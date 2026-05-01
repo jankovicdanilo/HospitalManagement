@@ -11,6 +11,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
+using FluentValidation;
+
+
+
+// tell ASP.NET Core to use Serilog
+var builder = WebApplication.CreateBuilder(args);
 
 // configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -23,10 +29,8 @@ Log.Logger = new LoggerConfiguration()
         retainedFileCountLimit: 7 // keep last 7 days of logs
     ).CreateLogger();
 
-// tell ASP.NET Core to use Serilog
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Host.UseSerilog();
+builder.Host.UseSerilog((context, config) =>
+    config.ReadFrom.Configuration(context.Configuration));
 
 // Register HospitalDbContext with SQL Server using connection string from appsettings.json
 builder.Services.AddDbContext<HospitalDbContext>(options =>
@@ -101,6 +105,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters
             .Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Required for Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();

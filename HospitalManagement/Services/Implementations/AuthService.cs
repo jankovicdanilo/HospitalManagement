@@ -40,21 +40,6 @@ namespace HospitalManagement.Services.Implementations
                 return Result<AuthResponseDto>.Fail($"Email {request.Email} already exists", "EMAIL_TAKEN");
             }
 
-            if(string.IsNullOrEmpty(request.Username))
-            {
-                return Result<AuthResponseDto>.Fail($"Username can't be null", "USERNAME_NULL");
-            }
-
-            if (string.IsNullOrEmpty(request.Email))
-            {
-                return Result<AuthResponseDto>.Fail($"Email can't be null", "EMAIL_NULL");
-            }
-
-            if (string.IsNullOrEmpty(request.Password))
-            {
-                return Result<AuthResponseDto>.Fail($"Password can't be null", "PASSWORD_NULL");
-            }
-
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             var user = new User
@@ -84,7 +69,7 @@ namespace HospitalManagement.Services.Implementations
         {
             var user = await authRepository.GetByUsernameAsync(request.Username);
 
-            if(user == null)
+            if (user == null)
             {
                 return Result<AuthResponseDto>.Fail("Invalid credentials", "INVALID_CREDENTIALS");
             }

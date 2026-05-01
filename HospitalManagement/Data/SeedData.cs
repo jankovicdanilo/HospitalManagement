@@ -21,7 +21,7 @@ namespace HospitalManagement.Data
             };
 
             await dbContext.Users.AddAsync(admin);
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
 
             Console.WriteLine("Default admin seeded successfully.");
         }

@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Models.DTOs.Doctor;
+﻿using FluentValidation;
+using HospitalManagement.Models.DTOs.Doctor;
 using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +7,7 @@ namespace HospitalManagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DoctorController : ControllerBase
+    public class DoctorController : BaseController
     {
         private readonly IDoctorService doctorService;
 
@@ -16,8 +17,17 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] DoctorCreateRequestDto request)
+        public async Task<IActionResult> Create(
+            [FromBody] DoctorCreateRequestDto request,
+            [FromServices] IValidator<DoctorCreateRequestDto> validator)
         {
+            var validation = await validator.ValidateAsync(request);
+
+            if(!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
             var result = await doctorService.Create(request);
 
             return Ok(result);
@@ -45,8 +55,17 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] DoctorUpdateRequestDto request)
+        public async Task<IActionResult> Update(
+            [FromBody] DoctorUpdateRequestDto request,
+            [FromServices] IValidator<DoctorUpdateRequestDto> validator)
         {
+            var validation = await validator.ValidateAsync(request);
+
+            if(!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
             var result = await doctorService.Update(request);
 
             if(!result.Success)

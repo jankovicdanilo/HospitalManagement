@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Models.DTOs.Auth;
+﻿using FluentValidation;
+using HospitalManagement.Models.DTOs.Auth;
 using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ namespace HospitalManagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
         private readonly IAuthService authService;
 
@@ -19,8 +20,17 @@ namespace HospitalManagement.Controllers
 
         [HttpPost("register")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
+        public async Task<IActionResult> Register(
+            [FromBody] RegisterRequestDto request,
+            [FromServices] IValidator<RegisterRequestDto> validator)
         {
+            var validation = await validator.ValidateAsync(request);
+
+            if(!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
             var result = await authService.RegisterAsync(request);
 
             if (!result.Success)
@@ -33,8 +43,17 @@ namespace HospitalManagement.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+        public async Task<IActionResult> Login(
+            [FromBody] LoginRequestDto request,
+            [FromServices] IValidator<LoginRequestDto> validator)
         {
+            var validation = await validator.ValidateAsync(request);
+
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
             var result = await authService.LoginAsync(request);
 
             if (!result.Success)
@@ -90,8 +109,17 @@ namespace HospitalManagement.Controllers
 
         [HttpPut]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequestDto request)
+        public async Task<IActionResult> UpdateUser(
+            [FromBody] UpdateUserRequestDto request,
+            [FromServices] IValidator<UpdateUserRequestDto> validator)
         {
+            var validation = await validator.ValidateAsync(request);
+
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
             var result = await authService.UpdateUserAsync(request);
 
             if(!result.Success)
