@@ -40,6 +40,8 @@ builder.Services.AddScoped<IAuthRepository,AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
+builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+builder.Services.AddScoped<IPatientService, PatientService>();
 
 // Read JWT settings for token validation configuration
 var jwtSettings = new JwtSettings
