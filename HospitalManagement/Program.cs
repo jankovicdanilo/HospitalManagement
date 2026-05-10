@@ -34,7 +34,7 @@ builder.Host.UseSerilog((context, config) =>
 
 // Register HospitalDbContext with SQL Server using connection string from appsettings.json
 builder.Services.AddDbContext<HospitalDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalDb")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IAuthRepository,AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
