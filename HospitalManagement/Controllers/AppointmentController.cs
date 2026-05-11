@@ -18,7 +18,6 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
         public async Task<IActionResult> CreateAsync([FromBody] CreateAppointmentRequestDto request)
         {
             var result = await appointmentService.CreateAsync(request);
