@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <Folder Include="Models\DTOs\Appointment\" />
-    <Folder Include="Models\DTOs\Patient\" />
   </ItemGroup>
 
 </Project>
