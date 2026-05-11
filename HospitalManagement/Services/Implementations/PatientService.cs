@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Repositories.Interfaces;
+﻿using HospitalManagement.Common;
+using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
 
 namespace HospitalManagement.Services.Implementations
@@ -10,6 +11,13 @@ namespace HospitalManagement.Services.Implementations
         public PatientService(IPatientRepository patientRepository)
         {
             this.patientRepository = patientRepository;
+        }
+
+        public async Task<Result> Delete(int id)
+        {
+            await patientRepository.Delete(id);
+
+            return Result.Ok($"Patient with id {id} deleted");
         }
     }
 }
