@@ -25,7 +25,6 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetByIdAsync(int id)
         {
             var result = await appointmentService.GetByIdAsync(id);
