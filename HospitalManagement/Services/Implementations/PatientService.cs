@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.Common;
+using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;

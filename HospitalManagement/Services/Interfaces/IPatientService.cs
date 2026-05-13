@@ -7,5 +7,6 @@ namespace HospitalManagement.Services.Interfaces
     {
         Task<Result<List<PatientListDto>>> GetAllAsync();
         Task<Result<PatientGetByIdDto?>> GetByIdAsync(int id);
+        Task<Result<CreatePatientResponseDto?>> CreateAsync(CreatePatientRequestDto request);
     }
 }

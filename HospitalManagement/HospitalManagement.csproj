@@ -9,13 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Models\DTOs\Appointment\**" />
-    <Content Remove="Models\DTOs\Appointment\**" />
-    <EmbeddedResource Remove="Models\DTOs\Appointment\**" />
-    <None Remove="Models\DTOs\Appointment\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />

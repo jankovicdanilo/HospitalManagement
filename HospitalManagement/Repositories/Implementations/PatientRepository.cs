@@ -23,5 +23,18 @@ namespace HospitalManagement.Repositories.Implementations
         {
             return await dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
         }
+
+        public async Task<Patient?> CreateAsync(Patient patient)
+        {
+            await dbContext.Patients.AddAsync(patient);
+            await dbContext.SaveChangesAsync();
+
+            return patient;
+        }
+
+        public async Task<Patient> GetByEmail(string email)
+        {
+            return await dbContext.Patients.FirstOrDefaultAsync(x => x.Email == email);
+        }
     }
 }
