@@ -16,12 +16,8 @@ namespace HospitalManagement.Controllers
             this.patientService = patientService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] CreatePatientRequestDto request)
         {
-            var result = await patientService.CreateAsync(request);
 
-            if (!result.Success)
             {
                 return NotFound(new {result.Message, result.ErrorCode});
             }
