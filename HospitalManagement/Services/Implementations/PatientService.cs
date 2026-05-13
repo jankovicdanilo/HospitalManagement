@@ -57,5 +57,43 @@ namespace HospitalManagement.Services.Implementations
 
             return Result<PatientGetByIdDto?>.Ok(result);
         }
+
+        public async Task<Result<CreatePatientResponseDto?>> CreateAsync(CreatePatientRequestDto request)
+        {
+            if (request == null)
+            {
+                return Result<CreatePatientResponseDto?>.Fail("Patient not found", "PATIENT_NOT_FOUND");
+            }
+
+            var patientExists = await patientRepository.GetByEmail(request.Email);
+
+            if (patientExists != null)
+            {
+                return Result<CreatePatientResponseDto?>.Fail($"Email {request.Email} aldready exists", "INVALID_EMAIL");
+            }
+
+            var patientDomain = new Patient
+            {
+                Name = request.Name,
+                LastName = request.LastName,
+                DateOfBirth = request.DateOfBirth,
+                Email = request.Email,
+                Phone = request.Phone
+            };
+
+            patientDomain = await patientRepository.CreateAsync(patientDomain);
+
+            var result = new CreatePatientResponseDto
+                (
+                    patientDomain.Id,
+                    patientDomain.Name,
+                    patientDomain.LastName,
+                    patientDomain.DateOfBirth,
+                    patientDomain.Email,
+                    patientDomain.Phone
+                );
+
+            return Result<CreatePatientResponseDto?>.Ok(result);
+        }
     }
 }

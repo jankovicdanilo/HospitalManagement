@@ -36,4 +36,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\DTOs\Appointment\" />
+    <Folder Include="Models\DTOs\Patient\" />
+  </ItemGroup>
+
 </Project>
