@@ -5,6 +5,7 @@ namespace HospitalManagement.Services.Interfaces
 {
     public interface IPatientService
     {
-        Task<Result<CreatePatientResponseDto?>> CreateAsync(CreatePatientRequestDto request);
+        Task<Result<List<PatientListDto>>> GetAllAsync();
+        Task<Result<PatientGetByIdDto?>> GetByIdAsync(int id);
     }
 }
