@@ -1,8 +1,11 @@
 ﻿using HospitalManagement.Common;
 using HospitalManagement.Models.DTOs.Appointment;
+using HospitalManagement.Repositories.Implementations;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
+using HospitalManagement.Services.Validations;
 using Microsoft.AspNetCore.Http.Features;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.InteropServices;
 
 namespace HospitalManagement.Services.Implementations
@@ -10,38 +13,24 @@ namespace HospitalManagement.Services.Implementations
     public class AppointmentService : IAppointmentService
     {
         private readonly IAppointmentRepository appointmentRepository;
-        private readonly IDoctorRepository doctorRepository;
-        private readonly IPatientRepository patientRepository;
+        private readonly AppointmentUpdateValidation appointmentValidation;
 
-        public AppointmentService(IAppointmentRepository appointmentRepository, IDoctorRepository doctorRepository, IPatientRepository patientRepository)
+        public AppointmentService(IAppointmentRepository apointmentRepository, AppointmentUpdateValidation appointmentValidation)
         {
-            this.appointmentRepository = appointmentRepository;
-            this.doctorRepository = doctorRepository;
-            this.patientRepository = patientRepository;
+            this.appointmentRepository = apointmentRepository;
+            this.appointmentValidation = appointmentValidation;
         }
 
         public async Task<Result<AppointmentUpdateResponseDto>> UpdateAsync(AppointmentUpdateRequestDto request)
         {
-            var appointmentDomain = await appointmentRepository.GetByIdAsync(request.Id);
+            var validatedAppointment = await appointmentValidation.ValidateAll(request.Id, request.DoctorId, request.PatientId, request.DateTime);
 
-            if(appointmentDomain == null)
+            if (!validatedAppointment.Success)
             {
-                return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found", "INVALID_ID");
+                return Result<AppointmentUpdateResponseDto>.Fail(validatedAppointment.Message, validatedAppointment.ErrorCode);
             }
 
-            var patientDomain = await patientRepository.GetByIdAsync(request.PatientId);
-
-            if (patientDomain == null)
-            {
-                return Result<AppointmentUpdateResponseDto>.Fail($"Patient with the id {request.PatientId} not found", "INVALID_PATIENT_ID");
-            }
-
-            var doctorDomain = await doctorRepository.GetById(request.DoctorId);
-
-            if(doctorDomain == null)
-            {
-                return Result<AppointmentUpdateResponseDto>.Fail($"Doctor with the id {request.DoctorId} not found", "INVALID_DOCTOR_ID");
-            } 
+            var appointmentDomain = validatedAppointment.Data;
 
             appointmentDomain.PatientId = request.PatientId;
             appointmentDomain.DoctorId = request.DoctorId;

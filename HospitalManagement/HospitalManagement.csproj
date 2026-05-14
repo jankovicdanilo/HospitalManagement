@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Mappings\" />
     <Folder Include="Models\DTOs\Patient\" />
   </ItemGroup>
 
