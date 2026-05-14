@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.Data;
+using HospitalManagement.Models.Domain;
 using HospitalManagement.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,12 +14,42 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public async Task Delete(int id)
+        public async Task<Patient?> Delete(int id)
         {
             var patient = await dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
 
+            if(patient == null)
+            {
+                return null;
+            }
+
             dbContext.Patients.Remove(patient);
             dbContext.SaveChanges();
+
+            return patient;
+        }
+
+        public async Task<List<Patient>> GetAllAsync()
+        {
+            return await dbContext.Patients.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<Patient?> GetByIdAsync(int id)
+        {
+            return await dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<Patient?> CreateAsync(Patient patient)
+        {
+            await dbContext.Patients.AddAsync(patient);
+            await dbContext.SaveChangesAsync();
+
+            return patient;
+        }
+
+        public async Task<Patient> GetByEmail(string email)
+        {
+            return await dbContext.Patients.FirstOrDefaultAsync(x => x.Email == email);
         }
     }
 }
