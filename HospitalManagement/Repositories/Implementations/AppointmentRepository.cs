@@ -1,6 +1,7 @@
 ﻿using HospitalManagement.Data;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace HospitalManagement.Repositories.Implementations
 {
@@ -19,6 +20,16 @@ namespace HospitalManagement.Repositories.Implementations
             await dbContext.SaveChangesAsync();
 
             return appointment;
+        }
+
+        public async Task<List<Appointment>> GetAllAsync()
+        {
+            return await dbContext.Appointments.AsNoTracking().Include(x => x.Doctor).Include(x => x.Patient).ToListAsync();
+        }
+
+        public async Task<Appointment?> GetByIdAsync(int id)
+        {
+            return await dbContext.Appointments.FirstOrDefaultAsync(x => x.Id == id);
         }
     }
 }
