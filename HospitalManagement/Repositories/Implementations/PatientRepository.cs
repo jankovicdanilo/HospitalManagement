@@ -18,12 +18,7 @@ namespace HospitalManagement.Repositories.Implementations
         {
             var patient = dbContext.Patients.FirstOrDefault(x => x.Email == email);
 
-            if (patient == null)
-            {
-                return false;
-            }
-
-            return true;
+            return patient != null;
         }
 
         public async Task<Patient?> GetByEmailAsync(string email)
