@@ -19,12 +19,19 @@ namespace HospitalManagement.Repositories.Implementations
             return await dbContext.Appointments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task Delete(int id)
+        public async Task<Appointment?> Delete(int id)
         {
             var appointment = await dbContext.Appointments.FirstOrDefaultAsync(x => x.Id == id);
 
+            if(appointment == null)
+            {
+                return null;
+            }
+
             dbContext.Appointments.Remove(appointment);
             await dbContext.SaveChangesAsync();
+
+            return appointment;
         }
 
         
