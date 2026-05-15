@@ -8,5 +8,7 @@ namespace HospitalManagement.Repositories.Interfaces
         Task<List<Appointment>> GetAllAsync();
 
         Task<Appointment?> GetByIdAsync(int id);
+
+        Task<List<Appointment>> GetByDoctorIdAsync(int id);
     }
 }

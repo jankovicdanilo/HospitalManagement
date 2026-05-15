@@ -12,6 +12,8 @@ namespace HospitalManagement.Models.DTOs.Appointment
 
         DateTime DateTime,
 
+        TimeSpan Duration,
+
         string Status,
 
         string? Notes

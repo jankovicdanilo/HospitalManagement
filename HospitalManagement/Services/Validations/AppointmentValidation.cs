@@ -10,11 +10,13 @@ namespace HospitalManagement.Services.Validations
     {
         private readonly IDoctorRepository doctorRepository;
         private readonly IPatientRepository patientRepository;
+        private readonly IAppointmentRepository appointmentRepository;
 
-        public AppointmentValidation(IDoctorRepository doctorRepository, IPatientRepository patientRepository)
+        public AppointmentValidation(IDoctorRepository doctorRepository, IPatientRepository patientRepository, IAppointmentRepository appointmentRepository)
         {
             this.doctorRepository = doctorRepository;
             this.patientRepository = patientRepository;
+            this.appointmentRepository = appointmentRepository;
         }
 
         private async Task<bool> CheckDoctorId(int id)
@@ -32,8 +34,15 @@ namespace HospitalManagement.Services.Validations
             return dateTime <= DateTime.UtcNow;
         }
 
+        private async Task<bool> CheckDoctorAvailability(int doctorId, DateTime dateTime, TimeSpan duration)
+        {
+            var appointments = await appointmentRepository.GetByDoctorIdAsync(doctorId);
+
+            return !appointments.Any(a => dateTime < a.DateTime.Add(a.Duration) && dateTime.Add(duration) > a.DateTime);
+        }
+
         public async Task<Result> ValidateAll(int doctorId,
-            int patientId, DateTime dateTime)
+            int patientId, DateTime dateTime, TimeSpan duration)
         {
             if (!await CheckDoctorId(doctorId))
             {
@@ -48,6 +57,11 @@ namespace HospitalManagement.Services.Validations
             if (CheckDate(dateTime))
             {
                 return Result.Fail($"Appointment can't be set before today", "INVALID_DATE_TIME");
+            }
+
+            if(!await CheckDoctorAvailability(doctorId, dateTime, duration))
+            {
+                return Result.Fail($"Doctor with the id {doctorId} is not available at that time", "DOCTOR_NOT_AVAILABLE");
             }
 
             return Result.Ok("Validation ok");

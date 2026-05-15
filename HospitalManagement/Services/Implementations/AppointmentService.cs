@@ -35,6 +35,7 @@ namespace HospitalManagement.Services.Implementations
                         appointment.PatientId,
                         appointment.DoctorId,
                         appointment.DateTime,
+                        appointment.Duration,
                         appointment.Status,
                         appointment.Notes
                     ));
@@ -58,6 +59,7 @@ namespace HospitalManagement.Services.Implementations
                     appointmentDomain.PatientId,
                     appointmentDomain.DoctorId,
                     appointmentDomain.DateTime,
+                    appointmentDomain.Duration,
                     appointmentDomain.Status,
                     appointmentDomain.Notes
                 );
@@ -68,7 +70,7 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<CreateAppointmentResponseDto>> CreateAsync(CreateAppointmentRequestDto request)
         {
-            var validate = await appointmentValidation.ValidateAll(request.DoctorId, request.PatientId, request.DateTime);
+            var validate = await appointmentValidation.ValidateAll(request.DoctorId, request.PatientId, request.DateTime, request.Duration);
 
             if (!validate.Success)
             {
@@ -92,6 +94,7 @@ namespace HospitalManagement.Services.Implementations
                     appointmentDomain.PatientId,
                     appointmentDomain.DoctorId,
                     appointmentDomain.DateTime,
+                    appointmentDomain.Duration,
                     appointmentDomain.Status,
                     appointmentDomain.Status
                 );

@@ -10,6 +10,8 @@
 
         DateTime DateTime,
 
+        TimeSpan Duration,
+
         string Status,
 
         string? Notes

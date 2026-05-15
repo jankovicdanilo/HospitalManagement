@@ -27,6 +27,11 @@ namespace HospitalManagement.Repositories.Implementations
             return await dbContext.Appointments.AsNoTracking().Include(x => x.Doctor).Include(x => x.Patient).ToListAsync();
         }
 
+        public async Task<List<Appointment>> GetByDoctorIdAsync(int id)
+        {
+            return await dbContext.Appointments.Where(x => x.DoctorId == id).ToListAsync();
+        }
+
         public async Task<Appointment?> GetByIdAsync(int id)
         {
             return await dbContext.Appointments.FirstOrDefaultAsync(x => x.Id == id);
