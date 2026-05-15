@@ -33,8 +33,14 @@ namespace HospitalManagement.Services.Validations
             return dateTime <= DateTime.UtcNow;
         }
 
+        private async Task<bool> CheckDoctorAvailability(int doctorId, DateTime dateTime, TimeSpan duration, int? excludeAppointmenId = null)
+        {
+            var appointments = await appointmentRepository.GetByDoctorIdAsync(doctorId);
+            return !appointments.Any(a => a.Id != excludeAppointmenId && dateTime < a.DateTime.Add(a.Duration) && dateTime.Add(duration) > a.DateTime);
+        }
+
         public async Task<Result<Appointment>> ValidateAll(int appointmentId, int doctorId,
-            int patientId, DateTime dateTime)
+            int patientId, DateTime dateTime, TimeSpan duration)
         {
             if (!await CheckDoctorId(doctorId))
             {
@@ -46,7 +52,7 @@ namespace HospitalManagement.Services.Validations
                 return Result<Appointment>.Fail($"Patient with the id {patientId} not found", "INVALID_PATIENT_ID");
             }
 
-            if (CheckDate(dateTime))
+            if (CheckDate(dateTime))    
             {
                 return Result<Appointment>.Fail($"Appointment can't be set before today", "INVALID_DATE_TIME");
             }
@@ -56,6 +62,11 @@ namespace HospitalManagement.Services.Validations
             if(appointmentDomain == null)
             {
                 return Result<Appointment>.Fail($"Appointment with the id {appointmentId} not found", "INVALID_APPOINTMENT_ID");
+            }
+
+            if(!await CheckDoctorAvailability(doctorId, dateTime, duration, appointmentId))
+            {
+                return Result<Appointment>.Fail($"Doctor with id {doctorId} is not available at that time", "DOCTOR_NOT_AVAILABLE");
             }
 
             return Result<Appointment>.Ok(appointmentDomain);

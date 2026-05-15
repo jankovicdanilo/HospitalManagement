@@ -23,7 +23,8 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<AppointmentUpdateResponseDto>> UpdateAsync(AppointmentUpdateRequestDto request)
         {
-            var validatedAppointment = await appointmentValidation.ValidateAll(request.Id, request.DoctorId, request.PatientId, request.DateTime);
+            var validatedAppointment = await appointmentValidation.ValidateAll(request.Id, request.DoctorId, request.PatientId, request.DateTime,
+                request.Duration);
 
             if (!validatedAppointment.Success)
             {
@@ -35,6 +36,7 @@ namespace HospitalManagement.Services.Implementations
             appointmentDomain.PatientId = request.PatientId;
             appointmentDomain.DoctorId = request.DoctorId;
             appointmentDomain.DateTime = request.DateTime;
+            appointmentDomain.Duration = request.Duration;
             appointmentDomain.Status = request.Status;
             appointmentDomain.Notes = request.Notes;
 
@@ -46,6 +48,7 @@ namespace HospitalManagement.Services.Implementations
                     appointmentDomain.PatientId,
                     appointmentDomain.DoctorId,
                     appointmentDomain.DateTime,
+                    appointmentDomain.Duration,
                     appointmentDomain.Status,
                     appointmentDomain.Notes
                 );

@@ -14,6 +14,11 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
+        public async Task<List<Appointment>?> GetByDoctorIdAsync(int id)
+        {
+            return await dbContext.Appointments.Where(x => x.DoctorId == id).ToListAsync();
+        }
+
         public async Task<Appointment?> GetByIdAsync(int id)
         {
             return await dbContext.Appointments.FirstOrDefaultAsync(x => x.Id == id);
