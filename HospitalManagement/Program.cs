@@ -103,6 +103,8 @@ builder.Services.AddAuthorization(options =>
         .RequireAuthenticatedUser().Build();
 });
 
+//builder.Services.AddAuthorization();
+
 // Register controllers
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

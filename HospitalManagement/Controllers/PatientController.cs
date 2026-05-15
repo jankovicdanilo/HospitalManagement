@@ -1,5 +1,6 @@
 ﻿using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +18,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllAsync()
         {
             var result = await patientService.GetAllAsync();

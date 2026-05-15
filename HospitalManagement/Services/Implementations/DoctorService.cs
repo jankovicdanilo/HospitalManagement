@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Common;
+﻿using AutoMapper;
+using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Doctor;
 using HospitalManagement.Repositories.Interfaces;
@@ -9,34 +10,21 @@ namespace HospitalManagement.Services.Implementations
     public class DoctorService : IDoctorService
     {
         private readonly IDoctorRepository doctorRepository;
+        private readonly IMapper mapper;
 
-        public DoctorService(IDoctorRepository doctorRepository)
+        public DoctorService(IDoctorRepository doctorRepository, IMapper mapper)
         {
             this.doctorRepository = doctorRepository;
+            this.mapper = mapper;
         }
 
         public async Task<Result<DoctorResponseDto>> Create(DoctorCreateRequestDto request)
         {
-            var doctorDomain = new Doctor
-            {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                Specialization = request.Specialization,
-                Phone = request.Phone
-            };
+            var doctorDomain = mapper.Map<Doctor>(request);
 
             doctorDomain = await doctorRepository.Create(doctorDomain);
 
-            var result = new DoctorResponseDto
-            (
-                doctorDomain.Id,
-                doctorDomain.FirstName,
-                doctorDomain.LastName,
-                doctorDomain.Specialization,
-                doctorDomain.Email,
-                doctorDomain.Phone
-            );
+            var result = mapper.Map<DoctorResponseDto>(doctorDomain);
 
             return Result<DoctorResponseDto>.Ok(result);
         }
@@ -59,15 +47,7 @@ namespace HospitalManagement.Services.Implementations
         {
             var doctors = await doctorRepository.GetAll();
 
-            var result = doctors.Select(doctor => new DoctorResponseDto
-            (
-                doctor.Id,
-                doctor.FirstName,
-                doctor.LastName,
-                doctor.Specialization,
-                doctor.Email,
-                doctor.Phone
-            )).ToList();
+            var result = mapper.Map<List<DoctorResponseDto>>(doctors);
 
             return Result<List<DoctorResponseDto>>.Ok(result);
         }
@@ -82,15 +62,7 @@ namespace HospitalManagement.Services.Implementations
                     ErrorType.NotFound);
             }
 
-            var result = new DoctorResponseDto
-            (
-                doctor.Id,
-                doctor.FirstName,
-                doctor.LastName,
-                doctor.Specialization,
-                doctor.Email,
-                doctor.Phone
-            );
+            var result = mapper.Map<DoctorResponseDto>(doctor);
 
             return Result<DoctorResponseDto>.Ok(result);
         }
@@ -113,15 +85,7 @@ namespace HospitalManagement.Services.Implementations
 
             doctor = await doctorRepository.Update(doctor);
 
-            var result = new DoctorResponseDto
-            (
-                doctor.Id,
-                doctor.FirstName,
-                doctor.LastName,
-                doctor.Specialization,
-                doctor.Email,
-                doctor.Phone
-            );
+            var result = mapper.Map<DoctorResponseDto>(doctor);
 
             return Result<DoctorResponseDto>.Ok(result);
         }
