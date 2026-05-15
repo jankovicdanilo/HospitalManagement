@@ -1,8 +1,14 @@
 ﻿using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HospitalManagement.Services.Implementations
 {
@@ -13,6 +19,18 @@ namespace HospitalManagement.Services.Implementations
         public PatientService(IPatientRepository patientRepository)
         {
             this.patientRepository = patientRepository;
+        }
+
+        public async Task<Result> Delete(int id)
+        {
+            var patientDomain = await patientRepository.Delete(id);
+
+            if (patientDomain == null)
+            {
+                return Result.Fail($"Patient with the id {id} not found", "INVALID_ID");
+            }
+
+            return Result.Ok($"Patient with id {id} deleted"); 
         }
 
         public async Task<Result<List<PatientListDto>>> GetAllAsync()

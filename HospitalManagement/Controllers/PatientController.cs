@@ -1,7 +1,10 @@
+
+﻿using HospitalManagement.Services.Implementations;
 ﻿using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HospitalManagement.Controllers
 {
@@ -14,6 +17,19 @@ namespace HospitalManagement.Controllers
         public PatientController(IPatientService patientService)
         {
             this.patientService = patientService;
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await patientService.Delete(id);
+
+            if (!result.Success)
+            {
+                return NotFound(new {result.Message, result.ErrorCode});
+            }
+
+            return Ok(result);
         }
 
         [HttpGet]

@@ -14,6 +14,21 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
+        public async Task<Patient?> Delete(int id)
+        {
+            var patient = await dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
+
+            if(patient == null)
+            {
+                return null;
+            }
+
+            dbContext.Patients.Remove(patient);
+            dbContext.SaveChanges();
+
+            return patient;
+        }
+
         public async Task<List<Patient>> GetAllAsync()
         {
             return await dbContext.Patients.AsNoTracking().ToListAsync();
