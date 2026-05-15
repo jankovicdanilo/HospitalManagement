@@ -39,7 +39,6 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet("free-slots")]
-        [AllowAnonymous]
         public async Task<IActionResult> FreeSlots(int doctorId, DateOnly date)
         {
             var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
