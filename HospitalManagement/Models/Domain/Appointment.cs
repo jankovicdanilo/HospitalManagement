@@ -13,6 +13,8 @@ public partial class Appointment
 
     public DateTime DateTime { get; set; }
 
+    public TimeSpan Duration { get; set; }
+
     public string Status { get; set; } = null!;
 
     public string? Notes { get; set; }
