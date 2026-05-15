@@ -17,6 +17,12 @@ namespace HospitalManagement.Controllers
             this.appointmentService = appointmentService;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> FreeSlots(int doctorId, DateOnly date)
+        {
+
+        }
+
         [HttpPut]
         public async Task<IActionResult> UpdateAsync([FromBody] AppointmentUpdateRequestDto request)
         {
