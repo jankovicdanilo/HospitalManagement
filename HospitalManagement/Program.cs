@@ -1,6 +1,7 @@
 using FluentValidation;
 using HospitalManagement.Data;
 using HospitalManagement.Middleware;
+using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Repositories.Implementations;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
@@ -47,6 +48,7 @@ builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddScoped<AppointmentUpdateValidation>();
+builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));
 
 // Read JWT settings for token validation configuration
 var jwtSettings = new JwtSettings

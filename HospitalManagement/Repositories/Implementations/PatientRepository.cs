@@ -36,10 +36,5 @@ namespace HospitalManagement.Repositories.Implementations
         {
             return await dbContext.Patients.FirstOrDefaultAsync(x => x.Email == email);
         }
-
-        public async Task<Patient?> GetByIdAsync(int id)
-        {
-            return await dbContext.Patients.FirstOrDefaultAsync(p => p.Id == id);
-        }
     }
 }

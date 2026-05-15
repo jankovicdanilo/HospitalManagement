@@ -29,17 +29,19 @@ namespace HospitalManagement.Repositories.Implementations
             return await dbContext.Appointments.Where(x => x.DoctorId == id).ToListAsync();
         }
 
-        public async Task<Appointment?> GetByIdAsync(int id)
-        {
-            return await dbContext.Appointments.FirstOrDefaultAsync(x => x.Id == id);
-        }
-
         public async Task<Appointment> UpdateAsync(Appointment appointment)
         {
             dbContext.Appointments.Update(appointment);
             await dbContext.SaveChangesAsync();
 
             return appointment;
+        }
+
+        public async Task<List<Appointment>> GetByDoctorIdAndDateAsync(int doctorId, DateOnly date)
+        {
+            return await dbContext.Appointments.Where(x => x.DoctorId == doctorId && 
+                DateOnly.FromDateTime(x.DateTime) == date)
+                .ToListAsync();
         }
     }
 }

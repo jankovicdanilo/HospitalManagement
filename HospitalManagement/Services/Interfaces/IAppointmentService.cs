@@ -8,6 +8,9 @@ namespace HospitalManagement.Services.Interfaces
         Task<Result<List<AppointmentListResponseDto>>> GetAllAsync();
 
         Task<Result<AppointmentResponseDto>> GetByIdAsync(int id);
+
         Task<Result<AppointmentUpdateResponseDto>> UpdateAsync(AppointmentUpdateRequestDto request);
+
+        Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date);
     }
 }
