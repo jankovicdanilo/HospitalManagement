@@ -71,11 +71,6 @@ namespace HospitalManagement.Repositories.Implementations
             return await dbContext.Patients.AsNoTracking().ToListAsync();
         }
 
-        public async Task<Patient?> GetByIdAsync(int id)
-        {
-            return await dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
-        }
-
         public async Task<Patient?> CreateAsync(Patient patient)
         {
             await dbContext.Patients.AddAsync(patient);
