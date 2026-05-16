@@ -17,6 +17,19 @@ namespace HospitalManagement.Controllers
             this.appointmentService = appointmentService;
         }
 
+        [HttpPut]
+        public async Task<IActionResult> UpdateAsync([FromBody] AppointmentUpdateRequestDto request)
+        {
+            var result = await appointmentService.UpdateAsync(request);
+
+            if (!result.Success)
+            {
+                return NotFound(new {result.Message, result.ErrorCode});
+            }
+
+            return Ok(result);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAllAsync()
         {

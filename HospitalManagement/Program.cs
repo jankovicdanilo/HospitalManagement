@@ -1,9 +1,11 @@
+using FluentValidation;
 using HospitalManagement.Data;
 using HospitalManagement.Middleware;
 using HospitalManagement.Repositories.Implementations;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
 using HospitalManagement.Services.Interfaces;
+using HospitalManagement.Services.Validations;
 using HospitalManagement.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
