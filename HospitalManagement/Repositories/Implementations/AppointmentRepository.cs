@@ -14,6 +14,7 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
+        
         public async Task<Appointment?> GetByIdAsync(int id)
         {
             return await dbContext.Appointments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
@@ -47,6 +48,13 @@ namespace HospitalManagement.Repositories.Implementations
             await dbContext.SaveChangesAsync();
 
             return appointment;
+        }
+
+        public async Task<List<Appointment>> GetByDoctorIdAndDateAsync(int doctorId, DateOnly date)
+        {
+            return await dbContext.Appointments.Where(x => x.DoctorId == doctorId && 
+                DateOnly.FromDateTime(x.DateTime) == date)
+                .ToListAsync();
         }
 
         public async Task<Appointment> CreateAsync(Appointment appointment)

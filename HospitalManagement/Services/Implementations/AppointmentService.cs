@@ -5,6 +5,7 @@ using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Services.Validations;
+using Microsoft.Extensions.Options;
 
 namespace HospitalManagement.Services.Implementations
 {
@@ -13,12 +14,15 @@ namespace HospitalManagement.Services.Implementations
         private readonly IAppointmentRepository appointmentRepository;
         private readonly IMapper mapper;
         private readonly AppointmentValidation appointmentValidation;
+        private readonly AppointmentSettings appointmentSettings;
 
-        public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper, AppointmentValidation appointmentValidation)
+        public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
+            AppointmentValidation appointmentValidation, IOptions<AppointmentSettings> appointmentSettings)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
             this.appointmentValidation = appointmentValidation;
+            this.appointmentSettings = appointmentSettings.Value;
         }
 
         public async Task<Result<List<AppointmentListResponseDto>>> GetAllAsync()
@@ -72,6 +76,41 @@ namespace HospitalManagement.Services.Implementations
                 return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID");
 
             return Result.Ok("Appointment deleted");
+        }
+
+        public async Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date)
+        {
+            var workStart = new TimeSpan(appointmentSettings.WorkStartHour, 0, 0);
+            var workEnd = new TimeSpan(appointmentSettings.WorkEndHour, 0, 0);
+            var slotSize = new TimeSpan(0, appointmentSettings.SlotSizeMinutes, 0);
+
+            var appointments = await appointmentRepository.GetByDoctorIdAndDateAsync(doctorId, date);
+
+            var freeSlots = new List<TimeSlotDto>();
+            var current = workStart;
+
+            while (current + slotSize <= workEnd)
+            {
+                var slotStart = date.ToDateTime(TimeOnly.FromTimeSpan(current));
+                var slotEnd = slotStart.Add(slotSize);
+
+                var isBooked = appointments.Any(a =>
+                    slotStart < a.DateTime.Add(a.Duration) &&
+                    slotEnd > a.DateTime);
+
+                if (!isBooked)
+                {
+                    freeSlots.Add(new TimeSlotDto
+                    {
+                        Start = TimeOnly.FromDateTime(slotStart),
+                        End = TimeOnly.FromDateTime(slotEnd)
+                    });
+                }
+
+                current = current.Add(slotSize);
+            }
+
+            return Result<List<TimeSlotDto>>.Ok(freeSlots);
         }
     }
 }

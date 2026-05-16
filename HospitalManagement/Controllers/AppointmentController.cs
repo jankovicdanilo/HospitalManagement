@@ -76,5 +76,19 @@ namespace HospitalManagement.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("free-slots")]
+        public async Task<IActionResult> FreeSlots(int doctorId, DateOnly date)
+        {
+            var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
+
+            if (!result.Success)
+            {
+                return BadRequest(new { result.Message, result.ErrorCode });
+            }
+
+            return Ok(result);
+        }
+        
     }
 }

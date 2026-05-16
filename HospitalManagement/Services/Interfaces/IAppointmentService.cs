@@ -15,5 +15,7 @@ namespace HospitalManagement.Services.Interfaces
         Task<Result<CreateAppointmentResponseDto>> CreateAsync(CreateAppointmentRequestDto request);
 
         Task<Result<AppointmentUpdateResponseDto>> UpdateAsync(AppointmentUpdateRequestDto request);
+
+        Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date);
     }
 }
