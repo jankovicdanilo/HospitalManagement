@@ -14,14 +14,31 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
+        public async Task<Appointment?> GetByIdAsync(int id)
+        {
+            return await dbContext.Appointments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<Appointment?> Delete(int id)
+        {
+            var appointment = await dbContext.Appointments.FirstOrDefaultAsync(x => x.Id == id);
+
+            if(appointment == null)
+            {
+                return null;
+            }
+
+            dbContext.Appointments.Remove(appointment);
+            await dbContext.SaveChangesAsync();
+
+            return appointment;
+        }
+
+        
+
         public async Task<List<Appointment>?> GetByDoctorIdAsync(int id)
         {
             return await dbContext.Appointments.Where(x => x.DoctorId == id).ToListAsync();
-        }
-
-        public async Task<Appointment?> GetByIdAsync(int id)
-        {
-            return await dbContext.Appointments.FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<Appointment> UpdateAsync(Appointment appointment)

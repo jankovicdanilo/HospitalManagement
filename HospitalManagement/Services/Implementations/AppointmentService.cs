@@ -114,5 +114,29 @@ namespace HospitalManagement.Services.Implementations
                 );
             return Result<AppointmentUpdateResponseDto>.Ok(result);
         }
+
+        public async Task<Result> Delete(int id)
+        {
+            var appointmentDomain = await apointmentRepository.Delete(id);
+
+            if (appointmentDomain == null)
+            {
+                return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID");
+            }
+
+            return Result.Ok("Appointment deleted");
+        }
+
+        public async Task<Result> Delete(int id)
+        {
+            var appointmentDomain = await apointmentRepository.Delete(id);
+
+            if (appointmentDomain == null)
+            {
+                return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID");
+            }
+
+            return Result.Ok("Appointment deleted");
+        }
     }
 }

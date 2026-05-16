@@ -17,6 +17,19 @@ namespace HospitalManagement.Controllers
             this.appointmentService = appointmentService;
         }
 
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await appointmentService.Delete(id);
+
+            if (!result.Success)
+            {
+                return NotFound(new {result.Message, result.ErrorCode});
+            }
+
+            return Ok(result);
+        }
+
         [HttpPut]
         public async Task<IActionResult> UpdateAsync([FromBody] AppointmentUpdateRequestDto request)
         {
