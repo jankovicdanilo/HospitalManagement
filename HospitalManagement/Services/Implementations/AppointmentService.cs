@@ -28,7 +28,9 @@ namespace HospitalManagement.Services.Implementations
         public async Task<Result<List<AppointmentListResponseDto>>> GetAllAsync()
         {
             var appointments = await appointmentRepository.GetAllAsync();
+
             var result = mapper.Map<List<AppointmentListResponseDto>>(appointments);
+
             return Result<List<AppointmentListResponseDto>>.Ok(result);
         }
 
@@ -36,45 +38,67 @@ namespace HospitalManagement.Services.Implementations
         {
             var appointmentDomain = await appointmentRepository.GetByIdAsync(id);
             if (appointmentDomain == null)
+            {
                 return Result<AppointmentResponseDto>.Fail($"Appointment with the id {id} not found", "INVALID_ID");
-
+            }
+                
             var result = mapper.Map<AppointmentResponseDto>(appointmentDomain);
+
             return Result<AppointmentResponseDto>.Ok(result);
         }
 
-        public async Task<Result<CreateAppointmentResponseDto>> CreateAsync(CreateAppointmentRequestDto request)
+        public async Task<Result<AppointmentCreateResponseDto>> CreateAsync(AppointmentCreateRequestDto request)
         {
             var validate = await appointmentValidation.ValidateAll(request.DoctorId, request.PatientId, request.DateTime, request.Duration);
+
             if (!validate.Success)
-                return Result<CreateAppointmentResponseDto>.Fail(validate.Message, validate.ErrorCode);
+            {
+                return Result<AppointmentCreateResponseDto>.Fail(validate.Message, validate.ErrorCode);
+            }
 
             var appointmentDomain = mapper.Map<Appointment>(request);
+
             appointmentDomain = await appointmentRepository.CreateAsync(appointmentDomain);
 
-            var result = mapper.Map<CreateAppointmentResponseDto>(appointmentDomain);
-            return Result<CreateAppointmentResponseDto>.Ok(result);
+            var result = mapper.Map<AppointmentCreateResponseDto>(appointmentDomain);
+
+            return Result<AppointmentCreateResponseDto>.Ok(result);
         }
 
         public async Task<Result<AppointmentUpdateResponseDto>> UpdateAsync(AppointmentUpdateRequestDto request)
         {
-            var validatedAppointment = await appointmentValidation.ValidateAll(request.Id, request.DoctorId, request.PatientId, request.DateTime, request.Duration);
+            var validatedAppointment = await appointmentValidation.ValidateAll(request.DoctorId, request.PatientId, 
+                request.DateTime, request.Duration, request.Id);
             if (!validatedAppointment.Success)
+            {
                 return Result<AppointmentUpdateResponseDto>.Fail(validatedAppointment.Message, validatedAppointment.ErrorCode);
+            }
+                
+            var appointmentDomain = await appointmentRepository.GetByIdAsync(request.Id);
+            
+            if (appointmentDomain == null)
+            {
+                return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found", "INVALID_ID");
+            }
 
-            var appointmentDomain = validatedAppointment.Data;
             mapper.Map(request, appointmentDomain);
+
             appointmentDomain = await appointmentRepository.UpdateAsync(appointmentDomain);
 
             var result = mapper.Map<AppointmentUpdateResponseDto>(appointmentDomain);
+
             return Result<AppointmentUpdateResponseDto>.Ok(result);
         }
 
         public async Task<Result> Delete(int id)
         {
             var appointmentDomain = await appointmentRepository.Delete(id);
-            if (appointmentDomain == null)
-                return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID");
 
+            if (appointmentDomain == null)
+            {
+                return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID");
+            }   
+                
             return Result.Ok("Appointment deleted");
         }
 

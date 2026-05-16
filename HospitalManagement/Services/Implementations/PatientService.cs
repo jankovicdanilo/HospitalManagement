@@ -62,27 +62,27 @@ namespace HospitalManagement.Services.Implementations
             return Result<PatientGetByIdDto?>.Ok(result);
         }
 
-        public async Task<Result<CreatePatientResponseDto?>> CreateAsync(CreatePatientRequestDto request)
+        public async Task<Result<PatientCreateResponseDto?>> CreateAsync(PatientCreateRequestDto request)
         {
             if (request == null)
             {
-                return Result<CreatePatientResponseDto?>.Fail("Patient not found", "PATIENT_NOT_FOUND");
+                return Result<PatientCreateResponseDto?>.Fail("Patient not found", "PATIENT_NOT_FOUND");
             }
 
-            var patientExists = await patientRepository.GetByEmail(request.Email);
+            var patientExists = await patientRepository.GetByEmailAsync(request.Email);
 
             if (patientExists != null)
             {
-                return Result<CreatePatientResponseDto?>.Fail($"Email {request.Email} aldready exists", "INVALID_EMAIL");
+                return Result<PatientCreateResponseDto?>.Fail($"Email {request.Email} aldready exists", "INVALID_EMAIL");
             }
 
             var patientDomain = mapper.Map<Patient>(request);
 
             patientDomain = await patientRepository.CreateAsync(patientDomain);
 
-            var result = mapper.Map<CreatePatientResponseDto>(patientDomain);
+            var result = mapper.Map<PatientCreateResponseDto>(patientDomain);
 
-            return Result<CreatePatientResponseDto?>.Ok(result);
+            return Result<PatientCreateResponseDto?>.Ok(result);
         }
 
         public async Task<Result<PatientUpdateResponseDto>> UpdateAsync(PatientUpdateRequestDto request)
@@ -99,25 +99,11 @@ namespace HospitalManagement.Services.Implementations
                 return Result<PatientUpdateResponseDto>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL");
             }
 
-            patientDomain.Id = request.Id;
-            patientDomain.Name = request.Name;
-            patientDomain.LastName = request.LastName;
-            patientDomain.Email = request.Email;
-            patientDomain.DateOfBirth = request.DateOfBirth;
-            patientDomain.Phone = request.Phone;
-
+            mapper.Map(request, patientDomain);
 
             await patientRepository.UpdateAsync(patientDomain);
 
-            var result = new PatientUpdateResponseDto
-                (
-                    patientDomain.Id,
-                    patientDomain.Name,
-                    patientDomain.LastName,
-                    patientDomain.DateOfBirth,
-                    patientDomain.Email,
-                    patientDomain.Phone
-                );
+            var result = mapper.Map<PatientUpdateResponseDto>(patientDomain);
 
             return Result<PatientUpdateResponseDto>.Ok(result);
         }

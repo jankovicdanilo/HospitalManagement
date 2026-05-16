@@ -12,7 +12,7 @@ namespace HospitalManagement.Services.Interfaces
 
         Task<Result<AppointmentResponseDto>> GetByIdAsync(int id);
 
-        Task<Result<CreateAppointmentResponseDto>> CreateAsync(CreateAppointmentRequestDto request);
+        Task<Result<AppointmentCreateResponseDto>> CreateAsync(AppointmentCreateRequestDto request);
 
         Task<Result<AppointmentUpdateResponseDto>> UpdateAsync(AppointmentUpdateRequestDto request);
 

@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Models.DTOs.Appointment;
+﻿using FluentValidation;
+using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +9,7 @@ namespace HospitalManagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AppointmentController : ControllerBase
+    public class AppointmentController : BaseController
     {
         private readonly IAppointmentService appointmentService;
 
@@ -65,7 +66,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] CreateAppointmentRequestDto request)
+        public async Task<IActionResult> CreateAsync([FromBody] AppointmentCreateRequestDto request)
         {
             var result = await appointmentService.CreateAsync(request);
 
@@ -78,9 +79,17 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet("free-slots")]
-        public async Task<IActionResult> FreeSlots(int doctorId, DateOnly date)
+        public async Task<IActionResult> FreeSlots([FromQuery] FreeSlotsRequestDto request,
+            [FromServices] IValidator<FreeSlotsRequestDto> validator)
         {
-            var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
+            var validation = await validator.ValidateAsync(request);
+
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
+            var result = await appointmentService.GetFreeSlotsAsync(request.DoctorId, request.Date);
 
             if (!result.Success)
             {

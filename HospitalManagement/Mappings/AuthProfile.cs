@@ -9,12 +9,12 @@ namespace HospitalManagement.Mappings
     {
         public AuthProfile()
         {
-            CreateMap<User, AuthResponseDto>();
-            CreateMap<User, AuthResponseListDto>();
-            CreateMap<User, AuthResponseUpdateDto>();
-            CreateMap<User, CurrentUserDto>();
-            CreateMap<RegisterRequestDto, User>();
-            CreateMap<UpdateUserRequestDto, User>();
+            CreateMap<User, AuthResponseDto>().ReverseMap();
+            CreateMap<User, AuthResponseListDto>().ReverseMap();
+            CreateMap<User, AuthResponseUpdateDto>().ReverseMap();
+            CreateMap<User, CurrentUserDto>().ReverseMap();
+            CreateMap<User, RegisterRequestDto>().ReverseMap();
+            CreateMap<User, UpdateUserRequestDto>().ReverseMap();
         }
     }
 }

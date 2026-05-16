@@ -14,13 +14,6 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public bool EmailExists(string email)
-        {
-            var patient = dbContext.Patients.FirstOrDefault(x => x.Email == email);
-
-            return patient != null;
-        }
-
         public async Task<Patient?> GetByEmailAsync(string email)
         {
             return await dbContext.Patients.FirstOrDefaultAsync(x => x.Email == email);
@@ -31,21 +24,10 @@ namespace HospitalManagement.Repositories.Implementations
             return await dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public bool PatientExists(int id)
-        {
-            var patient = dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
-
-            if(patient == null)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
         public async Task<Patient> UpdateAsync(Patient patient)
         {
             dbContext.Patients.Update(patient);
+
             await dbContext.SaveChangesAsync();
 
             return patient;
@@ -74,6 +56,7 @@ namespace HospitalManagement.Repositories.Implementations
         public async Task<Patient?> CreateAsync(Patient patient)
         {
             await dbContext.Patients.AddAsync(patient);
+
             await dbContext.SaveChangesAsync();
 
             return patient;
@@ -82,6 +65,16 @@ namespace HospitalManagement.Repositories.Implementations
         public async Task<Patient?> GetByEmail(string email)
         {
             return await dbContext.Patients.FirstOrDefaultAsync(x => x.Email == email);
+        }
+
+        public bool EmailExists(string email)
+        {
+            return dbContext.Patients.Any(x => x.Email == email);
+        }
+
+        public bool PatientExists(int id)
+        {
+            return dbContext.Patients.Any(x => x.Id == id);
         }
     }
 }

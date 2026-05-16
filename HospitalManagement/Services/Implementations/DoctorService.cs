@@ -18,11 +18,11 @@ namespace HospitalManagement.Services.Implementations
             this.mapper = mapper;
         }
 
-        public async Task<Result<DoctorResponseDto>> Create(DoctorCreateRequestDto request)
+        public async Task<Result<DoctorResponseDto>> CreateAsync(DoctorCreateRequestDto request)
         {
             var doctorDomain = mapper.Map<Doctor>(request);
 
-            doctorDomain = await doctorRepository.Create(doctorDomain);
+            doctorDomain = await doctorRepository.CreateAsync(doctorDomain);
 
             var result = mapper.Map<DoctorResponseDto>(doctorDomain);
 
@@ -31,7 +31,7 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result> Delete(int id)
         {
-            var doctor = await doctorRepository.GetById(id);
+            var doctor = await doctorRepository.GetByIdAsync(id);
 
             if(doctor is null)
             {
@@ -43,18 +43,18 @@ namespace HospitalManagement.Services.Implementations
             return Result.Ok("Doctor has been deleted!");
         }
 
-        public async Task<Result<List<DoctorResponseDto>>> GetAll()
+        public async Task<Result<List<DoctorResponseDto>>> GetAllAsync()
         {
-            var doctors = await doctorRepository.GetAll();
+            var doctors = await doctorRepository.GetAllAsync();
 
             var result = mapper.Map<List<DoctorResponseDto>>(doctors);
 
             return Result<List<DoctorResponseDto>>.Ok(result);
         }
 
-        public async Task<Result<DoctorResponseDto>> GetById(int id)
+        public async Task<Result<DoctorResponseDto>> GetByIdAsync(int id)
         {
-            var doctor = await doctorRepository.GetById(id);
+            var doctor = await doctorRepository.GetByIdAsync(id);
 
             if(doctor is null)
             {
@@ -67,25 +67,21 @@ namespace HospitalManagement.Services.Implementations
             return Result<DoctorResponseDto>.Ok(result);
         }
 
-        public async Task<Result<DoctorResponseDto>> Update(DoctorUpdateRequestDto request)
+        public async Task<Result<DoctorResponseDto>> UpdateAsync(DoctorUpdateRequestDto request)
         {
-            var doctor = await doctorRepository.GetById(request.Id);
+            var doctorDomain = await doctorRepository.GetByIdAsync(request.Id);
 
-            if(doctor is null)
+            if(doctorDomain is null)
             {
                 return Result<DoctorResponseDto>.Fail
                         ($"Doctor with the id {request.Id} doesn't exist!","INVALID_ID", ErrorType.NotFound);
             }
 
-            doctor.FirstName = request.FirstName;
-            doctor.LastName = request.LastName;
-            doctor.Email = request.Email;
-            doctor.Phone = request.Phone;
-            doctor.Specialization = request.Specialization;
+            mapper.Map(request, doctorDomain);
 
-            doctor = await doctorRepository.Update(doctor);
+            doctorDomain = await doctorRepository.UpdateAsync(doctorDomain);
 
-            var result = mapper.Map<DoctorResponseDto>(doctor);
+            var result = mapper.Map<DoctorResponseDto>(doctorDomain);
 
             return Result<DoctorResponseDto>.Ok(result);
         }

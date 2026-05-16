@@ -20,7 +20,7 @@ namespace HospitalManagement.Controllers
 
         [HttpPost("register")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Register(
+        public async Task<IActionResult> RegisterAsync(
             [FromBody] RegisterRequestDto request,
             [FromServices] IValidator<RegisterRequestDto> validator)
         {
@@ -43,7 +43,7 @@ namespace HospitalManagement.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(
+        public async Task<IActionResult> LoginAsync(
             [FromBody] LoginRequestDto request,
             [FromServices] IValidator<LoginRequestDto> validator)
         {
@@ -66,7 +66,7 @@ namespace HospitalManagement.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAllAsync()
         {
             var result = await authService.GetAllAsync();
 
@@ -79,7 +79,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet("me")]
-        public async Task<IActionResult> GetCurrentUser()
+        public async Task<IActionResult> GetCurrentUserAsync()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
@@ -109,7 +109,7 @@ namespace HospitalManagement.Controllers
 
         [HttpPut]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateUser(
+        public async Task<IActionResult> UpdateUserAsync(
             [FromBody] UpdateUserRequestDto request,
             [FromServices] IValidator<UpdateUserRequestDto> validator)
         {

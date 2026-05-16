@@ -39,7 +39,7 @@ namespace HospitalManagement.Repositories.Implementations
 
         public async Task<List<Appointment>?> GetByDoctorIdAsync(int id)
         {
-            return await dbContext.Appointments.Where(x => x.DoctorId == id).ToListAsync();
+            return await dbContext.Appointments.AsNoTracking().Where(x => x.DoctorId == id).ToListAsync();
         }
 
         public async Task<Appointment> UpdateAsync(Appointment appointment)

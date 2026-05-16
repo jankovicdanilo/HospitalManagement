@@ -12,6 +12,7 @@ namespace HospitalManagement.Controllers
     public class PatientController : ControllerBase
     {
         private readonly IPatientService patientService;
+
         public PatientController(IPatientService patientService)
         {
             this.patientService = patientService;
@@ -35,7 +36,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] CreatePatientRequestDto request)
+        public async Task<IActionResult> CreateAsync([FromBody] PatientCreateRequestDto request)
         {
             var result = await patientService.CreateAsync(request);
             if (!result.Success)

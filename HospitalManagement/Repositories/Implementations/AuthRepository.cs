@@ -17,7 +17,9 @@ namespace HospitalManagement.Repositories.Implementations
         public async Task<User?> CreateAsync(User user)
         {
             await dbContext.Users.AddAsync(user);
+
             await dbContext.SaveChangesAsync();
+
             return user;
         }
 
@@ -28,16 +30,12 @@ namespace HospitalManagement.Repositories.Implementations
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Email == email);
+            return await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Email == email);
         }
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            return await dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Username == username);
+            return await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Username == username);
         }
 
         public async Task<User?> GetByIdAsync(int id)
@@ -50,12 +48,14 @@ namespace HospitalManagement.Repositories.Implementations
             var user = await dbContext.Users.FirstOrDefaultAsync(x => x.Id == id);
 
             dbContext.Users.Remove(user);
+
             await dbContext.SaveChangesAsync();
         }
 
         public async Task<User> UpdateAsync(User user)
         {
             dbContext.Users.Update(user);
+
             await dbContext.SaveChangesAsync();
 
             return user;

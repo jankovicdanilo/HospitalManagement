@@ -5,13 +5,13 @@ namespace HospitalManagement.Services.Interfaces
 {
     public interface IDoctorService
     {
-        Task<Result<DoctorResponseDto>> Create(DoctorCreateRequestDto request);
+        Task<Result<DoctorResponseDto>> CreateAsync(DoctorCreateRequestDto request);
 
-        Task<Result<List<DoctorResponseDto>>> GetAll();
+        Task<Result<List<DoctorResponseDto>>> GetAllAsync();
 
-        Task<Result<DoctorResponseDto>> GetById(int id);
+        Task<Result<DoctorResponseDto>> GetByIdAsync(int id);
 
-        Task<Result<DoctorResponseDto>> Update(DoctorUpdateRequestDto request);
+        Task<Result<DoctorResponseDto>> UpdateAsync(DoctorUpdateRequestDto request);
 
         Task<Result> Delete(int id);
     }

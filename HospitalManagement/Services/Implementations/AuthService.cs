@@ -154,10 +154,7 @@ namespace HospitalManagement.Services.Implementations
                     ($"User with the {request.Id} not found", "USER_NOT_FOUND");
             }
 
-            user.Username = request.Username;
-            user.Email = request.Email;
-            user.Role = request.Role;
-            user.IsActive = request.IsActive;
+            mapper.Map(request, user);
 
             user = await authRepository.UpdateAsync(user);
 

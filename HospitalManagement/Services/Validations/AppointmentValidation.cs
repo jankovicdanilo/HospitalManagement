@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using HospitalManagement.Common;
+using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Repositories.Interfaces;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace HospitalManagement.Services.Validations
 
         private async Task<bool> CheckDoctorId(int id)
         {
-            return await doctorRepository.GetById(id) != null;
+            return await doctorRepository.GetByIdAsync(id) != null;
         }
 
         private async Task<bool> CheckPatientId(int id)
@@ -34,15 +35,15 @@ namespace HospitalManagement.Services.Validations
             return dateTime <= DateTime.UtcNow;
         }
 
-        private async Task<bool> CheckDoctorAvailability(int doctorId, DateTime dateTime, TimeSpan duration)
+        private async Task<bool> CheckDoctorAvailability(int doctorId, DateTime dateTime, TimeSpan duration, int? excludeAppointmentId = null)
         {
             var appointments = await appointmentRepository.GetByDoctorIdAsync(doctorId);
 
-            return !appointments.Any(a => dateTime < a.DateTime.Add(a.Duration) && dateTime.Add(duration) > a.DateTime);
+            return !appointments.Any(a => a.Id != excludeAppointmentId && dateTime < a.DateTime.Add(a.Duration) && dateTime.Add(duration) > a.DateTime);
         }
 
         public async Task<Result> ValidateAll(int doctorId,
-            int patientId, DateTime dateTime, TimeSpan duration)
+            int patientId, DateTime dateTime, TimeSpan duration, int? appointmentId = null)
         {
             if (!await CheckDoctorId(doctorId))
             {
@@ -58,8 +59,8 @@ namespace HospitalManagement.Services.Validations
             {
                 return Result.Fail($"Appointment can't be set before today", "INVALID_DATE_TIME");
             }
-
-            if(!await CheckDoctorAvailability(doctorId, dateTime, duration))
+            
+            if (!await CheckDoctorAvailability(doctorId, dateTime, duration, appointmentId))
             {
                 return Result.Fail($"Doctor with the id {doctorId} is not available at that time", "DOCTOR_NOT_AVAILABLE");
             }

@@ -8,11 +8,13 @@ namespace HospitalManagement.Mappings
     {
         public AppointmentProfile()
         {
-            CreateMap<Appointment, AppointmentListResponseDto>();
-            CreateMap<Appointment, AppointmentResponseDto>();
-            CreateMap<Appointment, AppointmentUpdateResponseDto>();
-            CreateMap<AppointmentUpdateRequestDto, Appointment>();
+            CreateMap<Appointment, AppointmentListResponseDto>().ReverseMap();
             CreateMap<Appointment, AppointmentRequestDto>().ReverseMap();
+            CreateMap<Appointment, AppointmentResponseDto>().ReverseMap();
+            CreateMap<Appointment, AppointmentUpdateRequestDto>().ReverseMap();
+            CreateMap<Appointment, AppointmentUpdateResponseDto>().ReverseMap();
+            CreateMap<Appointment, AppointmentCreateRequestDto>().ReverseMap();
+            CreateMap<Appointment, AppointmentCreateResponseDto>().ReverseMap();
         }
     }
 }
