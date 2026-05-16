@@ -79,7 +79,7 @@ namespace HospitalManagement.Repositories.Implementations
             return patient;
         }
 
-        public async Task<Patient> GetByEmail(string email)
+        public async Task<Patient?> GetByEmail(string email)
         {
             return await dbContext.Patients.FirstOrDefaultAsync(x => x.Email == email);
         }

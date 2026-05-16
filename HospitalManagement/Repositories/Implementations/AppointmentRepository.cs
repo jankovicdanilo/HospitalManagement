@@ -14,9 +14,22 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
+        public async Task<Appointment> CreateAsync(Appointment appointment)
+        {
+            await dbContext.Appointments.AddAsync(appointment);
+            await dbContext.SaveChangesAsync();
+
+            return appointment;
+        }
+
         public async Task<List<Appointment>> GetAllAsync()
         {
             return await dbContext.Appointments.AsNoTracking().Include(x => x.Doctor).Include(x => x.Patient).ToListAsync();
+        }
+
+        public async Task<List<Appointment>> GetByDoctorIdAsync(int id)
+        {
+            return await dbContext.Appointments.Where(x => x.DoctorId == id).ToListAsync();
         }
 
         public async Task<Appointment?> GetByIdAsync(int id)

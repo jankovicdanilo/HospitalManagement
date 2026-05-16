@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Services.Interfaces;
+﻿using HospitalManagement.Models.DTOs.Appointment;
+using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,19 @@ namespace HospitalManagement.Controllers
             if (!result.Success)
             {
                 return NotFound(new {result.Message, result.ErrorCode});
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateAsync([FromBody] CreateAppointmentRequestDto request)
+        {
+            var result = await appointmentService.CreateAsync(request);
+
+            if (!result.Success)
+            {
+                return NotFound(new { result.Message, result.ErrorCode });
             }
 
             return Ok(result);

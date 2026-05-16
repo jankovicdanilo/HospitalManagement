@@ -14,8 +14,6 @@ namespace HospitalManagement.Repositories.Interfaces
 
         Task<Patient?> CreateAsync(Patient patient);
 
-        Task<Patient> GetByEmail(string email);
-
         Task<Patient> UpdateAsync(Patient patient);
 
         bool PatientExists(int id);

@@ -1,8 +1,6 @@
-﻿using HospitalManagement.Models.Domain;
-
-namespace HospitalManagement.Models.DTOs.Appointment
+﻿namespace HospitalManagement.Models.DTOs.Appointment
 {
-    public record AppointmentListResponseDto
+    public record CreateAppointmentResponseDto
     (
         int Id,
 
