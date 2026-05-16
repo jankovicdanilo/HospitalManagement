@@ -14,7 +14,7 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public async Task<Doctor> Create(Doctor request)
+        public async Task<Doctor?> Create(Doctor request)
         {
             await dbContext.Doctors.AddAsync(request);
             await dbContext.SaveChangesAsync();
