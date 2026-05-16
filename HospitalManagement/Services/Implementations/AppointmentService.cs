@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Common;
+﻿using AutoMapper;
+using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Repositories.Interfaces;
@@ -10,31 +11,20 @@ namespace HospitalManagement.Services.Implementations
     public class AppointmentService : IAppointmentService
     {
         private readonly IAppointmentRepository appointmentRepository;
+        private readonly IMapper mapper;
         private readonly AppointmentValidation appointmentValidation;
 
-        public AppointmentService(IAppointmentRepository appointmentRepository, AppointmentValidation appointmentValidation)
+        public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper, AppointmentValidation appointmentValidation)
         {
             this.appointmentRepository = appointmentRepository;
+            this.mapper = mapper;
             this.appointmentValidation = appointmentValidation;
         }
 
         public async Task<Result<List<AppointmentListResponseDto>>> GetAllAsync()
         {
             var appointments = await appointmentRepository.GetAllAsync();
-            var result = new List<AppointmentListResponseDto>();
-            foreach (var appointment in appointments)
-            {
-                result.Add(new AppointmentListResponseDto
-                    (
-                        appointment.Id,
-                        appointment.PatientId,
-                        appointment.DoctorId,
-                        appointment.DateTime,
-                        appointment.Duration,
-                        appointment.Status,
-                        appointment.Notes
-                    ));
-            }
+            var result = mapper.Map<List<AppointmentListResponseDto>>(appointments);
             return Result<List<AppointmentListResponseDto>>.Ok(result);
         }
 
@@ -44,16 +34,7 @@ namespace HospitalManagement.Services.Implementations
             if (appointmentDomain == null)
                 return Result<AppointmentResponseDto>.Fail($"Appointment with the id {id} not found", "INVALID_ID");
 
-            var result = new AppointmentResponseDto
-                (
-                    appointmentDomain.Id,
-                    appointmentDomain.PatientId,
-                    appointmentDomain.DoctorId,
-                    appointmentDomain.DateTime,
-                    appointmentDomain.Duration,
-                    appointmentDomain.Status,
-                    appointmentDomain.Notes
-                );
+            var result = mapper.Map<AppointmentResponseDto>(appointmentDomain);
             return Result<AppointmentResponseDto>.Ok(result);
         }
 
@@ -63,27 +44,10 @@ namespace HospitalManagement.Services.Implementations
             if (!validate.Success)
                 return Result<CreateAppointmentResponseDto>.Fail(validate.Message, validate.ErrorCode);
 
-            var appointmentDomain = new Appointment
-            {
-                DoctorId = request.DoctorId,
-                PatientId = request.PatientId,
-                DateTime = request.DateTime,
-                Duration = request.Duration,
-                Status = request.Status,
-                Notes = request.Notes
-            };
+            var appointmentDomain = mapper.Map<Appointment>(request);
             appointmentDomain = await appointmentRepository.CreateAsync(appointmentDomain);
 
-            var result = new CreateAppointmentResponseDto
-                (
-                    appointmentDomain.Id,
-                    appointmentDomain.PatientId,
-                    appointmentDomain.DoctorId,
-                    appointmentDomain.DateTime,
-                    appointmentDomain.Duration,
-                    appointmentDomain.Status,
-                    appointmentDomain.Notes
-                );
+            var result = mapper.Map<CreateAppointmentResponseDto>(appointmentDomain);
             return Result<CreateAppointmentResponseDto>.Ok(result);
         }
 
@@ -94,47 +58,18 @@ namespace HospitalManagement.Services.Implementations
                 return Result<AppointmentUpdateResponseDto>.Fail(validatedAppointment.Message, validatedAppointment.ErrorCode);
 
             var appointmentDomain = validatedAppointment.Data;
-            appointmentDomain.PatientId = request.PatientId;
-            appointmentDomain.DoctorId = request.DoctorId;
-            appointmentDomain.DateTime = request.DateTime;
-            appointmentDomain.Duration = request.Duration;
-            appointmentDomain.Status = request.Status;
-            appointmentDomain.Notes = request.Notes;
+            mapper.Map(request, appointmentDomain);
             appointmentDomain = await appointmentRepository.UpdateAsync(appointmentDomain);
 
-            var result = new AppointmentUpdateResponseDto
-                (
-                    appointmentDomain.Id,
-                    appointmentDomain.PatientId,
-                    appointmentDomain.DoctorId,
-                    appointmentDomain.DateTime,
-                    appointmentDomain.Duration,
-                    appointmentDomain.Status,
-                    appointmentDomain.Notes
-                );
+            var result = mapper.Map<AppointmentUpdateResponseDto>(appointmentDomain);
             return Result<AppointmentUpdateResponseDto>.Ok(result);
         }
 
         public async Task<Result> Delete(int id)
         {
-            var appointmentDomain = await apointmentRepository.Delete(id);
-
+            var appointmentDomain = await appointmentRepository.Delete(id);
             if (appointmentDomain == null)
-            {
                 return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID");
-            }
-
-            return Result.Ok("Appointment deleted");
-        }
-
-        public async Task<Result> Delete(int id)
-        {
-            var appointmentDomain = await apointmentRepository.Delete(id);
-
-            if (appointmentDomain == null)
-            {
-                return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID");
-            }
 
             return Result.Ok("Appointment deleted");
         }

@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Common;
+﻿using AutoMapper;
+using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Models.Domain;
@@ -18,10 +19,12 @@ namespace HospitalManagement.Services.Implementations
     public class PatientService : IPatientService
     {
         private readonly IPatientRepository patientRepository;
+        private readonly IMapper mapper;
 
-        public PatientService(IPatientRepository patientRepository)
+        public PatientService(IPatientRepository patientRepository, IMapper mapper)
         {
             this.patientRepository = patientRepository;
+            this.mapper = mapper;
         }
 
         public async Task<Result> Delete(int id)
@@ -40,20 +43,7 @@ namespace HospitalManagement.Services.Implementations
         {
             var patientsListDomain = await patientRepository.GetAllAsync();
 
-            List<PatientListDto> result = new List<PatientListDto>();
-
-            foreach (var patient in patientsListDomain)
-            {
-                result.Add(new PatientListDto
-                    (
-                        patient.Id,
-                        patient.Name,
-                        patient.DateOfBirth,
-                        patient.Email,
-                        patient.Phone,
-                        patient.LastName
-                    ));
-            }
+            var result = mapper.Map<List<PatientListDto>>(patientsListDomain);
 
             return Result<List<PatientListDto>>.Ok(result);
         }
@@ -67,15 +57,7 @@ namespace HospitalManagement.Services.Implementations
                 return Result<PatientGetByIdDto?>.Fail($"Patient with the id {id} doesn't exist", "INVALID_ID");
             }
 
-            var result = new PatientGetByIdDto
-                (
-                    patientDomain.Id,
-                    patientDomain.Name,
-                    patientDomain.DateOfBirth,
-                    patientDomain.Email,
-                    patientDomain.LastName,
-                    patientDomain.Phone
-                );
+            var result = mapper.Map<PatientGetByIdDto>(patientDomain);
 
             return Result<PatientGetByIdDto?>.Ok(result);
         }
@@ -94,26 +76,11 @@ namespace HospitalManagement.Services.Implementations
                 return Result<CreatePatientResponseDto?>.Fail($"Email {request.Email} aldready exists", "INVALID_EMAIL");
             }
 
-            var patientDomain = new Patient
-            {
-                Name = request.Name,
-                LastName = request.LastName,
-                DateOfBirth = request.DateOfBirth,
-                Email = request.Email,
-                Phone = request.Phone
-            };
+            var patientDomain = mapper.Map<Patient>(request);
 
             patientDomain = await patientRepository.CreateAsync(patientDomain);
 
-            var result = new CreatePatientResponseDto
-                (
-                    patientDomain.Id,
-                    patientDomain.Name,
-                    patientDomain.LastName,
-                    patientDomain.DateOfBirth,
-                    patientDomain.Email,
-                    patientDomain.Phone
-                );
+            var result = mapper.Map<CreatePatientResponseDto>(patientDomain);
 
             return Result<CreatePatientResponseDto?>.Ok(result);
         }

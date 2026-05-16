@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Common;
+﻿using AutoMapper;
+using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Auth;
 using HospitalManagement.Repositories.Interfaces;
@@ -16,11 +17,13 @@ namespace HospitalManagement.Services.Implementations
     {
         private readonly IAuthRepository authRepository;
         private readonly JwtSettings jwtSettings;
+        private readonly IMapper mapper;
 
-        public AuthService(IAuthRepository authRepository, IOptions<JwtSettings> jwtSettings)
+        public AuthService(IAuthRepository authRepository, IOptions<JwtSettings> jwtSettings, IMapper mapper)
         {
             this.authRepository = authRepository;
             this.jwtSettings = jwtSettings.Value;
+            this.mapper = mapper;
         }
 
         public async Task<Result<AuthResponseDto>> RegisterAsync(RegisterRequestDto request)
@@ -42,25 +45,17 @@ namespace HospitalManagement.Services.Implementations
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            var user = new User
-            {
-                Username = request.Username,
-                Email = request.Email,
-                PasswordHash = passwordHash,
-                Role = request.Role
-            };
+            var user = mapper.Map<User>(request);
+            user.PasswordHash = passwordHash;
+            user.CreatedAt = DateTime.UtcNow;
+            user.IsActive = true;
 
             await authRepository.CreateAsync(user);
 
             var token = GenerateToken(user);
 
-            var result = new AuthResponseDto
-                (
-                    user.Username,
-                    user.Email,
-                    user.Role,
-                    token
-                );
+            var result = mapper.Map<AuthResponseDto>(user);
+            result.Token = token;
 
             return Result<AuthResponseDto>.Ok(result);
         }
@@ -83,13 +78,8 @@ namespace HospitalManagement.Services.Implementations
 
             var token = GenerateToken(user);
 
-            var result = new AuthResponseDto
-            (
-                user.Username,
-                user.Email,
-                user.Role,
-                token
-            );
+            var result = mapper.Map<AuthResponseDto>(user);
+            result.Token = token;
 
             return Result<AuthResponseDto>.Ok(result);
         }
@@ -123,15 +113,7 @@ namespace HospitalManagement.Services.Implementations
         {
             var users = await authRepository.GetAllAsync();
 
-            var result = users.Select(user => new AuthResponseListDto
-            (
-                user.Id,
-                user.Username,
-                user.Email,
-                user.Role,
-                user.CreatedAt,
-                user.IsActive
-            )).ToList();
+            var result = mapper.Map<List<AuthResponseListDto>>(users);
 
             return Result<List<AuthResponseListDto>>.Ok(result);
         }
@@ -145,14 +127,7 @@ namespace HospitalManagement.Services.Implementations
                 return Result<CurrentUserDto>.Fail($"User with the id {id} not found", "USER_NOT_FOUND");
             }
 
-            var result = new CurrentUserDto
-                (
-                    user.Id,
-                    user.Username,
-                    user.Email,
-                    user.Role,
-                    user.CreatedAt
-                );
+            var result = mapper.Map<CurrentUserDto>(user);
 
             return Result<CurrentUserDto>.Ok(result);
         }
@@ -184,17 +159,9 @@ namespace HospitalManagement.Services.Implementations
             user.Role = request.Role;
             user.IsActive = request.IsActive;
 
-            var updatedUser = await authRepository.UpdateAsync(user);
+            user = await authRepository.UpdateAsync(user);
 
-            var result = new AuthResponseUpdateDto
-            (
-                updatedUser.Id,
-                updatedUser.Username,
-                updatedUser.Email,
-                updatedUser.Role,
-                updatedUser.IsActive,
-                updatedUser.CreatedAt
-            );
+            var result = mapper.Map<AuthResponseUpdateDto>(user);
 
             return Result< AuthResponseUpdateDto>.Ok(result);
         }
