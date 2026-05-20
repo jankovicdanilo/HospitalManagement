@@ -49,7 +49,7 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<AppointmentCreateResponseDto>> CreateAsync(AppointmentCreateRequestDto request)
         {
-            var validate = await appointmentValidation.ValidateAll(request.DoctorId, request.PatientId, request.DateTime, request.Duration);
+            var validate = await appointmentValidation.ValidateAll(request);
 
             if (!validate.Success)
             {
@@ -67,18 +67,20 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<AppointmentUpdateResponseDto>> UpdateAsync(AppointmentUpdateRequestDto request)
         {
-            var validatedAppointment = await appointmentValidation.ValidateAll(request.DoctorId, request.PatientId, 
-                request.DateTime, request.Duration, request.Id);
+            var validatedAppointment = await appointmentValidation.ValidateAll(request);
+
             if (!validatedAppointment.Success)
             {
-                return Result<AppointmentUpdateResponseDto>.Fail(validatedAppointment.Message, validatedAppointment.ErrorCode);
+                return Result<AppointmentUpdateResponseDto>.Fail(validatedAppointment.Message,
+                    validatedAppointment.ErrorCode);
             }
                 
             var appointmentDomain = await appointmentRepository.GetByIdAsync(request.Id);
             
             if (appointmentDomain == null)
             {
-                return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found", "INVALID_ID");
+                return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found", 
+                    "INVALID_ID");
             }
 
             mapper.Map(request, appointmentDomain);

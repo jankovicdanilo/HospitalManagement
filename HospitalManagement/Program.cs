@@ -14,8 +14,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
-using FluentValidation;
-using HospitalManagement.Services.Validations;
 
 
 
@@ -38,7 +36,7 @@ builder.Host.UseSerilog((context, config) =>
 
 // Register HospitalDbContext with SQL Server using connection string from appsettings.json
 builder.Services.AddDbContext<HospitalDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalDb")));
 
 builder.Services.AddScoped<IAuthRepository,AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
