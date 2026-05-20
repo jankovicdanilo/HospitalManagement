@@ -1,5 +1,7 @@
 ﻿
 
+using HospitalManagement.Models.Enums;
+
 namespace HospitalManagement.Models.Domain;
 
 public partial class User

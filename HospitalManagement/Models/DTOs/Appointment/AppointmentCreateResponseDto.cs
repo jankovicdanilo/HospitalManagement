@@ -1,4 +1,6 @@
-﻿namespace HospitalManagement.Models.DTOs.Appointment
+﻿using HospitalManagement.Models.Enums;
+
+namespace HospitalManagement.Models.DTOs.Appointment
 {
     public class AppointmentCreateResponseDto
     {
@@ -7,7 +9,7 @@
         public int DoctorId { get; set; }
         public DateTime DateTime { get; set; }
         public TimeSpan Duration { get; set; }
-        public string Status { get; set; }
+        public AppointmentStatus Status { get; set; }
         public string? Notes { get; set; }
     }
 }
