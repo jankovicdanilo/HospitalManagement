@@ -1,8 +1,8 @@
 ﻿namespace HospitalManagement.Models.DTOs.Auth
 {
-    public record LoginRequestDto
-    (
-        string Username,
-        string Password
-    );
+    public class LoginRequestDto
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
 }

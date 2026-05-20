@@ -6,13 +6,13 @@ namespace HospitalManagement.Repositories.Interfaces
 {
     public interface IDoctorRepository
     {
-        Task<Doctor?> Create(Doctor request);
+        Task<Doctor?> CreateAsync(Doctor request);
 
-        Task<List<Doctor>> GetAll();
+        Task<List<Doctor>> GetAllAsync();
 
-        Task<Doctor?> GetById(int id);
+        Task<Doctor?> GetByIdAsync(int id);
 
-        Task<Doctor?> Update(Doctor request);
+        Task<Doctor?> UpdateAsync(Doctor request);
 
         Task Delete(int id);
     }

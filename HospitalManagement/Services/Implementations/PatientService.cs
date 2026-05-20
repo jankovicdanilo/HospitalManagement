@@ -1,6 +1,10 @@
-﻿using HospitalManagement.Common;
+﻿using AutoMapper;
+using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Repositories.Interfaces;
@@ -15,10 +19,12 @@ namespace HospitalManagement.Services.Implementations
     public class PatientService : IPatientService
     {
         private readonly IPatientRepository patientRepository;
+        private readonly IMapper mapper;
 
-        public PatientService(IPatientRepository patientRepository)
+        public PatientService(IPatientRepository patientRepository, IMapper mapper)
         {
             this.patientRepository = patientRepository;
+            this.mapper = mapper;
         }
 
         public async Task<Result> Delete(int id)
@@ -37,20 +43,7 @@ namespace HospitalManagement.Services.Implementations
         {
             var patientsListDomain = await patientRepository.GetAllAsync();
 
-            List<PatientListDto> result = new List<PatientListDto>();
-
-            foreach (var patient in patientsListDomain)
-            {
-                result.Add(new PatientListDto
-                    (
-                        patient.Id,
-                        patient.Name,
-                        patient.DateOfBirth,
-                        patient.Email,
-                        patient.Phone,
-                        patient.LastName
-                    ));
-            }
+            var result = mapper.Map<List<PatientListDto>>(patientsListDomain);
 
             return Result<List<PatientListDto>>.Ok(result);
         }
@@ -64,55 +57,55 @@ namespace HospitalManagement.Services.Implementations
                 return Result<PatientGetByIdDto?>.Fail($"Patient with the id {id} doesn't exist", "INVALID_ID");
             }
 
-            var result = new PatientGetByIdDto
-                (
-                    patientDomain.Id,
-                    patientDomain.Name,
-                    patientDomain.DateOfBirth,
-                    patientDomain.Email,
-                    patientDomain.LastName,
-                    patientDomain.Phone
-                );
+            var result = mapper.Map<PatientGetByIdDto>(patientDomain);
 
             return Result<PatientGetByIdDto?>.Ok(result);
         }
 
-        public async Task<Result<CreatePatientResponseDto?>> CreateAsync(CreatePatientRequestDto request)
+        public async Task<Result<PatientCreateResponseDto?>> CreateAsync(PatientCreateRequestDto request)
         {
             if (request == null)
             {
-                return Result<CreatePatientResponseDto?>.Fail("Patient not found", "PATIENT_NOT_FOUND");
+                return Result<PatientCreateResponseDto?>.Fail("Patient not found", "PATIENT_NOT_FOUND");
             }
 
-            var patientExists = await patientRepository.GetByEmail(request.Email);
+            var patientExists = await patientRepository.GetByEmailAsync(request.Email);
 
             if (patientExists != null)
             {
-                return Result<CreatePatientResponseDto?>.Fail($"Email {request.Email} aldready exists", "INVALID_EMAIL");
+                return Result<PatientCreateResponseDto?>.Fail($"Email {request.Email} aldready exists", "INVALID_EMAIL");
             }
 
-            var patientDomain = new Patient
-            {
-                Name = request.Name,
-                LastName = request.LastName,
-                DateOfBirth = request.DateOfBirth,
-                Email = request.Email,
-                Phone = request.Phone
-            };
+            var patientDomain = mapper.Map<Patient>(request);
 
             patientDomain = await patientRepository.CreateAsync(patientDomain);
 
-            var result = new CreatePatientResponseDto
-                (
-                    patientDomain.Id,
-                    patientDomain.Name,
-                    patientDomain.LastName,
-                    patientDomain.DateOfBirth,
-                    patientDomain.Email,
-                    patientDomain.Phone
-                );
+            var result = mapper.Map<PatientCreateResponseDto>(patientDomain);
 
-            return Result<CreatePatientResponseDto?>.Ok(result);
+            return Result<PatientCreateResponseDto?>.Ok(result);
+        }
+
+        public async Task<Result<PatientUpdateResponseDto>> UpdateAsync(PatientUpdateRequestDto request)
+        {
+            var patientDomain = await patientRepository.GetByIdAsync(request.Id);
+
+            if (patientDomain == null)
+            {
+                return Result<PatientUpdateResponseDto>.Fail($"Patient with the id {request.Id} not found", "INVALID_ID");
+            }
+
+            if (patientRepository.EmailExists(request.Email) && request.Email != patientDomain.Email)
+            {
+                return Result<PatientUpdateResponseDto>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL");
+            }
+
+            mapper.Map(request, patientDomain);
+
+            await patientRepository.UpdateAsync(patientDomain);
+
+            var result = mapper.Map<PatientUpdateResponseDto>(patientDomain);
+
+            return Result<PatientUpdateResponseDto>.Ok(result);
         }
     }
 }

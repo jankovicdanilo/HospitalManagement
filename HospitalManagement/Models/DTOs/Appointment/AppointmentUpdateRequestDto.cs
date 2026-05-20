@@ -1,8 +1,6 @@
-﻿using HospitalManagement.Models.Domain;
-
-namespace HospitalManagement.Models.DTOs.Appointment
+﻿namespace HospitalManagement.Models.DTOs.Appointment
 {
-    public class AppointmentRequestDto
+    public class AppointmentUpdateRequestDto
     {
         public int Id { get; set; }
         public int PatientId { get; set; }
@@ -10,6 +8,6 @@ namespace HospitalManagement.Models.DTOs.Appointment
         public DateTime DateTime { get; set; }
         public TimeSpan Duration { get; set; }
         public string Status { get; set; }
-        public string? Notes { get; set; }
+        public string Notes { get; set; }
     }
 }

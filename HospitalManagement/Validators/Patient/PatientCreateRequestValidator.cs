@@ -3,7 +3,7 @@ using HospitalManagement.Models.DTOs.Patient;
 
 namespace HospitalManagement.Validators.Patient
 {
-    public class PatientCreateRequestValidator : AbstractValidator<CreatePatientRequestDto>
+    public class PatientCreateRequestValidator : AbstractValidator<PatientCreateRequestDto>
     {
         public PatientCreateRequestValidator()
         {

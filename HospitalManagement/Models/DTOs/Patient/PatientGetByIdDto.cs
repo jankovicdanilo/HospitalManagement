@@ -1,17 +1,12 @@
 ﻿namespace HospitalManagement.Models.DTOs.Patient
 {
-    public record PatientGetByIdDto
-    (
-        int Id,
-
-        string Name,
-
-        DateOnly DateOfBirth,
-
-        string Email,
-
-        string LastName,
-
-        string? Phone
-    );
+    public class PatientGetByIdDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string? Phone { get; set; }
+        public DateOnly DateOfBirth { get; set; }
+    }
 }

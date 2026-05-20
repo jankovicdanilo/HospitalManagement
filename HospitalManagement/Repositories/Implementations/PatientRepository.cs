@@ -14,6 +14,25 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
+        public async Task<Patient?> GetByEmailAsync(string email)
+        {
+            return await dbContext.Patients.FirstOrDefaultAsync(x => x.Email == email);
+        }
+
+        public async Task<Patient?> GetByIdAsync(int id)
+        {
+            return await dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<Patient> UpdateAsync(Patient patient)
+        {
+            dbContext.Patients.Update(patient);
+
+            await dbContext.SaveChangesAsync();
+
+            return patient;
+        }
+
         public async Task<Patient?> Delete(int id)
         {
             var patient = await dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
@@ -34,22 +53,28 @@ namespace HospitalManagement.Repositories.Implementations
             return await dbContext.Patients.AsNoTracking().ToListAsync();
         }
 
-        public async Task<Patient?> GetByIdAsync(int id)
-        {
-            return await dbContext.Patients.FirstOrDefaultAsync(x => x.Id == id);
-        }
-
         public async Task<Patient?> CreateAsync(Patient patient)
         {
             await dbContext.Patients.AddAsync(patient);
+
             await dbContext.SaveChangesAsync();
 
             return patient;
         }
 
-        public async Task<Patient> GetByEmail(string email)
+        public async Task<Patient?> GetByEmail(string email)
         {
             return await dbContext.Patients.FirstOrDefaultAsync(x => x.Email == email);
+        }
+
+        public bool EmailExists(string email)
+        {
+            return dbContext.Patients.Any(x => x.Email == email);
+        }
+
+        public bool PatientExists(int id)
+        {
+            return dbContext.Patients.Any(x => x.Id == id);
         }
     }
 }

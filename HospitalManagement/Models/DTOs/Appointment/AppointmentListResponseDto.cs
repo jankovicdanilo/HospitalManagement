@@ -2,18 +2,14 @@
 
 namespace HospitalManagement.Models.DTOs.Appointment
 {
-    public record AppointmentListResponseDto
-    (
-        int Id,
-
-        int PatientId,
-
-        int DoctorId,
-
-        DateTime DateTime,
-
-        string Status,
-
-        string? Notes
-    );
+    public class AppointmentListResponseDto
+    {
+        public int Id { get; set; }
+        public int PatientId { get; set; }
+        public int DoctorId { get; set; }
+        public DateTime DateTime { get; set; }
+        public TimeSpan Duration { get; set; }
+        public string Status { get; set; }
+        public string? Notes { get; set; }
+    }
 }

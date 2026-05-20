@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using HospitalManagement.Models.DTOs.Doctor;
 using HospitalManagement.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalManagement.Controllers
@@ -17,7 +18,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(
+        public async Task<IActionResult> CreateAsync(
             [FromBody] DoctorCreateRequestDto request,
             [FromServices] IValidator<DoctorCreateRequestDto> validator)
         {
@@ -28,23 +29,23 @@ namespace HospitalManagement.Controllers
                 return ValidationFailed(validation);
             }
 
-            var result = await doctorService.Create(request);
+            var result = await doctorService.CreateAsync(request);
 
             return Ok(result);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAllAsync()
         {
-            var result = await doctorService.GetAll();
+            var result = await doctorService.GetAllAsync();
 
             return Ok(result);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetById([FromRoute] int id)
+        public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
         {
-            var result = await doctorService.GetById(id);
+            var result = await doctorService.GetByIdAsync(id);
 
             if (!result.Success)
             {
@@ -55,7 +56,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(
+        public async Task<IActionResult> UpdateAsync(
             [FromBody] DoctorUpdateRequestDto request,
             [FromServices] IValidator<DoctorUpdateRequestDto> validator)
         {
@@ -66,7 +67,7 @@ namespace HospitalManagement.Controllers
                 return ValidationFailed(validation);
             }
 
-            var result = await doctorService.Update(request);
+            var result = await doctorService.UpdateAsync(request);
 
             if(!result.Success)
             {

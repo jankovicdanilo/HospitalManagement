@@ -1,15 +1,11 @@
 ﻿namespace HospitalManagement.Models.DTOs.Doctor
 {
-    public record DoctorCreateRequestDto
-    (
-        string FirstName,
-
-        string LastName,
-
-        string Specialization,
-
-        string Email,
-
-        string? Phone
-    );
+    public class DoctorCreateRequestDto
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Specialization { get; set; }
+        public string Email { get; set; }
+        public string? Phone { get; set; }
+    }
 }

@@ -2,12 +2,12 @@
 
 namespace HospitalManagement.Models.DTOs.Auth
 {
-    public record CurrentUserDto
-    (
-        int Id,
-        string Username,
-        string Email,
-        UserRole Role,
-        DateTime CreatedAt
-    );
+    public class CurrentUserDto
+    {
+        public int Id { get; set; }
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public UserRole Role { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
 }

@@ -1,8 +1,6 @@
-﻿using HospitalManagement.Models.Domain;
-
-namespace HospitalManagement.Models.DTOs.Appointment
+﻿namespace HospitalManagement.Models.DTOs.Appointment
 {
-    public class AppointmentRequestDto
+    public class AppointmentCreateResponseDto
     {
         public int Id { get; set; }
         public int PatientId { get; set; }

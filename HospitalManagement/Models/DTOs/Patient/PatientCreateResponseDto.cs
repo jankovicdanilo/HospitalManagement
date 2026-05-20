@@ -1,6 +1,6 @@
 ﻿namespace HospitalManagement.Models.DTOs.Patient
 {
-    public class PatientListDto
+    public class PatientCreateResponseDto
     {
         public int Id { get; set; }
         public string Name { get; set; }
