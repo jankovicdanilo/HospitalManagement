@@ -46,8 +46,11 @@ builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
+builder.Services.AddScoped<ITreatmentService,  TreatmentService>();
 builder.Services.AddScoped<AppointmentValidation>();
+builder.Services.AddScoped<TreatmentValidation>();
+builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));
 
 // Read JWT settings for token validation configuration
