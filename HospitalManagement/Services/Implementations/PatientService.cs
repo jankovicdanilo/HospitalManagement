@@ -2,17 +2,8 @@
 using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Patient;
-using HospitalManagement.Common;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 
 namespace HospitalManagement.Services.Implementations
 {
@@ -20,11 +11,13 @@ namespace HospitalManagement.Services.Implementations
     {
         private readonly IPatientRepository patientRepository;
         private readonly IMapper mapper;
+        private readonly ILogger<PatientService> logger;
 
-        public PatientService(IPatientRepository patientRepository, IMapper mapper)
+        public PatientService(IPatientRepository patientRepository, IMapper mapper, ILogger<PatientService> logger)
         {
             this.patientRepository = patientRepository;
             this.mapper = mapper;
+            this.logger = logger;
         }
 
         public async Task<Result> Delete(int id)
@@ -33,8 +26,11 @@ namespace HospitalManagement.Services.Implementations
 
             if (patientDomain == null)
             {
+                logger.LogError("Patient with id {Id} not found for deletion", id);
                 return Result.Fail($"Patient with the id {id} not found", "INVALID_ID");
             }
+
+            logger.LogInformation("Patient with id {Id} deleted", id);
 
             return Result.Ok($"Patient with id {id} deleted"); 
         }
@@ -54,6 +50,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(patientDomain == null)
             {
+                logger.LogError("Patient with id {Id} not found", id);
                 return Result<PatientGetByIdDto?>.Fail($"Patient with the id {id} doesn't exist", "INVALID_ID");
             }
 
@@ -64,21 +61,19 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<PatientCreateResponseDto?>> CreateAsync(PatientCreateRequestDto request)
         {
-            if (request == null)
-            {
-                return Result<PatientCreateResponseDto?>.Fail("Patient not found", "PATIENT_NOT_FOUND");
-            }
-
             var patientExists = await patientRepository.GetByEmailAsync(request.Email);
 
             if (patientExists != null)
             {
+                logger.LogError("Patient creation failed, email {Email} already exists", request.Email);
                 return Result<PatientCreateResponseDto?>.Fail($"Email {request.Email} aldready exists", "INVALID_EMAIL");
             }
 
             var patientDomain = mapper.Map<Patient>(request);
 
             patientDomain = await patientRepository.CreateAsync(patientDomain);
+
+            logger.LogInformation("Patient created with id {Id}", patientDomain.Id);
 
             var result = mapper.Map<PatientCreateResponseDto>(patientDomain);
 
@@ -91,17 +86,21 @@ namespace HospitalManagement.Services.Implementations
 
             if (patientDomain == null)
             {
+                logger.LogError("Patient with id {Id} not found for update", request.Id);
                 return Result<PatientUpdateResponseDto>.Fail($"Patient with the id {request.Id} not found", "INVALID_ID");
             }
 
             if (patientRepository.EmailExists(request.Email) && request.Email != patientDomain.Email)
             {
+                logger.LogError("Patient creation failed, email {Email} already exists", request.Email);
                 return Result<PatientUpdateResponseDto>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL");
             }
 
             mapper.Map(request, patientDomain);
 
             await patientRepository.UpdateAsync(patientDomain);
+
+            logger.LogInformation("Patient with id {Id} updated", patientDomain.Id);
 
             var result = mapper.Map<PatientUpdateResponseDto>(patientDomain);
 
