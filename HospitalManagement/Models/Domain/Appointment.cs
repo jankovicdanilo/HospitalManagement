@@ -23,4 +23,6 @@ public partial class Appointment
     public virtual Doctor Doctor { get; set; } = null!;
 
     public virtual Patient Patient { get; set; } = null!;
+
+    public virtual Treatment? Treatment { get; set; }
 }
