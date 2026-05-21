@@ -1,5 +1,6 @@
 ﻿using HospitalManagement.Data;
 using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.Enums;
 using HospitalManagement.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -68,6 +69,11 @@ namespace HospitalManagement.Repositories.Implementations
         public async Task<List<Appointment>> GetAllAsync()
         {
             return await dbContext.Appointments.AsNoTracking().Include(x => x.Doctor).Include(x => x.Patient).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetPendingPastAppointmentsAsync()
+        {
+            return await dbContext.Appointments.Where(a => a.Status == AppointmentStatus.Pending && a.DateTime < DateTime.UtcNow).ToListAsync();
         }
     }
 }

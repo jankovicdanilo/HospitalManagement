@@ -4,6 +4,7 @@ using HospitalManagement.Middleware;
 using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Repositories.Implementations;
 using HospitalManagement.Repositories.Interfaces;
+using HospitalManagement.Services.Background;
 using HospitalManagement.Services.Implementations;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Services.Validations;
@@ -50,6 +51,7 @@ builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
 builder.Services.AddScoped<ITreatmentService,  TreatmentService>();
 builder.Services.AddScoped<AppointmentValidation>();
 builder.Services.AddScoped<TreatmentValidation>();
+builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));
 
