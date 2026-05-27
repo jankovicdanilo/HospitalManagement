@@ -4,6 +4,7 @@ using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace HospitalManagement.Controllers
 {
@@ -114,6 +115,26 @@ namespace HospitalManagement.Controllers
 
             return Ok(result);
         }
-        
+
+        [HttpPatch("status")]
+        public async Task<IActionResult> UpdateStatusAsync([FromBody] AppointmentStatusUpdateDto request,
+            [FromServices] IValidator<AppointmentStatusUpdateDto> validator)
+        {
+            var validation = await validator.ValidateAsync(request);
+
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
+            var result = await appointmentService.UpdateStatusAsync(request);
+
+            if (!result.Success)
+            {
+                return BadRequest(new { result.Message, result.ErrorCode });
+            }
+
+            return Ok(result);
+        }
     }
 }

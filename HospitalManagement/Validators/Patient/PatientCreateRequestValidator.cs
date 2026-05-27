@@ -11,7 +11,7 @@ namespace HospitalManagement.Validators.Patient
 
             RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
 
-            RuleFor(x => x.Email).NotEmpty().EmailAddress().WithMessage("Invalid email format"));
+            RuleFor(x => x.Email).NotEmpty().EmailAddress().WithMessage("Invalid email format");
         }
     }
 }

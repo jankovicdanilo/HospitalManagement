@@ -6,6 +6,7 @@ using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Services.Validations;
 using Microsoft.Extensions.Options;
+using HospitalManagement.Models.Enums;
 
 namespace HospitalManagement.Services.Implementations
 {
@@ -149,6 +150,31 @@ namespace HospitalManagement.Services.Implementations
             }
 
             return Result<List<TimeSlotDto>>.Ok(freeSlots);
+        }
+
+        public async Task<Result> UpdateStatusAsync(AppointmentStatusUpdateDto request)
+        {
+            var appointmentDomain = await appointmentRepository.GetByIdAsync(request.Id);
+
+            if(appointmentDomain == null)
+            {
+                logger.LogWarning("Appointment with id {Id} not found for deletion", request.Id);
+                return Result.Fail($"Appointment with the id {request.Id} not found", "INVALID_ID");
+            }
+
+            if(appointmentDomain.Status != AppointmentStatus.Pending)
+            {
+                logger.LogWarning("Appointment with id {Id} cannot be updated, status is {Status}", request.Id, appointmentDomain.Status);
+                return Result.Fail("Only pending appointments can have their status changed", "INVALID_STATUS");
+            }
+
+            appointmentDomain.Status = request.Status;
+
+            await appointmentRepository.UpdateAsync(appointmentDomain);
+
+            logger.LogInformation("Appointment with id {Id} status updated to {Status}", request.Id, request.Status);
+
+            return Result.Ok("Appointment status updated");
         }
     }
 }

@@ -1,6 +1,4 @@
 ﻿using HospitalManagement.Common;
-
-using HospitalManagement.Common;
 using HospitalManagement.Models.DTOs.Appointment;
 
 namespace HospitalManagement.Services.Interfaces
@@ -17,5 +15,7 @@ namespace HospitalManagement.Services.Interfaces
         Task<Result<AppointmentUpdateResponseDto>> UpdateAsync(AppointmentUpdateRequestDto request);
 
         Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date);
+
+        Task<Result> UpdateStatusAsync(AppointmentStatusUpdateDto request);
     }
 }
