@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Models.Domain;
+﻿using HospitalManagement.Models.Enums;
 
 namespace HospitalManagement.Models.DTOs.Auth
 {

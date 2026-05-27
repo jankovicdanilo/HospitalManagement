@@ -1,4 +1,4 @@
-﻿namespace HospitalManagement.Models.Domain
+﻿namespace HospitalManagement.Models.Enums
 {
     public enum UserRole
     {

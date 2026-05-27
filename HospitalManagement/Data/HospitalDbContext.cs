@@ -24,6 +24,8 @@ public partial class HospitalDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<Treatment> Treatments { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Appointment>(entity =>
@@ -70,6 +72,19 @@ public partial class HospitalDbContext : DbContext
             entity.Property(e => e.LastName).HasMaxLength(100);
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.Phone).HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<Treatment>(entity =>
+        {
+            entity.ToTable("Treatment");
+
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.Medication).HasMaxLength(500);
+
+            entity.HasOne(t => t.Appointment)
+                    .WithOne(a => a.Treatment)
+                    .HasForeignKey<Treatment>(t => t.AppointmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<User>(entity =>

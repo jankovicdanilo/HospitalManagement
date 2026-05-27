@@ -9,6 +9,11 @@ namespace HospitalManagement.Controllers
     {
         protected IActionResult ValidationFailed(ValidationResult validation)
         {
+            var logger = (ILogger)HttpContext.RequestServices.GetRequiredService(typeof(ILogger<>).MakeGenericType(GetType()));
+
+            var errors = string.Join(", ", validation.Errors.Select(x => x.ErrorMessage));
+            logger.LogWarning("Validation failed: {Errors}", errors);
+
             return BadRequest(new
             {
                 ErrorCode = "VALIDATION_FAILED",

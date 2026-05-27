@@ -4,6 +4,7 @@ using HospitalManagement.Middleware;
 using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Repositories.Implementations;
 using HospitalManagement.Repositories.Interfaces;
+using HospitalManagement.Services.Background;
 using HospitalManagement.Services.Implementations;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Services.Validations;
@@ -12,27 +13,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Serilog;
+using NLog.Web;
 using System.Text;
 
 
 
 // tell ASP.NET Core to use Serilog
 var builder = WebApplication.CreateBuilder(args);
-
-// configure Serilog
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .WriteTo.Console()
-    .WriteTo.File
-    (
-        "logs/log-.txt",
-        rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 7 // keep last 7 days of logs
-    ).CreateLogger();
-
-builder.Host.UseSerilog((context, config) =>
-    config.ReadFrom.Configuration(context.Configuration));
 
 // Register HospitalDbContext with SQL Server using connection string from appsettings.json
 builder.Services.AddDbContext<HospitalDbContext>(options =>
@@ -46,9 +33,16 @@ builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
+builder.Services.AddScoped<ITreatmentService,  TreatmentService>();
 builder.Services.AddScoped<AppointmentValidation>();
+builder.Services.AddScoped<TreatmentValidation>();
+builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
+builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));
+
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
 
 // Read JWT settings for token validation configuration
 var jwtSettings = new JwtSettings

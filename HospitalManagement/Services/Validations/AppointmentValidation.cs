@@ -34,11 +34,6 @@ namespace HospitalManagement.Services.Validations
             return await patientRepository.GetByIdAsync(id) != null;
         }
 
-        private bool CheckDate(DateTime dateTime)
-        {
-            return dateTime <= DateTime.UtcNow;
-        }
-
         private bool IsWithinWorkingHours(DateTime dateTime)
         {
             var totalMinutes = dateTime.Hour * 60 + dateTime.Minute;
@@ -68,11 +63,6 @@ namespace HospitalManagement.Services.Validations
                 return Result.Fail($"Patient with the id {request.PatientId} not found", "INVALID_PATIENT_ID");
             }
 
-            if (CheckDate(request.DateTime))
-            {
-                return Result.Fail($"Appointment can't be set before today", "INVALID_DATE_TIME");
-            }
-
             if (!IsWithinWorkingHours(request.DateTime))
             {
                 return Result.Fail($"Appointment can't be set outside working hours", "INVALID_DATE_TIME");
@@ -97,11 +87,6 @@ namespace HospitalManagement.Services.Validations
             if (!await CheckPatientId(request.PatientId))
             {
                 return Result.Fail($"Patient with the id {request.PatientId} not found", "INVALID_PATIENT_ID");
-            }
-
-            if (CheckDate(request.DateTime))
-            {
-                return Result.Fail($"Appointment can't be set before today", "INVALID_DATE_TIME");
             }
 
             if (!IsWithinWorkingHours(request.DateTime))

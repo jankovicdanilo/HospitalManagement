@@ -4,6 +4,7 @@ using HospitalManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HospitalManagement.Migrations
 {
     [DbContext(typeof(HospitalDbContext))]
-    partial class HospitalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260520234611_ConvertAppointmentStatusToEnum")]
+    partial class ConvertAppointmentStatusToEnum
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,37 +138,6 @@ namespace HospitalManagement.Migrations
                     b.ToTable("Patient", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Treatment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AppointmentId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("Medication")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppointmentId")
-                        .IsUnique();
-
-                    b.ToTable("Treatment", (string)null);
-                });
-
             modelBuilder.Entity("HospitalManagement.Models.Domain.User", b =>
                 {
                     b.Property<int>("Id")
@@ -227,22 +199,6 @@ namespace HospitalManagement.Migrations
                     b.Navigation("Doctor");
 
                     b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Treatment", b =>
-                {
-                    b.HasOne("HospitalManagement.Models.Domain.Appointment", "Appointment")
-                        .WithOne("Treatment")
-                        .HasForeignKey("HospitalManagement.Models.Domain.Treatment", "AppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Appointment");
-                });
-
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Appointment", b =>
-                {
-                    b.Navigation("Treatment");
                 });
 
             modelBuilder.Entity("HospitalManagement.Models.Domain.Doctor", b =>

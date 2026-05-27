@@ -11,11 +11,13 @@ namespace HospitalManagement.Services.Implementations
     {
         private readonly IDoctorRepository doctorRepository;
         private readonly IMapper mapper;
+        private readonly ILogger<DoctorService> logger;
 
-        public DoctorService(IDoctorRepository doctorRepository, IMapper mapper)
+        public DoctorService(IDoctorRepository doctorRepository, IMapper mapper, ILogger<DoctorService> logger)
         {
             this.doctorRepository = doctorRepository;
             this.mapper = mapper;
+            this.logger = logger;
         }
 
         public async Task<Result<DoctorResponseDto>> CreateAsync(DoctorCreateRequestDto request)
@@ -23,6 +25,8 @@ namespace HospitalManagement.Services.Implementations
             var doctorDomain = mapper.Map<Doctor>(request);
 
             doctorDomain = await doctorRepository.CreateAsync(doctorDomain);
+
+            logger.LogInformation("Doctor created with id {Id}", doctorDomain.Id);
 
             var result = mapper.Map<DoctorResponseDto>(doctorDomain);
 
@@ -35,10 +39,13 @@ namespace HospitalManagement.Services.Implementations
 
             if(doctor is null)
             {
+                logger.LogWarning("Doctor with id {Id} not found for deletion", id);
                 return Result.Fail($"Doctor with the id {id} does not exist", "INVALID_ID", ErrorType.NotFound);
             }
 
             await doctorRepository.Delete(id);
+
+            logger.LogInformation("Doctor with id {Id} deleted", id);
 
             return Result.Ok("Doctor has been deleted!");
         }
@@ -58,6 +65,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(doctor is null)
             {
+                logger.LogWarning("Doctor with id {Id} not found", id);
                 return Result<DoctorResponseDto>.Fail($"Doctor with the id {id} was not found", "INVALID_ID",
                     ErrorType.NotFound);
             }
@@ -73,6 +81,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(doctorDomain is null)
             {
+                logger.LogWarning("Doctor with id {Id} not found for update", request.Id);
                 return Result<DoctorResponseDto>.Fail
                         ($"Doctor with the id {request.Id} doesn't exist!","INVALID_ID", ErrorType.NotFound);
             }
@@ -80,6 +89,8 @@ namespace HospitalManagement.Services.Implementations
             mapper.Map(request, doctorDomain);
 
             doctorDomain = await doctorRepository.UpdateAsync(doctorDomain);
+
+            logger.LogInformation("Doctor with id {Id} updated", doctorDomain.Id);
 
             var result = mapper.Map<DoctorResponseDto>(doctorDomain);
 
