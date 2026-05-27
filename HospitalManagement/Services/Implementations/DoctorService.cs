@@ -39,7 +39,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(doctor is null)
             {
-                logger.LogError("Doctor with id {Id} not found for deletion", id);
+                logger.LogWarning("Doctor with id {Id} not found for deletion", id);
                 return Result.Fail($"Doctor with the id {id} does not exist", "INVALID_ID", ErrorType.NotFound);
             }
 
@@ -65,7 +65,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(doctor is null)
             {
-                logger.LogError("Doctor with id {Id} not found", id);
+                logger.LogWarning("Doctor with id {Id} not found", id);
                 return Result<DoctorResponseDto>.Fail($"Doctor with the id {id} was not found", "INVALID_ID",
                     ErrorType.NotFound);
             }
@@ -81,7 +81,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(doctorDomain is null)
             {
-                logger.LogError("Doctor with id {Id} not found for update", request.Id);
+                logger.LogWarning("Doctor with id {Id} not found for update", request.Id);
                 return Result<DoctorResponseDto>.Fail
                         ($"Doctor with the id {request.Id} doesn't exist!","INVALID_ID", ErrorType.NotFound);
             }

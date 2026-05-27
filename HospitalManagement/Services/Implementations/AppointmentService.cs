@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
@@ -42,7 +41,7 @@ namespace HospitalManagement.Services.Implementations
             var appointmentDomain = await appointmentRepository.GetByIdAsync(id);
             if (appointmentDomain == null)
             {
-                logger.LogError("Appointment with id {id} not found", id);
+                logger.LogWarning("Appointment with id {id} not found", id);
                 return Result<AppointmentResponseDto>.Fail($"Appointment with the id {id} not found", "INVALID_ID");
             }
                 
@@ -57,7 +56,7 @@ namespace HospitalManagement.Services.Implementations
 
             if (!validatedAppointment.Success)
             {
-                logger.LogError("Appointment creation failed: {Message}", validatedAppointment.Message);
+                logger.LogWarning("Appointment creation failed: {Message}", validatedAppointment.Message);
                 return Result<AppointmentCreateResponseDto>.Fail(validatedAppointment.Message, validatedAppointment.ErrorCode);
             }
 
@@ -78,7 +77,7 @@ namespace HospitalManagement.Services.Implementations
 
             if (!validatedAppointment.Success)
             {
-                logger.LogError("Appointment update failed : {Message}", validatedAppointment.Message);
+                logger.LogWarning("Appointment update failed : {Message}", validatedAppointment.Message);
                 return Result<AppointmentUpdateResponseDto>.Fail(validatedAppointment.Message,
                     validatedAppointment.ErrorCode);
             }
@@ -87,7 +86,7 @@ namespace HospitalManagement.Services.Implementations
             
             if (appointmentDomain == null)
             {
-                logger.LogError("Appointment with id {Id} not found", request.Id);
+                logger.LogWarning("Appointment with id {Id} not found", request.Id);
                 return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found", 
                     "INVALID_ID");
             }
@@ -109,7 +108,7 @@ namespace HospitalManagement.Services.Implementations
 
             if (appointmentDomain == null)
             {
-                logger.LogError("Appointment with id {Id} not found for deletion", id);
+                logger.LogWarning("Appointment with id {Id} not found for deletion", id);
                 return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID");
             }
 

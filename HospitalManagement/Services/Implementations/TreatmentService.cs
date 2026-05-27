@@ -32,7 +32,7 @@ namespace HospitalManagement.Services.Implementations
 
             if (!validate.Success)
             {
-                logger.LogError("Treatment creation failed {Message}", validate.Message);
+                logger.LogWarning("Treatment creation failed {Message}", validate.Message);
                 return Result<TreatmentCreateResponseDto>.Fail(validate.Message, validate.ErrorCode);
             }
 

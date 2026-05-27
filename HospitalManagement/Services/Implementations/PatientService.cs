@@ -26,7 +26,7 @@ namespace HospitalManagement.Services.Implementations
 
             if (patientDomain == null)
             {
-                logger.LogError("Patient with id {Id} not found for deletion", id);
+                logger.LogWarning("Patient with id {Id} not found for deletion", id);
                 return Result.Fail($"Patient with the id {id} not found", "INVALID_ID");
             }
 
@@ -50,7 +50,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(patientDomain == null)
             {
-                logger.LogError("Patient with id {Id} not found", id);
+                logger.LogWarning("Patient with id {Id} not found", id);
                 return Result<PatientGetByIdDto?>.Fail($"Patient with the id {id} doesn't exist", "INVALID_ID");
             }
 
@@ -65,7 +65,7 @@ namespace HospitalManagement.Services.Implementations
 
             if (patientExists != null)
             {
-                logger.LogError("Patient creation failed, email {Email} already exists", request.Email);
+                logger.LogWarning("Patient creation failed, email {Email} already exists", request.Email);
                 return Result<PatientCreateResponseDto?>.Fail($"Email {request.Email} aldready exists", "INVALID_EMAIL");
             }
 
@@ -86,13 +86,13 @@ namespace HospitalManagement.Services.Implementations
 
             if (patientDomain == null)
             {
-                logger.LogError("Patient with id {Id} not found for update", request.Id);
+                logger.LogWarning("Patient with id {Id} not found for update", request.Id);
                 return Result<PatientUpdateResponseDto>.Fail($"Patient with the id {request.Id} not found", "INVALID_ID");
             }
 
             if (patientRepository.EmailExists(request.Email) && request.Email != patientDomain.Email)
             {
-                logger.LogError("Patient creation failed, email {Email} already exists", request.Email);
+                logger.LogWarning("Patient creation failed, email {Email} already exists", request.Email);
                 return Result<PatientUpdateResponseDto>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL");
             }
 

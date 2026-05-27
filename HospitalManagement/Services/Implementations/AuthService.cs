@@ -35,7 +35,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(existingUser != null)
             {
-                logger.LogError("Registration failed, username {Username} already exists", request.Username);
+                logger.LogWarning("Registration failed, username {Username} already exists", request.Username);
                 return Result<AuthResponseDto>.Fail
                     ($"Username {request.Username} already exists", "USERNAME_TAKEN");
             }
@@ -44,7 +44,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(existingEmail != null)
             {
-                logger.LogError("Registration failed, email {Email} already exists", request.Email);
+                logger.LogWarning("Registration failed, email {Email} already exists", request.Email);
                 return Result<AuthResponseDto>.Fail($"Email {request.Email} already exists", "EMAIL_TAKEN");
             }
 
@@ -73,7 +73,7 @@ namespace HospitalManagement.Services.Implementations
 
             if (user == null)
             {
-                logger.LogError("Login failed, username {Username} not found", request.Username);
+                logger.LogWarning("Login failed, username {Username} not found", request.Username);
                 return Result<AuthResponseDto>.Fail("Invalid credentials", "INVALID_CREDENTIALS");
             }
 
@@ -81,7 +81,7 @@ namespace HospitalManagement.Services.Implementations
 
             if (!isValidPassword)
             {
-                logger.LogError("Login failed, invalid password for username {Username}", request.Username);
+                logger.LogWarning("Login failed, invalid password for username {Username}", request.Username);
                 return Result<AuthResponseDto>.Fail("Invalid credentials", "INVALID_CREDENTIALS");
             }
 
@@ -135,7 +135,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(user == null)
             {
-                logger.LogError("User with id {Id} not found", id);
+                logger.LogWarning("User with id {Id} not found", id);
                 return Result<CurrentUserDto>.Fail($"User with the id {id} not found", "USER_NOT_FOUND");
             }
 
@@ -148,7 +148,7 @@ namespace HospitalManagement.Services.Implementations
         {
             if(await authRepository.GetByIdAsync(id) == null)
             {
-                logger.LogError("User with id {Id} not found for deletion", id);
+                logger.LogWarning("User with id {Id} not found for deletion", id);
                 return Result.Fail($"User with the {id} not found", "USER_NOT_FOUND");
             }
 
@@ -165,7 +165,7 @@ namespace HospitalManagement.Services.Implementations
 
             if (user == null)
             {
-                logger.LogError("User with id {Id} not found for update", request.Id);
+                logger.LogWarning("User with id {Id} not found for update", request.Id);
                 return Result<AuthResponseUpdateDto>.Fail
                     ($"User with the {request.Id} not found", "USER_NOT_FOUND");
             }
