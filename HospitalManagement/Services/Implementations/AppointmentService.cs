@@ -28,13 +28,11 @@ namespace HospitalManagement.Services.Implementations
             this.logger = logger;
         }
 
-        public async Task<Result<List<AppointmentListResponseDto>>> GetAllAsync()
+        public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
         {
-            var appointments = await appointmentRepository.GetAllAsync();
+            var appointments = await appointmentRepository.GetAllAsync(filter);
 
-            var result = mapper.Map<List<AppointmentListResponseDto>>(appointments);
-
-            return Result<List<AppointmentListResponseDto>>.Ok(result);
+            return Result<PagedResult<AppointmentListResponseDto>>.Ok(appointments);
         }
 
         public async Task<Result<AppointmentResponseDto>> GetByIdAsync(int id)
