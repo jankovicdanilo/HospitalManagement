@@ -32,8 +32,16 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateAsync([FromBody] AppointmentUpdateRequestDto request)
+        public async Task<IActionResult> UpdateAsync([FromBody] AppointmentUpdateRequestDto request,
+            [FromServices] IValidator<AppointmentUpdateRequestDto> validator)
         {
+            var validation = await validator.ValidateAsync(request);
+
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
             var result = await appointmentService.UpdateAsync(request);
 
             if (!result.Success)
@@ -66,8 +74,16 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAsync([FromBody] AppointmentCreateRequestDto request)
+        public async Task<IActionResult> CreateAsync([FromBody] AppointmentCreateRequestDto request,
+            [FromServices] IValidator<AppointmentCreateRequestDto> validator)
         {
+            var validation = await validator.ValidateAsync(request);
+
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
             var result = await appointmentService.CreateAsync(request);
 
             if (!result.Success)

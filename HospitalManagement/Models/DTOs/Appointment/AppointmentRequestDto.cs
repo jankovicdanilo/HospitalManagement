@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.Enums;
 
 namespace HospitalManagement.Models.DTOs.Appointment
 {
@@ -9,7 +10,7 @@ namespace HospitalManagement.Models.DTOs.Appointment
         public int DoctorId { get; set; }
         public DateTime DateTime { get; set; }
         public TimeSpan Duration { get; set; }
-        public string Status { get; set; }
+        public AppointmentStatus Status { get; set; }
         public string? Notes { get; set; }
     }
 }
