@@ -26,6 +26,8 @@ public partial class HospitalDbContext : DbContext
 
     public virtual DbSet<Treatment> Treatments { get; set; }
 
+    public virtual DbSet<DoctorSchedule> DoctorSchedules { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Appointment>(entity =>
@@ -101,6 +103,18 @@ public partial class HospitalDbContext : DbContext
             entity.Property(e => e.PasswordHash).HasMaxLength(255);
             entity.Property(e => e.Role).HasMaxLength(50).HasConversion<string>();
             entity.Property(e => e.Username).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<DoctorSchedule>(entity =>
+        {
+            entity.ToTable("DoctorSchedule");
+
+            entity.HasOne(d => d.Doctor)
+                .WithMany(d => d.Schedules)
+                .HasForeignKey(d => d.DoctorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.DayOfWeek).HasConversion<string>();
         });
 
         OnModelCreatingPartial(modelBuilder);
