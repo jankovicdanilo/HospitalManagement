@@ -15,5 +15,7 @@ namespace HospitalManagement.Services.Interfaces
         Task<Result<PatientCreateResponseDto?>> CreateAsync(PatientCreateRequestDto request);
 
         Task<Result<PatientUpdateResponseDto>> UpdateAsync(PatientUpdateRequestDto request);
+
+        Task<Result<PatientMedicalHistoryDto>> GetMedicalHistoryAsync(int patientId);
     }
 }

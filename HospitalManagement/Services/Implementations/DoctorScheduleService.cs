@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Doctor;
 using HospitalManagement.Models.DTOs.DoctorSchedule;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
@@ -105,7 +104,7 @@ namespace HospitalManagement.Services.Implementations
             if(doctorScheduleDomain == null)
             {
                 logger.LogWarning("Doctor schedule for id {Id} not found", id);
-                return Result<DoctorScheduleResponseDto>.Fail($"Patient with id {id} not found", "INVALID_ID");
+                return Result<DoctorScheduleResponseDto>.Fail($"Doctor schedule with id {id} not found", "INVALID_ID");
             }
 
             var result = mapper.Map<DoctorScheduleResponseDto>(doctorScheduleDomain);

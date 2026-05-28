@@ -90,7 +90,7 @@ namespace HospitalManagement.Services.Implementations
                 return Result<PatientUpdateResponseDto>.Fail($"Patient with the id {request.Id} not found", "INVALID_ID");
             }
 
-            if (patientRepository.EmailExists(request.Email) && request.Email != patientDomain.Email)
+            if (await patientRepository.EmailExists(request.Email) && request.Email != patientDomain.Email)
             {
                 logger.LogWarning("Patient creation failed, email {Email} already exists", request.Email);
                 return Result<PatientUpdateResponseDto>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL");
@@ -105,6 +105,19 @@ namespace HospitalManagement.Services.Implementations
             var result = mapper.Map<PatientUpdateResponseDto>(patientDomain);
 
             return Result<PatientUpdateResponseDto>.Ok(result);
+        }
+
+        public async Task<Result<PatientMedicalHistoryDto>> GetMedicalHistoryAsync(int patientId)
+        {
+            if(!await patientRepository.PatientExists(patientId))
+            {
+                logger.LogWarning("Patient with id {Id} not found", patientId);
+                return Result<PatientMedicalHistoryDto>.Fail($"Patient with the id {patientId} doesn't exist", "INVALID_ID");
+            }
+
+            var result = await patientRepository.GetMedicalHistoryAsync(patientId);
+
+            return Result<PatientMedicalHistoryDto>.Ok(result);
         }
     }
 }
