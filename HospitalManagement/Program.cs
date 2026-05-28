@@ -16,9 +16,6 @@ using Microsoft.IdentityModel.Tokens;
 using NLog.Web;
 using System.Text;
 
-
-
-// tell ASP.NET Core to use Serilog
 var builder = WebApplication.CreateBuilder(args);
 
 // Register HospitalDbContext with SQL Server using connection string from appsettings.json
@@ -35,6 +32,8 @@ builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
 builder.Services.AddScoped<ITreatmentService,  TreatmentService>();
+builder.Services.AddScoped<IDoctorScheduleRepository , DoctorScheduleRepository>();
+builder.Services.AddScoped<IDoctorScheduleService , DoctorScheduleService>();
 builder.Services.AddScoped<AppointmentValidation>();
 builder.Services.AddScoped<TreatmentValidation>();
 builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
