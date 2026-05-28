@@ -53,7 +53,6 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet("doctor/{doctorId:int}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllByDoctorIdAsync([FromRoute] int doctorId)
         {
             var result = await doctorScheduleService.GetAllByDoctorIdAsync(doctorId);
@@ -61,6 +60,54 @@ namespace HospitalManagement.Controllers
             if (!result.Success)
             {
                 return NotFound(new { result.Message, result.ErrorCode });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await doctorScheduleService.Delete(id);
+
+            if (!result.Success)
+            {
+                return NotFound(new {result.Message, result.ErrorCode});
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("doctor/{doctorId:int}/day/{dayOfWeek}")]
+        public async Task<IActionResult> GetByDoctorIdAndDayAsync(int doctorId, DayOfWeek dayOfWeek)
+        {
+            var result = await doctorScheduleService.GetByDoctorIdAndDayAsync(doctorId, dayOfWeek);
+
+            if (!result.Success)
+            {
+                return NotFound(new { result.Message, result.ErrorCode });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [AllowAnonymous]
+        public async Task<IActionResult> UpdateAsync([FromBody] DoctorScheduleUpdateRequestDto request,
+            [FromServices] IValidator<DoctorScheduleUpdateRequestDto> validator)
+        {
+            var validation = await validator.ValidateAsync(request);
+
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
+            var result = await doctorScheduleService.UpdateAsync(request);
+
+            if (!result.Success)
+            {
+                return BadRequest(new { result.Message, result.ErrorCode });
             }
 
             return Ok(result);

@@ -75,6 +75,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> CreateAsync([FromBody] AppointmentCreateRequestDto request,
             [FromServices] IValidator<AppointmentCreateRequestDto> validator)
         {
@@ -96,6 +97,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet("free-slots")]
+        [AllowAnonymous]
         public async Task<IActionResult> FreeSlots([FromQuery] FreeSlotsRequestDto request,
             [FromServices] IValidator<FreeSlotsRequestDto> validator)
         {

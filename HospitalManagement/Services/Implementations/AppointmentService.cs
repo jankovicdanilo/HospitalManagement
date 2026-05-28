@@ -15,17 +15,25 @@ namespace HospitalManagement.Services.Implementations
         private readonly IAppointmentRepository appointmentRepository;
         private readonly IMapper mapper;
         private readonly AppointmentValidation appointmentValidation;
-        private readonly AppointmentSettings appointmentSettings;
         private readonly ILogger<AppointmentService> logger;
+        private readonly IPatientRepository patientRepository;
+        private readonly IDoctorRepository doctorRepository;
+        private readonly IDoctorScheduleRepository doctorScheduleRepository;
+        private readonly AppointmentSettings appointmentSettings;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
-            AppointmentValidation appointmentValidation, IOptions<AppointmentSettings> appointmentSettings, ILogger<AppointmentService> logger)
+            AppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
+            IPatientRepository patientRepository, IDoctorRepository doctorRepository, IDoctorScheduleRepository doctorScheduleRepository,
+            IOptions<AppointmentSettings> appointmentSettings)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
             this.appointmentValidation = appointmentValidation;
-            this.appointmentSettings = appointmentSettings.Value;
             this.logger = logger;
+            this.patientRepository = patientRepository;
+            this.doctorRepository  = doctorRepository;
+            this.doctorScheduleRepository = doctorScheduleRepository;
+            this.appointmentSettings = appointmentSettings.Value;
         }
 
         public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
@@ -62,8 +70,12 @@ namespace HospitalManagement.Services.Implementations
             var appointmentDomain = mapper.Map<Appointment>(request);
 
             appointmentDomain = await appointmentRepository.CreateAsync(appointmentDomain);
+            var patient = await patientRepository.GetByIdAsync(request.PatientId);
+            var doctor = await doctorRepository.GetByIdAsync(request.DoctorId);
 
             logger.LogInformation("Appointment created with id {id}", appointmentDomain.Id);
+            logger.LogInformation("Email sent to {Email}: Appointment confirmed for {DateTime} with Dr. {Doctor}",
+                patient.Email, appointmentDomain.DateTime, $"{doctor.FirstName} {doctor.LastName}");
 
             var result = mapper.Map<AppointmentCreateResponseDto>(appointmentDomain);
 
@@ -117,8 +129,16 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date)
         {
-            var workStart = new TimeSpan(appointmentSettings.WorkStartHour, 0, 0);
-            var workEnd = new TimeSpan(appointmentSettings.WorkEndHour, 0, 0);
+            var doctorSchedule = await doctorScheduleRepository.GetByDoctorIdAndDayAsync(doctorId, date.DayOfWeek);
+
+            if(doctorSchedule == null)
+            {
+                logger.LogWarning("Doctor {DoctorId} does not work on {DayOfWeek}", doctorId, date.DayOfWeek.ToString());
+                return Result<List<TimeSlotDto>>.Fail($"Doctor does not work on {date.DayOfWeek}", "DOCTOR_NOT_AVAILABLE");
+            }
+
+            var workStart = new TimeSpan(doctorSchedule.StartHour, 0, 0);
+            var workEnd = new TimeSpan(doctorSchedule.EndHour, 0, 0);
             var slotSize = new TimeSpan(0, appointmentSettings.SlotSizeMinutes, 0);
 
             var appointments = await appointmentRepository.GetByDoctorIdAndDateAsync(doctorId, date);

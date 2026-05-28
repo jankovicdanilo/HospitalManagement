@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HospitalManagement.Common;
 using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.DTOs.Doctor;
 using HospitalManagement.Models.DTOs.DoctorSchedule;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
@@ -42,9 +43,19 @@ namespace HospitalManagement.Services.Implementations
             return Result<DoctorScheduleCreateResponseDto>.Ok(result);
         }
 
-        public Task<Result<DoctorScheduleResponseDto>> Delete(int id)
+        public async Task<Result> Delete(int id)
         {
-            throw new NotImplementedException();
+            var doctorScheduleDomain = await doctorScheduleRepository.Delete(id);
+
+            if(doctorScheduleDomain == null)
+            {
+                logger.LogWarning("Doctor schedule for id {Id} not found for deletion", id);
+                return Result.Fail($"Doctor schedule id {id} not found", "INVALID_ID");
+            }
+
+            logger.LogInformation("Doctor schedule with id {Id} deleted", id);
+
+            return Result.Ok($"Doctor schedule with id {id} deleted");
         }
 
         public async Task<Result<List<DoctorScheduleResponseDto>>> GetAllByDoctorIdAsync(int doctorId)
@@ -64,6 +75,29 @@ namespace HospitalManagement.Services.Implementations
             return Result<List<DoctorScheduleResponseDto>>.Ok(result);
         }
 
+        public async Task<Result<DoctorScheduleResponseDto>> GetByDoctorIdAndDayAsync(int doctorId, DayOfWeek dayOfWeek)
+        {
+            bool exists = await doctorScheduleRepository.DoctorExists(doctorId);
+
+            if (!exists)
+            {
+                logger.LogWarning("Doctor with id {DoctorId} not found", doctorId);
+                return Result<DoctorScheduleResponseDto>.Fail($"Doctor with id {doctorId} not found", "INVALID_DOCTOR_ID");
+            }
+
+            var doctorScheduleDomain = await doctorScheduleRepository.GetByDoctorIdAndDayAsync(doctorId, dayOfWeek);
+
+            if(doctorScheduleDomain == null)
+            {
+                logger.LogWarning("Doctor with id {Id} doesn't work on this {Day}", doctorId, dayOfWeek);
+                return Result<DoctorScheduleResponseDto>.Fail($"Doctor does not work on {dayOfWeek}", "DOCTOR_NOT_AVAILABLE");
+            }
+
+            var result = mapper.Map<DoctorScheduleResponseDto>(doctorScheduleDomain);
+
+            return Result<DoctorScheduleResponseDto>.Ok(result);
+        }
+
         public async Task<Result<DoctorScheduleResponseDto>> GetByIdAsync(int id)
         {
             var doctorScheduleDomain = await doctorScheduleRepository.GetByIdAsync(id);
@@ -79,9 +113,35 @@ namespace HospitalManagement.Services.Implementations
             return Result<DoctorScheduleResponseDto>.Ok(result);
         }
 
-        public Task<Result<DoctorScheduleUpdateResponseDto>> UpdateAsync(DoctorScheduleUpdateRequestDto request)
+        public async Task<Result<DoctorScheduleUpdateResponseDto>> UpdateAsync(DoctorScheduleUpdateRequestDto request)
         {
-            throw new NotImplementedException();
+            var existing = await doctorScheduleRepository.GetByIdAsync(request.Id);
+
+            if (existing == null)
+            {
+                logger.LogWarning("Doctor schedule with id {Id} not found", request.Id);
+                return Result<DoctorScheduleUpdateResponseDto>.Fail($"Doctor schedule with id {request.Id} not found", "INVALID_ID");
+            }
+
+            var duplicate = await doctorScheduleRepository.GetByDoctorIdAndDayAsync(existing.DoctorId, request.DayOfWeek);
+
+            if (duplicate != null && duplicate.Id != request.Id)
+            {
+                logger.LogWarning("Doctor {DoctorId} already has a schedule for {DayOfWeek}", existing.DoctorId, request.DayOfWeek);
+                return Result<DoctorScheduleUpdateResponseDto>.Fail($"Doctor already has a schedule for {request.DayOfWeek}", "DUPLICATE_SCHEDULE");
+            }
+
+            existing.DayOfWeek = request.DayOfWeek;
+            existing.StartHour = request.StartHour;
+            existing.EndHour = request.EndHour;
+
+            existing = await doctorScheduleRepository.UpdateAsync(existing);
+
+            logger.LogInformation("Doctor schedule with id {Id} updated", request.Id);
+
+            var result = mapper.Map<DoctorScheduleUpdateResponseDto>(existing);
+
+            return Result<DoctorScheduleUpdateResponseDto>.Ok(result);
         }
     }
 }
