@@ -2,7 +2,7 @@
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Repositories.Interfaces;
-using Microsoft.Extensions.Options;
+using HospitalManagement.Models.Enums;
 
 namespace HospitalManagement.Services.Validations
 {
@@ -65,7 +65,8 @@ namespace HospitalManagement.Services.Validations
                     $"{request.DateTime.ToString("dddd, dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)}", "DOCTOR_NOT_AVAILABLE");
             }
 
-            if(request.DateTime.Hour < schedule.StartHour || request.DateTime.Hour + request.Duration.Hours > schedule.EndHour)
+            if(request.DateTime.Hour < schedule.StartHour || request.DateTime.Hour * 60 + request.DateTime.Minute + 
+                (int)request.Duration.TotalMinutes > schedule.EndHour * 60)
             {
                 return Result.Fail($"Doctor works {schedule.StartHour}:00 - {schedule.EndHour}:00", "OUTSIDE_WORKING_HOURS");
             }
@@ -98,7 +99,8 @@ namespace HospitalManagement.Services.Validations
                     $"{request.DateTime.ToString("dddd, dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)}", "DOCTOR_NOT_AVAILABLE");
             }
 
-            if(request.DateTime.Hour < schedule.StartHour || request.DateTime.Hour + request.Duration.Hours > schedule.EndHour)
+            if(request.DateTime.Hour < schedule.StartHour || request.DateTime.Hour * 60 + request.DateTime.Minute
+                +(int)request.Duration.TotalMinutes > schedule.EndHour * 60)
             {
                 return Result.Fail($"Doctor works {schedule.StartHour}:00 - {schedule.EndHour}:00", "OUTSIDE_WORKING_HOURS");
             }

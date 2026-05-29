@@ -23,9 +23,16 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<DoctorScheduleCreateResponseDto>> CreateAsync(DoctorScheduleCreateRequestDto request)
         {
+            var doctorExists = await doctorScheduleRepository.DoctorExists(request.DoctorId);
             var existing = await doctorScheduleRepository.GetByDoctorIdAndDayAsync(request.DoctorId, request.DayOfWeek);
 
-            if(existing != null)
+            if (!doctorExists)
+            {
+                logger.LogWarning("Doctor with id {DoctorId} not found", request.DoctorId);
+                return Result<DoctorScheduleCreateResponseDto>.Fail($"Doctor with id {request.DoctorId} not found", "INVALID_DOCTOR_ID");
+            }
+
+            if (existing != null)
             {
                 logger.LogWarning("Doctor {DoctorId} already has a schedule for {DayOfWeek}", request.DoctorId, request.DayOfWeek);
                 return Result<DoctorScheduleCreateResponseDto>.Fail($"Doctor already has a schedule for {request.DayOfWeek}", "DUPLICATE_SCHEDULE");

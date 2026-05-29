@@ -92,14 +92,22 @@ namespace HospitalManagement.Services.Implementations
                 return Result<AppointmentUpdateResponseDto>.Fail(validatedAppointment.Message,
                     validatedAppointment.ErrorCode);
             }
-                
+
             var appointmentDomain = await appointmentRepository.GetByIdAsync(request.Id);
-            
+
             if (appointmentDomain == null)
             {
                 logger.LogWarning("Appointment with id {Id} not found", request.Id);
-                return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found", 
+                return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found",
                     "INVALID_ID");
+            }
+
+            if (appointmentDomain.Status != AppointmentStatus.Pending)
+            {
+                logger.LogWarning("Appointment with id {Id} cannot be updated, status is {Status}", request.Id, appointmentDomain.Status);
+                return Result<AppointmentUpdateResponseDto>.Fail(
+                    $"Only pending appointments can be updated",
+                    "INVALID_STATUS");
             }
 
             mapper.Map(request, appointmentDomain);
@@ -182,7 +190,7 @@ namespace HospitalManagement.Services.Implementations
 
             if(appointmentDomain == null)
             {
-                logger.LogWarning("Appointment with id {Id} not found for deletion", request.Id);
+                logger.LogWarning("Appointment with id {Id} not found", request.Id);
                 return Result.Fail($"Appointment with the id {request.Id} not found", "INVALID_ID");
             }
 
