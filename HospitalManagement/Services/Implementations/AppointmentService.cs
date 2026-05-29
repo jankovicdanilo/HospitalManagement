@@ -137,6 +137,12 @@ namespace HospitalManagement.Services.Implementations
                 return Result<List<TimeSlotDto>>.Fail($"Doctor does not work on {date.DayOfWeek}", "DOCTOR_NOT_AVAILABLE");
             }
 
+            if(date < DateOnly.FromDateTime(DateTime.UtcNow))
+            {
+                logger.LogWarning("Free slots requested for past date {Date}", date);
+                return Result<List<TimeSlotDto>>.Fail("Cannot get free slots for a past date", "INVALID_DATE");
+            }
+
             var workStart = new TimeSpan(doctorSchedule.StartHour, 0, 0);
             var workEnd = new TimeSpan(doctorSchedule.EndHour, 0, 0);
             var slotSize = new TimeSpan(0, appointmentSettings.SlotSizeMinutes, 0);

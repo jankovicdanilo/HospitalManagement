@@ -128,7 +128,12 @@ namespace HospitalManagement.Repositories.Implementations
 
         public async Task<IEnumerable<Appointment>> GetPendingPastAppointmentsAsync()
         {
-            return await dbContext.Appointments.Where(a => a.Status == AppointmentStatus.Pending && a.DateTime < DateTime.UtcNow).ToListAsync();
+            var now = DateTime.UtcNow;
+            var appointments = await dbContext.Appointments
+                .Where(a => a.Status == AppointmentStatus.Pending && a.DateTime < now)
+                .ToListAsync();
+
+            return appointments.Where(a => a.DateTime.Add(a.Duration).AddHours(1) < now);
         }
     }
 }
