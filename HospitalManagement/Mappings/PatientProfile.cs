@@ -14,6 +14,9 @@ namespace HospitalManagement.Mappings
             CreateMap<Patient, PatientCreateResponseDto>().ReverseMap();
             CreateMap<Patient, PatientUpdateRequestDto>().ReverseMap();
             CreateMap<Patient, PatientUpdateResponseDto>().ReverseMap();
+            CreateMap<Patient, PatientMedicalHistoryDto>()
+                .ForMember(dest => dest.PatientName,
+                    opt => opt.MapFrom(src => src.Name + " " + src.LastName));
         }
     }
 }

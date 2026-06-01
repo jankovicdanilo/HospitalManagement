@@ -23,6 +23,6 @@ namespace HospitalManagement.Repositories.Interfaces
 
         Task<Patient?> GetByEmailAsync(string email);
 
-        Task<PatientMedicalHistoryDto> GetMedicalHistoryAsync(int patientId);
+        Task<Patient?> GetMedicalHistoryAsync(int patientId);
     }
 }

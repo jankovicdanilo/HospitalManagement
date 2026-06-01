@@ -11,12 +11,10 @@ namespace HospitalManagement.Repositories.Implementations
     public class PatientRepository : IPatientRepository
     {
         private readonly HospitalDbContext dbContext;
-        private readonly string? connectionString;
 
-        public PatientRepository(HospitalDbContext dbContext, IConfiguration configuration)
+        public PatientRepository(HospitalDbContext dbContext)
         {
             this.dbContext = dbContext;
-            this.connectionString = configuration.GetConnectionString("HospitalDb");
         }
 
         public async Task<Patient?> GetByEmailAsync(string email)
@@ -82,52 +80,14 @@ namespace HospitalManagement.Repositories.Implementations
             return await dbContext.Patients.AnyAsync(x => x.Id == id);
         }
 
-        public async Task<PatientMedicalHistoryDto> GetMedicalHistoryAsync(int patientId)
+        public async Task<Patient?> GetMedicalHistoryAsync(int patientId)
         {
-            using var connection = new SqlConnection(connectionString);
-
-            var sql = @"
-                        SELECT 
-                            p.Id,
-                            p.Name + ' ' + p.LastName as PatientName,
-                            a.Id,
-                            a.DateTime,
-                            a.Duration,
-                            a.Status,
-                            a.Notes,
-                            d.FirstName + ' ' + d.LastName AS DoctorName,
-                            t.Id,
-                            t.Description,
-                            t.Medication,
-                            t.CreatedAt
-                        FROM Patient p
-                        LEFT JOIN Appointment a ON a.PatientId = p.Id
-                        LEFT JOIN Doctor d ON d.Id = a.DoctorId
-                        LEFT JOIN Treatment t ON t.AppointmentId = a.Id
-                        WHERE p.Id = @PatientId";
-
-            PatientMedicalHistoryDto? patient = null;
-
-            await connection.QueryAsync<PatientMedicalHistoryDto, AppointmentHistoryDto, TreatmentHistoryDto, PatientMedicalHistoryDto>(
-                sql,
-                (p, a, t) =>
-                {
-                    if(patient == null)
-                    {
-                        patient = p;
-                    }
-                    if(a != null)
-                    {
-                        a.Treatment = t;
-                        patient.Appointments.Add(a);
-                    }
-                    return patient;
-                },
-                new { PatientId = patientId},
-                splitOn:"Id,Id,Id"
-                );
-
-            return patient;
+            return await dbContext.Patients.
+                Include(a => a.Appointments)
+                    .ThenInclude(d => d.Doctor)
+                .Include(a => a.Appointments)
+                    .ThenInclude(t => t.Treatment)
+                .FirstOrDefaultAsync(p => p.Id == patientId);
         }
     }
 }

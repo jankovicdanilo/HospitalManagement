@@ -9,7 +9,7 @@ namespace HospitalManagement.Models.DTOs.Patient
         public TimeSpan Duration { get; set; }
         public AppointmentStatus Status { get; set; }
         public string? Notes { get; set; }
-        public string DoctorName { get; set; }
+        public string? DoctorName { get; set; }
         public TreatmentHistoryDto? Treatment {  get; set; } 
     }
 }
