@@ -77,11 +77,27 @@ namespace HospitalManagement.Repositories.Implementations
             var query = dbContext.Appointments
                 .Include(x => x.Doctor)
                 .Include(x => x.Patient)
-                .Where(x => !filter.DoctorId.HasValue || x.DoctorId == filter.DoctorId.Value)
-                .Where(x => !filter.PatientId.HasValue || x.PatientId == filter.PatientId.Value)
-                .Where(x => !filter.Date.HasValue || DateOnly.FromDateTime(x.DateTime) == filter.Date.Value)
-                .Where(x => !filter.Status.HasValue || x.Status == filter.Status.Value)
                 .AsQueryable();
+
+            if (filter.DoctorId.HasValue)
+            {
+                query = query.Where(x => x.DoctorId == filter.DoctorId.Value);
+            }
+
+            if(filter.PatientId.HasValue)
+            {
+                query = query.Where(x => x.PatientId == filter.PatientId.Value);
+            }
+
+            if (filter.Date.HasValue)
+            {
+                query = query.Where(x => DateOnly.FromDateTime(x.DateTime) == filter.Date.Value);
+            }
+
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(x => x.Status == filter.Status.Value);
+            }
 
             var totalCount = await query.CountAsync();
             var offset = (filter.PageNumber - 1) * filter.PageSize;
