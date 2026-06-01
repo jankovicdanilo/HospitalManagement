@@ -12,7 +12,7 @@ namespace HospitalManagement.Repositories.Interfaces
 
         Task<Appointment> CreateAsync(Appointment appointment);
 
-        Task<PagedResult<AppointmentListResponseDto>> GetAllAsync(AppointmentFilterDto filer);
+        Task<(List<Appointment> items, int totalCount)> GetAllAsync(AppointmentFilterDto filter);
 
         Task<Appointment> UpdateAsync(Appointment appointment);
 

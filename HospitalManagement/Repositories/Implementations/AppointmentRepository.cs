@@ -1,10 +1,12 @@
-﻿using Dapper;
+﻿using AutoMapper;
+using Dapper;
 using HospitalManagement.Common;
 using HospitalManagement.Data;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Models.Enums;
 using HospitalManagement.Repositories.Interfaces;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Net.NetworkInformation;
@@ -14,12 +16,10 @@ namespace HospitalManagement.Repositories.Implementations
     public class AppointmentRepository : IAppointmentRepository
     {
         private readonly HospitalDbContext dbContext;
-        private readonly string? connectionString;
 
-        public AppointmentRepository(HospitalDbContext dbContext, IConfiguration configuration)
+        public AppointmentRepository(HospitalDbContext dbContext)
         {
             this.dbContext = dbContext;
-            connectionString = configuration.GetConnectionString("HospitalDb");
         }
 
         public async Task<Appointment?> GetByIdAsync(int id)
@@ -72,58 +72,27 @@ namespace HospitalManagement.Repositories.Implementations
             return appointment;
         }
 
-        public async Task<PagedResult<AppointmentListResponseDto>> GetAllAsync(AppointmentFilterDto filter)
+        public async Task<(List<Appointment> items, int totalCount)> GetAllAsync(AppointmentFilterDto filter)
         {
-            using var connection = new SqlConnection(connectionString);
+            var query = dbContext.Appointments
+                .Include(x => x.Doctor)
+                .Include(x => x.Patient)
+                .Where(x => !filter.DoctorId.HasValue || x.DoctorId == filter.DoctorId.Value)
+                .Where(x => !filter.PatientId.HasValue || x.PatientId == filter.PatientId.Value)
+                .Where(x => !filter.Date.HasValue || DateOnly.FromDateTime(x.DateTime) == filter.Date.Value)
+                .Where(x => !filter.Status.HasValue || x.Status == filter.Status.Value)
+                .AsQueryable();
 
+            var totalCount = await query.CountAsync();
             var offset = (filter.PageNumber - 1) * filter.PageSize;
 
-            var sql = @"
-                WITH Filtered AS(
-                    SELECT 
-                        a.Id, 
-                        a.DateTime, 
-                        a.Duration, 
-                        a.Status, 
-                        a.Notes, 
-                        d.FirstName + ' ' + d.LastName AS DoctorName,
-                        p.Name + ' ' + p.Lastname AS PatientName 
-                    FROM Appointment a 
-                    JOIN Doctor d  ON d.Id = a.DoctorId
-                    JOIN Patient p ON p.Id = a.PatientId 
-                    WHERE
-                        (@DoctorId IS NULL OR a.DoctorId = @DoctorId) AND
-                        (@PatientId IS NULL OR a.PatientId = @PatientId) AND
-                        (@Date IS NULL OR cast(a.DateTime AS DATE) = @Date) AND
-                        (@Status IS NULL OR a.Status = @Status)
-                )
-                SELECT
-                    COUNT(*) OVER() AS TotalCount,
-                    Id,
-                    DateTime,
-                    Duration,
-                    Status,
-                    Notes,
-                    DoctorName,
-                    PatientName
-                FROM Filtered
-                ORDER BY Id
-                OFFSET @offset ROWS FETCH NEXT @PageSize ROWS ONLY;";
+            var items = await query
+                .OrderBy(x => x.Id)
+                .Skip(offset)
+                .Take(filter.PageSize)
+                .ToListAsync();
 
-            var result = await connection.QueryAsync<AppointmentListResponseDto>(sql, new
-            {
-                DoctorId = filter.DoctorId,
-                PatientId = filter.PatientId,
-                Date = filter.Date.HasValue ? filter.Date.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
-                Status = filter.Status.HasValue ? filter.Status.Value.ToString() : null,
-                offset,
-                PageSize = filter.PageSize
-            });
-
-            var items = result.ToList();
-            var totalCount = items.FirstOrDefault()?.TotalCount ?? 0;
-
-            return PagedResult<AppointmentListResponseDto>.Create(items, totalCount, filter.PageNumber, filter.PageSize);
+            return (items, totalCount);
         }
 
         public async Task<IEnumerable<Appointment>> GetPendingPastAppointmentsAsync()

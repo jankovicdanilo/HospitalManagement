@@ -38,9 +38,19 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
         {
-            var appointments = await appointmentRepository.GetAllAsync(filter);
+            var (items, totalCount) = await appointmentRepository.GetAllAsync(filter);
 
-            return Result<PagedResult<AppointmentListResponseDto>>.Ok(appointments);
+            var mapped = mapper.Map<List<AppointmentListResponseDto>>(items);
+
+            var pagedResult = new PagedResult<AppointmentListResponseDto>
+            {
+                Items = mapped,
+                TotalCount = totalCount,
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize
+            };
+
+            return Result<PagedResult<AppointmentListResponseDto>>.Ok(pagedResult);
         }
 
         public async Task<Result<AppointmentResponseDto>> GetByIdAsync(int id)
