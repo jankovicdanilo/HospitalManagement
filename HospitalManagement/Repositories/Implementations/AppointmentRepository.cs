@@ -1,8 +1,15 @@
-﻿using HospitalManagement.Data;
+﻿using AutoMapper;
+using Dapper;
+using HospitalManagement.Common;
+using HospitalManagement.Data;
 using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Models.Enums;
 using HospitalManagement.Repositories.Interfaces;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Net.NetworkInformation;
 
 namespace HospitalManagement.Repositories.Implementations
 {
@@ -15,7 +22,6 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        
         public async Task<Appointment?> GetByIdAsync(int id)
         {
             return await dbContext.Appointments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
@@ -66,14 +72,53 @@ namespace HospitalManagement.Repositories.Implementations
             return appointment;
         }
 
-        public async Task<List<Appointment>> GetAllAsync()
+        public async Task<(List<Appointment> items, int totalCount)> GetAllAsync(AppointmentFilterDto filter)
         {
-            return await dbContext.Appointments.AsNoTracking().Include(x => x.Doctor).Include(x => x.Patient).ToListAsync();
+            var query = dbContext.Appointments
+                .Include(x => x.Doctor)
+                .Include(x => x.Patient)
+                .AsQueryable();
+
+            if (filter.DoctorId.HasValue)
+            {
+                query = query.Where(x => x.DoctorId == filter.DoctorId.Value);
+            }
+
+            if(filter.PatientId.HasValue)
+            {
+                query = query.Where(x => x.PatientId == filter.PatientId.Value);
+            }
+
+            if (filter.Date.HasValue)
+            {
+                query = query.Where(x => DateOnly.FromDateTime(x.DateTime) == filter.Date.Value);
+            }
+
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(x => x.Status == filter.Status.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+            var offset = (filter.PageNumber - 1) * filter.PageSize;
+
+            var items = await query
+                .OrderBy(x => x.Id)
+                .Skip(offset)
+                .Take(filter.PageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
 
         public async Task<IEnumerable<Appointment>> GetPendingPastAppointmentsAsync()
         {
-            return await dbContext.Appointments.Where(a => a.Status == AppointmentStatus.Pending && a.DateTime < DateTime.UtcNow).ToListAsync();
+            var now = DateTime.UtcNow;
+            var appointments = await dbContext.Appointments
+                .Where(a => a.Status == AppointmentStatus.Pending && a.DateTime < now)
+                .ToListAsync();
+
+            return appointments.Where(a => a.DateTime.Add(a.Duration).AddHours(1) < now);
         }
     }
 }

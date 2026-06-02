@@ -1,4 +1,6 @@
-﻿using HospitalManagement.Models.Domain;
+﻿using HospitalManagement.Common;
+using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.DTOs.Appointment;
 
 namespace HospitalManagement.Repositories.Interfaces
 {
@@ -10,7 +12,7 @@ namespace HospitalManagement.Repositories.Interfaces
 
         Task<Appointment> CreateAsync(Appointment appointment);
 
-        Task<List<Appointment>> GetAllAsync();
+        Task<(List<Appointment> items, int totalCount)> GetAllAsync(AppointmentFilterDto filter);
 
         Task<Appointment> UpdateAsync(Appointment appointment);
 

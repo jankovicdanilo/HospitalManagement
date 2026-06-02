@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.DTOs.Patient;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,10 +17,12 @@ namespace HospitalManagement.Repositories.Interfaces
 
         Task<Patient> UpdateAsync(Patient patient);
 
-        bool PatientExists(int id);
+        Task<bool> PatientExists(int id);
 
-        bool EmailExists(string email);
+        Task<bool> EmailExists(string email);
 
         Task<Patient?> GetByEmailAsync(string email);
+
+        Task<Patient?> GetMedicalHistoryAsync(int patientId);
     }
 }

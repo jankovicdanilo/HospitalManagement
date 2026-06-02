@@ -6,6 +6,7 @@ using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Services.Validations;
 using Microsoft.Extensions.Options;
+using HospitalManagement.Models.Enums;
 
 namespace HospitalManagement.Services.Implementations
 {
@@ -14,26 +15,42 @@ namespace HospitalManagement.Services.Implementations
         private readonly IAppointmentRepository appointmentRepository;
         private readonly IMapper mapper;
         private readonly AppointmentValidation appointmentValidation;
-        private readonly AppointmentSettings appointmentSettings;
         private readonly ILogger<AppointmentService> logger;
+        private readonly IPatientRepository patientRepository;
+        private readonly IDoctorRepository doctorRepository;
+        private readonly IDoctorScheduleRepository doctorScheduleRepository;
+        private readonly AppointmentSettings appointmentSettings;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
-            AppointmentValidation appointmentValidation, IOptions<AppointmentSettings> appointmentSettings, ILogger<AppointmentService> logger)
+            AppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
+            IPatientRepository patientRepository, IDoctorRepository doctorRepository, IDoctorScheduleRepository doctorScheduleRepository,
+            IOptions<AppointmentSettings> appointmentSettings)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
             this.appointmentValidation = appointmentValidation;
-            this.appointmentSettings = appointmentSettings.Value;
             this.logger = logger;
+            this.patientRepository = patientRepository;
+            this.doctorRepository  = doctorRepository;
+            this.doctorScheduleRepository = doctorScheduleRepository;
+            this.appointmentSettings = appointmentSettings.Value;
         }
 
-        public async Task<Result<List<AppointmentListResponseDto>>> GetAllAsync()
+        public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
         {
-            var appointments = await appointmentRepository.GetAllAsync();
+            var (items, totalCount) = await appointmentRepository.GetAllAsync(filter);
 
-            var result = mapper.Map<List<AppointmentListResponseDto>>(appointments);
+            var mapped = mapper.Map<List<AppointmentListResponseDto>>(items);
 
-            return Result<List<AppointmentListResponseDto>>.Ok(result);
+            var pagedResult = new PagedResult<AppointmentListResponseDto>
+            {
+                Items = mapped,
+                TotalCount = totalCount,
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize
+            };
+
+            return Result<PagedResult<AppointmentListResponseDto>>.Ok(pagedResult);
         }
 
         public async Task<Result<AppointmentResponseDto>> GetByIdAsync(int id)
@@ -63,8 +80,12 @@ namespace HospitalManagement.Services.Implementations
             var appointmentDomain = mapper.Map<Appointment>(request);
 
             appointmentDomain = await appointmentRepository.CreateAsync(appointmentDomain);
+            var patient = await patientRepository.GetByIdAsync(request.PatientId);
+            var doctor = await doctorRepository.GetByIdAsync(request.DoctorId);
 
             logger.LogInformation("Appointment created with id {id}", appointmentDomain.Id);
+            logger.LogInformation("Email sent to {Email}: Appointment confirmed for {DateTime} with Dr. {Doctor}",
+                patient.Email, appointmentDomain.DateTime, $"{doctor.FirstName} {doctor.LastName}");
 
             var result = mapper.Map<AppointmentCreateResponseDto>(appointmentDomain);
 
@@ -81,14 +102,22 @@ namespace HospitalManagement.Services.Implementations
                 return Result<AppointmentUpdateResponseDto>.Fail(validatedAppointment.Message,
                     validatedAppointment.ErrorCode);
             }
-                
+
             var appointmentDomain = await appointmentRepository.GetByIdAsync(request.Id);
-            
+
             if (appointmentDomain == null)
             {
                 logger.LogWarning("Appointment with id {Id} not found", request.Id);
-                return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found", 
+                return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found",
                     "INVALID_ID");
+            }
+
+            if (appointmentDomain.Status != AppointmentStatus.Pending)
+            {
+                logger.LogWarning("Appointment with id {Id} cannot be updated, status is {Status}", request.Id, appointmentDomain.Status);
+                return Result<AppointmentUpdateResponseDto>.Fail(
+                    $"Only pending appointments can be updated",
+                    "INVALID_STATUS");
             }
 
             mapper.Map(request, appointmentDomain);
@@ -118,8 +147,22 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date)
         {
-            var workStart = new TimeSpan(appointmentSettings.WorkStartHour, 0, 0);
-            var workEnd = new TimeSpan(appointmentSettings.WorkEndHour, 0, 0);
+            var doctorSchedule = await doctorScheduleRepository.GetByDoctorIdAndDayAsync(doctorId, date.DayOfWeek);
+
+            if(doctorSchedule == null)
+            {
+                logger.LogWarning("Doctor {DoctorId} does not work on {DayOfWeek}", doctorId, date.DayOfWeek.ToString());
+                return Result<List<TimeSlotDto>>.Fail($"Doctor does not work on {date.DayOfWeek}", "DOCTOR_NOT_AVAILABLE");
+            }
+
+            if(date < DateOnly.FromDateTime(DateTime.UtcNow))
+            {
+                logger.LogWarning("Free slots requested for past date {Date}", date);
+                return Result<List<TimeSlotDto>>.Fail("Cannot get free slots for a past date", "INVALID_DATE");
+            }
+
+            var workStart = new TimeSpan(doctorSchedule.StartHour, 0, 0);
+            var workEnd = new TimeSpan(doctorSchedule.EndHour, 0, 0);
             var slotSize = new TimeSpan(0, appointmentSettings.SlotSizeMinutes, 0);
 
             var appointments = await appointmentRepository.GetByDoctorIdAndDateAsync(doctorId, date);
@@ -149,6 +192,31 @@ namespace HospitalManagement.Services.Implementations
             }
 
             return Result<List<TimeSlotDto>>.Ok(freeSlots);
+        }
+
+        public async Task<Result> UpdateStatusAsync(AppointmentStatusUpdateDto request)
+        {
+            var appointmentDomain = await appointmentRepository.GetByIdAsync(request.Id);
+
+            if(appointmentDomain == null)
+            {
+                logger.LogWarning("Appointment with id {Id} not found", request.Id);
+                return Result.Fail($"Appointment with the id {request.Id} not found", "INVALID_ID");
+            }
+
+            if(appointmentDomain.Status != AppointmentStatus.Pending)
+            {
+                logger.LogWarning("Appointment with id {Id} cannot be updated, status is {Status}", request.Id, appointmentDomain.Status);
+                return Result.Fail("Only pending appointments can have their status changed", "INVALID_STATUS");
+            }
+
+            appointmentDomain.Status = request.Status;
+
+            await appointmentRepository.UpdateAsync(appointmentDomain);
+
+            logger.LogInformation("Appointment with id {Id} status updated to {Status}", request.Id, request.Status);
+
+            return Result.Ok("Appointment status updated");
         }
     }
 }

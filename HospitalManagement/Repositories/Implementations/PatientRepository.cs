@@ -1,6 +1,9 @@
-﻿using HospitalManagement.Data;
+﻿using Dapper;
+using HospitalManagement.Data;
 using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Repositories.Interfaces;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace HospitalManagement.Repositories.Implementations
@@ -67,14 +70,24 @@ namespace HospitalManagement.Repositories.Implementations
             return await dbContext.Patients.FirstOrDefaultAsync(x => x.Email == email);
         }
 
-        public bool EmailExists(string email)
+        public async Task<bool> EmailExists(string email)
         {
-            return dbContext.Patients.Any(x => x.Email == email);
+            return await dbContext.Patients.AnyAsync(x => x.Email == email);
         }
 
-        public bool PatientExists(int id)
+        public async Task<bool> PatientExists(int id)
         {
-            return dbContext.Patients.Any(x => x.Id == id);
+            return await dbContext.Patients.AnyAsync(x => x.Id == id);
+        }
+
+        public async Task<Patient?> GetMedicalHistoryAsync(int patientId)
+        {
+            return await dbContext.Patients.
+                Include(a => a.Appointments)
+                    .ThenInclude(d => d.Doctor)
+                .Include(a => a.Appointments)
+                    .ThenInclude(t => t.Treatment)
+                .FirstOrDefaultAsync(p => p.Id == patientId);
         }
     }
 }

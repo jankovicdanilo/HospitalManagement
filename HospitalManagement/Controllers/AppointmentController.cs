@@ -4,6 +4,7 @@ using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace HospitalManagement.Controllers
 {
@@ -53,9 +54,10 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentFilterDto filter)
         {
-            var result = await appointmentService.GetAllAsync();
+            var result = await appointmentService.GetAllAsync(filter);
 
             return Ok(result);
         }
@@ -74,6 +76,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> CreateAsync([FromBody] AppointmentCreateRequestDto request,
             [FromServices] IValidator<AppointmentCreateRequestDto> validator)
         {
@@ -95,6 +98,7 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet("free-slots")]
+        [AllowAnonymous]
         public async Task<IActionResult> FreeSlots([FromQuery] FreeSlotsRequestDto request,
             [FromServices] IValidator<FreeSlotsRequestDto> validator)
         {
@@ -114,6 +118,26 @@ namespace HospitalManagement.Controllers
 
             return Ok(result);
         }
-        
+
+        [HttpPatch("status")]
+        public async Task<IActionResult> UpdateStatusAsync([FromBody] AppointmentStatusUpdateDto request,
+            [FromServices] IValidator<AppointmentStatusUpdateDto> validator)
+        {
+            var validation = await validator.ValidateAsync(request);
+
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
+            var result = await appointmentService.UpdateStatusAsync(request);
+
+            if (!result.Success)
+            {
+                return BadRequest(new { result.Message, result.ErrorCode });
+            }
+
+            return Ok(result);
+        }
     }
 }
