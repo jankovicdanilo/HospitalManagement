@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.Models.Domain;
+using HospitalManagement.Models.DTOs.Procedure;
 using HospitalManagement.Models.Enums;
 
 namespace HospitalManagement.Models.DTOs.Appointment
@@ -12,5 +13,7 @@ namespace HospitalManagement.Models.DTOs.Appointment
         public TimeSpan Duration { get; set; }
         public AppointmentStatus Status { get; set; }
         public string? Notes { get; set; }
+        public List<ProcedureResponseDto> Procedures { get; set; } = [];
+        public decimal TotalCost { get; set; }
     }
 }

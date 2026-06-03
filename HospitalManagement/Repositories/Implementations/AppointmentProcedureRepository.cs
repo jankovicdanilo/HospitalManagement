@@ -14,7 +14,7 @@ namespace HospitalManagement.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public async Task<AppointmentProcedure?> AddAsync(AppointmentProcedure request)
+        public async Task<AppointmentProcedure?> CreateAsync(AppointmentProcedure request)
         {
             await dbContext.AppointmentProcedures.AddAsync(request);
             await dbContext.SaveChangesAsync();
@@ -24,14 +24,14 @@ namespace HospitalManagement.Repositories.Implementations
             return request;
         }
 
-        public async Task<AppointmentProcedure?> GetAsync(int appointmentId, int procedureId)
+        public async Task<AppointmentProcedure?> GetByAppointmentAndProcedureIdAsync(int appointmentId, int procedureId)
         {
             return await dbContext.AppointmentProcedures
                 .Include(a => a.Procedure)
                 .FirstOrDefaultAsync(x => x.AppointmentId == appointmentId && x.ProcedureId == procedureId);
         }
 
-        public async Task<AppointmentProcedure?> RemoveAsync(int appointmentId, int procedureId)
+        public async Task<AppointmentProcedure?> DeleteAsync(int appointmentId, int procedureId)
         {
             var appointmentProcedure = await dbContext.AppointmentProcedures
                 .FirstOrDefaultAsync

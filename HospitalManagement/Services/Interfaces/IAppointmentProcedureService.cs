@@ -6,8 +6,8 @@ namespace HospitalManagement.Services.Interfaces
 {
     public interface IAppointmentProcedureService
     {
-        Task<Result<AppointmentProcedureResponseDto>> GetAsync(int appointmentId, int procedureId);  
-        Task<Result<AppointmentProcedureCreateResponseDto>> AddAsync(AppointmentProcedureCreateRequestDto request);
-        Task<Result<AppointmentProcedureResponseDto>> RemoveAsync(int appointmentId, int procedureId);
+        Task<Result<AppointmentProcedureResponseDto>> GetByAppointmentAndProcedureIdAsync(int appointmentId, int procedureId);  
+        Task<Result<AppointmentProcedureCreateResponseDto>> CreateAsync(AppointmentProcedureCreateRequestDto request);
+        Task<Result<AppointmentProcedureResponseDto>> DeleteAsync(int appointmentId, int procedureId);
     }
 }

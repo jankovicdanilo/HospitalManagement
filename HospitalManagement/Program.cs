@@ -40,6 +40,7 @@ builder.Services.AddScoped<IAppointmentProcedureRepository , AppointmentProcedur
 builder.Services.AddScoped<IAppointmentProcedureService , AppointmentProcedureService>();
 builder.Services.AddScoped<AppointmentValidation>();
 builder.Services.AddScoped<TreatmentValidation>();
+builder.Services.AddScoped<AppointmentProcedureValidation>();
 builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));

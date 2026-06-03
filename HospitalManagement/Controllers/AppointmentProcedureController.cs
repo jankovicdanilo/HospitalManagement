@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Services.Interfaces;
+﻿using HospitalManagement.Models.DTOs.AppointmentProcedure;
+using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,11 +16,36 @@ namespace HospitalManagement.Controllers
             this.appointmentProcedureService = appointmentProcedureService;
         }
 
-        [HttpGet]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetAsync(int appointmentId, int procedureId)
+        [HttpPost]
+        public async Task<IActionResult> CreateAsync([FromBody] AppointmentProcedureCreateRequestDto request)
         {
-            var result = await appointmentProcedureService.GetAsync(appointmentId, procedureId);
+            var result = await appointmentProcedureService.CreateAsync(request);
+
+            if (!result.Success)
+            {
+                return NotFound(new { result.Message, result.ErrorCode });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetByAppointmentAndProcedureIdAsync(int appointmentId, int procedureId)
+        {
+            var result = await appointmentProcedureService.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId);
+
+            if (!result.Success)
+            {
+                return NotFound(new { result.Message, result.ErrorCode });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteAsync(int appointmentId, int procedureId)
+        {
+            var result = await appointmentProcedureService.DeleteAsync(appointmentId, procedureId);
 
             if (!result.Success)
             {
