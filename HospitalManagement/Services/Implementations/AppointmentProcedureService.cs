@@ -19,7 +19,6 @@ namespace HospitalManagement.Services.Implementations
         private readonly ILogger<AppointmentProcedureService> logger;
 
         public AppointmentProcedureService(IAppointmentProcedureRepository appointmentProcedureRepository,
-            IAppointmentRepository appointmentRepository, IProcedureRepository procedureRepository,
             IMapper mapper, IAppointmentProcedureValidation appointmentProcedureValidation, ILogger<AppointmentProcedureService> logger)
         {
             this.appointmentProcedureRepository = appointmentProcedureRepository;
