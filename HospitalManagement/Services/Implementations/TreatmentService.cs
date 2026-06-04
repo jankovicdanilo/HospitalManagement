@@ -12,12 +12,12 @@ namespace HospitalManagement.Services.Implementations
     public class TreatmentService : ITreatmentService
     {
         private readonly ITreatmentRepository treatmentRepository;
-        private readonly TreatmentValidation treatmentValidation;
+        private readonly ITreatmentValidation treatmentValidation;
         private readonly IMapper mapper;
         private readonly ILogger<TreatmentService> logger;
 
         public TreatmentService(ITreatmentRepository treatmentRepository, IMapper mapper,
-            IAppointmentRepository appointmentRepository, TreatmentValidation treatmentValidation, 
+            IAppointmentRepository appointmentRepository, ITreatmentValidation treatmentValidation, 
             ILogger<TreatmentService> logger)
         {
             this.treatmentRepository = treatmentRepository;

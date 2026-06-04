@@ -15,11 +15,12 @@ namespace HospitalManagement.Services.Implementations
     {
         private readonly IAppointmentProcedureRepository appointmentProcedureRepository;
         private readonly IMapper mapper;
-        private readonly AppointmentProcedureValidation appointmentProcedureValidation;
+        private readonly IAppointmentProcedureValidation appointmentProcedureValidation;
         private readonly ILogger<AppointmentProcedureService> logger;
 
         public AppointmentProcedureService(IAppointmentProcedureRepository appointmentProcedureRepository,
-            IMapper mapper, AppointmentProcedureValidation appointmentProcedureValidation, ILogger<AppointmentProcedureService> logger)
+            IAppointmentRepository appointmentRepository, IProcedureRepository procedureRepository,
+            IMapper mapper, IAppointmentProcedureValidation appointmentProcedureValidation, ILogger<AppointmentProcedureService> logger)
         {
             this.appointmentProcedureRepository = appointmentProcedureRepository;
             this.mapper = mapper;
