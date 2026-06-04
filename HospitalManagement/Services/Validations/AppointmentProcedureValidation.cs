@@ -4,7 +4,7 @@ using HospitalManagement.Repositories.Interfaces;
 
 namespace HospitalManagement.Services.Validations
 {
-    public class AppointmentProcedureValidation
+    public class AppointmentProcedureValidation : IAppointmentProcedureValidation
     {
         private readonly IAppointmentRepository appointmentRepository;
         private readonly IProcedureRepository procedureRepository;
