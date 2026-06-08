@@ -16,8 +16,7 @@ namespace HospitalManagement.Services.Implementations
         private readonly IMapper mapper;
         private readonly ILogger<TreatmentService> logger;
 
-        public TreatmentService(ITreatmentRepository treatmentRepository, IMapper mapper,
-            IAppointmentRepository appointmentRepository, ITreatmentValidation treatmentValidation, 
+        public TreatmentService(ITreatmentRepository treatmentRepository, IMapper mapper, ITreatmentValidation treatmentValidation, 
             ILogger<TreatmentService> logger)
         {
             this.treatmentRepository = treatmentRepository;
