@@ -24,7 +24,11 @@ namespace HospitalManagement.Repositories.Implementations
 
         public async Task<Appointment?> GetByIdAsync(int id)
         {
-            return await dbContext.Appointments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            return await dbContext.Appointments
+                .Include(x => x.AppointmentProcedures)
+                    .ThenInclude(ap => ap.Procedure)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<Appointment?> Delete(int id)
@@ -77,6 +81,8 @@ namespace HospitalManagement.Repositories.Implementations
             var query = dbContext.Appointments
                 .Include(x => x.Doctor)
                 .Include(x => x.Patient)
+                .Include(x => x.AppointmentProcedures)
+                    .ThenInclude(ap => ap.Procedure)
                 .AsQueryable();
 
             if (filter.DoctorId.HasValue)

@@ -28,6 +28,10 @@ public partial class HospitalDbContext : DbContext
 
     public virtual DbSet<DoctorSchedule> DoctorSchedules { get; set; }
 
+    public virtual DbSet<Procedure> Procedures { get; set; }
+
+    public virtual DbSet<AppointmentProcedure> AppointmentProcedures { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Appointment>(entity =>
@@ -115,6 +119,24 @@ public partial class HospitalDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.DayOfWeek).HasConversion<string>();
+        });
+
+        modelBuilder.Entity<AppointmentProcedure>(entity =>
+        {
+            entity.HasKey(ap => new { ap.AppointmentId, ap.ProcedureId });
+
+            entity.HasOne(ap => ap.Appointment)
+                  .WithMany(a => a.AppointmentProcedures)
+                  .HasForeignKey(ap => ap.AppointmentId);
+
+            entity.HasOne(ap => ap.Procedure)
+                  .WithMany(a => a.AppointmentProcedures)
+                  .HasForeignKey(ap => ap.ProcedureId);
+        });
+
+        modelBuilder.Entity<Procedure>(entity =>
+        {
+            entity.Property(p => p.Price).HasPrecision(18, 2);
         });
 
         OnModelCreatingPartial(modelBuilder);

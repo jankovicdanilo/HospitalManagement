@@ -25,4 +25,6 @@ public partial class Appointment
     public virtual Patient Patient { get; set; } = null!;
 
     public virtual Treatment? Treatment { get; set; }
+
+    public ICollection<AppointmentProcedure> AppointmentProcedures { get; set; } = [];
 }

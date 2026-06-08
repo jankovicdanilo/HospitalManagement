@@ -14,7 +14,7 @@ namespace HospitalManagement.Services.Implementations
     {
         private readonly IAppointmentRepository appointmentRepository;
         private readonly IMapper mapper;
-        private readonly AppointmentValidation appointmentValidation;
+        private readonly IAppointmentValidation appointmentValidation;
         private readonly ILogger<AppointmentService> logger;
         private readonly IPatientRepository patientRepository;
         private readonly IDoctorRepository doctorRepository;
@@ -22,7 +22,7 @@ namespace HospitalManagement.Services.Implementations
         private readonly AppointmentSettings appointmentSettings;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
-            AppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
+            IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IPatientRepository patientRepository, IDoctorRepository doctorRepository, IDoctorScheduleRepository doctorScheduleRepository,
             IOptions<AppointmentSettings> appointmentSettings)
         {
