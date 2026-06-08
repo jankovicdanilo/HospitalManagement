@@ -20,7 +20,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Register HospitalDbContext with SQL Server using connection string from appsettings.json
 builder.Services.AddDbContext<HospitalDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalDb")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalDb"),
+    sqlOptions => sqlOptions.EnableRetryOnFailure(
+        maxRetryCount: 5,
+        maxRetryDelay: TimeSpan.FromSeconds(10),
+        errorNumbersToAdd: null)));
 
 builder.Services.AddScoped<IAuthRepository,AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -156,6 +160,7 @@ var app = builder.Build();
 using(var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<HospitalDbContext>();
+    context.Database.Migrate();
     await SeedData.SeedAdminAsync(context);
 }
 
