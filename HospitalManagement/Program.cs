@@ -64,6 +64,8 @@ var jwtSettings = new JwtSettings
 // Bind Jwt section from appsettings.json to JwtSettings class for DI
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<DiscountSettings>(
+    builder.Configuration.GetSection("DiscountSettings"));
 
 // Configure JWT authentication as the default scheme
 builder.Services.AddAuthentication(options =>
