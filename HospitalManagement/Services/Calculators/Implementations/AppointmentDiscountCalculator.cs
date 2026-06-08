@@ -1,11 +1,20 @@
 ﻿using HospitalManagement.Models.Domain;
 using HospitalManagement.Services.Calculators.Interfaces;
 using HospitalManagement.Services.Calculators.Results;
+using HospitalManagement.Settings;
+using Microsoft.Extensions.Options;
 
 namespace HospitalManagement.Services.Calculators.Implementations
 {
     public class AppointmentDiscountCalculator : IAppointmentDiscountCalculator
     {
+        private readonly DiscountSettings discountSettings;
+
+        public AppointmentDiscountCalculator(IOptions<DiscountSettings> discountSettings)
+        {
+            this.discountSettings = discountSettings.Value;
+        }
+
         public DiscountResult Calculate(ICollection<AppointmentProcedure> procedures)
         {
             
@@ -13,21 +22,21 @@ namespace HospitalManagement.Services.Calculators.Implementations
             var procedureCount = procedures.Count;
             decimal discount = 0;
 
-            if(procedureCount >= 3)
+            if(procedureCount >= discountSettings.Tier1MinCount)
             {
-                discount = totalCost * 0.03m;
+                discount = totalCost * discountSettings.Tier1Percentage/100m;
             }
-            if(procedureCount >= 5)
+            if(procedureCount >= discountSettings.Tier2MinCount)
             {
-                discount = totalCost * 0.04m;
+                discount = totalCost * discountSettings.Tier2Percentage/100m;
             }
-            if(procedureCount >= 7)
+            if(procedureCount >= discountSettings.Tier3MinCount)
             {
-                discount = totalCost * 0.05m;
+                discount = totalCost * discountSettings.Tier3Percentage/100m;
             }
-            if(discount > 100)
+            if(discount > discountSettings.MaxDiscount)
             {
-                discount = 100;
+                discount = discountSettings.MaxDiscount;
             }
 
             totalCost = totalCost - discount;
