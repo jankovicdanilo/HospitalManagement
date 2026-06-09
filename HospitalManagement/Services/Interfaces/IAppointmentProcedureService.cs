@@ -1,5 +1,5 @@
-﻿using HospitalManagement.Common;
-using HospitalManagement.Models.DTOs;
+﻿
+using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.DTOs.AppointmentProcedure;
 
 namespace HospitalManagement.Services.Interfaces

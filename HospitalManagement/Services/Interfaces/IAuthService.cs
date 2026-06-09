@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Common;
+﻿using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.DTOs.Auth;
 
 namespace HospitalManagement.Services.Interfaces
