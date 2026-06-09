@@ -1,17 +1,14 @@
 ﻿using AutoMapper;
-using Azure.Core;
-
+using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Models.Enums;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
 using HospitalManagement.Services.Validations;
-using HospitalManagement.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HospitalManagement.Tests.Services
 {

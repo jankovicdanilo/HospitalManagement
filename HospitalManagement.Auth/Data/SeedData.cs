@@ -1,0 +1,30 @@
+﻿using HospitalManagement.Auth.Models.Domain;
+using HospitalManagement.Auth.Models.Enums;
+using Microsoft.EntityFrameworkCore;
+
+namespace HospitalManagement.Auth.Data
+{
+    public static class SeedData
+    {
+        public static async Task SeedAdminAsync(AuthDbContext dbContext)
+        {
+            var adminExists = await dbContext.Users.AnyAsync(x => x.Role == UserRole.Admin);
+
+            if (adminExists)
+                return;
+
+            var admin = new User
+            {
+                Username = "admin",
+                Email = "admin@hospital.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                Role = UserRole.Admin,
+            };
+
+            await dbContext.Users.AddAsync(admin);
+            await dbContext.SaveChangesAsync();
+
+            Console.WriteLine("Default admin seeded successfully.");
+        }
+    }
+}
