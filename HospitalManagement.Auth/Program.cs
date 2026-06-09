@@ -16,7 +16,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<AuthDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDb")));
+options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDb"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure
+        (
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null
+        )));
 
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
