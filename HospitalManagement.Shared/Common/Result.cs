@@ -1,4 +1,10 @@
-﻿namespace HospitalManagement.Common
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HospitalManagement.Shared.Common
 {
     public enum ErrorType
     {
@@ -22,14 +28,14 @@
             Data = data
         };
 
-        public static Result<T> Fail(string message, string? errorCode = null, 
+        public static Result<T> Fail(string message, string? errorCode = null,
             ErrorType? errorType = null) => new()
-        {
-            Success = false,
-            Message = message,
-            ErrorCode = errorCode,
-            ErrorType = errorType
-        };
+            {
+                Success = false,
+                Message = message,
+                ErrorCode = errorCode,
+                ErrorType = errorType
+            };
     }
 
     public class Result
@@ -45,13 +51,13 @@
             Message = message
         };
 
-        public static Result Fail(string message, string? errorCode = null, 
+        public static Result Fail(string message, string? errorCode = null,
             ErrorType? errorType = null) => new()
-        {
-            Success = false,
-            Message = message,
-            ErrorCode = errorCode,
-            ErrorType = errorType
-        };
+            {
+                Success = false,
+                Message = message,
+                ErrorCode = errorCode,
+                ErrorType = errorType
+            };
     }
 }

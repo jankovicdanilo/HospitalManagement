@@ -3,6 +3,7 @@ using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HospitalManagement.Shared.Controllers;
 
 namespace HospitalManagement.Controllers
 {

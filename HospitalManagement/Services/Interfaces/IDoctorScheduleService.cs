@@ -1,5 +1,4 @@
-﻿using HospitalManagement.Common;
-using HospitalManagement.Models.DTOs.Doctor;
+﻿using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.DTOs.DoctorSchedule;
 
 namespace HospitalManagement.Services.Interfaces

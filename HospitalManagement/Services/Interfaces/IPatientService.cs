@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Common;
+﻿using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.DTOs.Patient;
 
 namespace HospitalManagement.Services.Interfaces

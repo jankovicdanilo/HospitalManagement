@@ -1,5 +1,6 @@
-﻿using HospitalManagement.Common;
+﻿
 using HospitalManagement.Models.DTOs.Treatment;
+using HospitalManagement.Shared.Common;
 
 namespace HospitalManagement.Services.Validations
 {

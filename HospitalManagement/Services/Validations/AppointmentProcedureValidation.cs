@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Common;
+﻿using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.Enums;
 using HospitalManagement.Repositories.Interfaces;
 

@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Dapper;
-using HospitalManagement.Common;
+using HospitalManagement.Shared.Common;
 using HospitalManagement.Data;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
