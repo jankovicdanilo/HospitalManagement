@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Common;
+﻿using HospitalManagement.Shared.Common;
 
 namespace HospitalManagement.Services.Validations
 {

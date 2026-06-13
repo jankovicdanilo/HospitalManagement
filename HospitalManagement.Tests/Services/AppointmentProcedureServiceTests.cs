@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using HospitalManagement.Common;
+
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.AppointmentProcedure;
 using HospitalManagement.Repositories.Interfaces;

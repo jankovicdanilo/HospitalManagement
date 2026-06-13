@@ -1,8 +1,7 @@
 ﻿using AutoMapper;
-using HospitalManagement.Common;
+using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Treatment;
-using HospitalManagement.Models.Enums;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Services.Validations;
