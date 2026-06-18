@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
-using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Models.Enums;
 using HospitalManagement.Repositories.Interfaces;
+using HospitalManagement.Services.Calculators.Interfaces;
+using HospitalManagement.Services.Calculators.Results;
 using HospitalManagement.Services.Implementations;
 using HospitalManagement.Services.Validations;
+using HospitalManagement.Shared.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -23,6 +25,7 @@ namespace HospitalManagement.Tests.Services
         private Mock<IDoctorRepository> doctorRepositoryMock;
         private Mock<IDoctorScheduleRepository> doctorScheduleRepositoryMock;
         private IOptions<AppointmentSettings> appointmentSettings;
+        private Mock<IAppointmentDiscountCalculator> appointmentDiscountCalculatorMock;
         private AppointmentService appointmentService;
 
         [SetUp]
@@ -35,6 +38,7 @@ namespace HospitalManagement.Tests.Services
             patientRepositoryMock = new Mock<IPatientRepository>();
             doctorRepositoryMock = new Mock<IDoctorRepository>();
             doctorScheduleRepositoryMock = new Mock<IDoctorScheduleRepository>();
+            appointmentDiscountCalculatorMock = new Mock<IAppointmentDiscountCalculator>();
             appointmentSettings = Options.Create(new AppointmentSettings { SlotSizeMinutes = 30 });
 
             appointmentService = new AppointmentService
@@ -46,7 +50,8 @@ namespace HospitalManagement.Tests.Services
                     patientRepositoryMock.Object,
                     doctorRepositoryMock.Object,
                     doctorScheduleRepositoryMock.Object,
-                    appointmentSettings
+                    appointmentSettings,
+                    appointmentDiscountCalculatorMock.Object
                 );
         }
 
@@ -77,6 +82,63 @@ namespace HospitalManagement.Tests.Services
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("INVALID_ID"));
+        }
+
+        [Test]
+        public async Task GetByIdAsync_AppointmentPending_DoesNotApplyDiscount()
+        {
+            int appointmentId = 1;
+            var procedure = new Procedure { Id = 1, Price = 100m };
+            var appointment = new Appointment
+            {
+                Id = appointmentId,
+                Status = AppointmentStatus.Pending,
+                AppointmentProcedures = new List<AppointmentProcedure>
+        {
+            new AppointmentProcedure { Procedure = procedure }
+        }
+            };
+            var appointmentDto = new AppointmentResponseDto { Id = appointmentId };
+
+            appointmentRepositoryMock.Setup(r => r.GetByIdAsync(appointmentId)).ReturnsAsync(appointment);
+            mapperMock.Setup(m => m.Map<AppointmentResponseDto>(appointment)).Returns(appointmentDto);
+
+            var result = await appointmentService.GetByIdAsync(appointmentId);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data.TotalCost, Is.EqualTo(100m));
+            Assert.That(result.Data.Discount, Is.EqualTo(0));
+            appointmentDiscountCalculatorMock.Verify(c => c.Calculate(It.IsAny<ICollection<AppointmentProcedure>>()), Times.Never);
+        }
+
+        [Test]
+        public async Task GetByIdAsync_AppointmentCompleted_AppliesDiscount()
+        {
+            int appointmentId = 1;
+            var procedure = new Procedure { Id = 1, Price = 100m };
+            var procedures = new List<AppointmentProcedure>
+    {
+        new AppointmentProcedure { Procedure = procedure }
+    };
+            var appointment = new Appointment
+            {
+                Id = appointmentId,
+                Status = AppointmentStatus.Completed,
+                AppointmentProcedures = procedures
+            };
+            var appointmentDto = new AppointmentResponseDto { Id = appointmentId };
+            var discountResult = new DiscountResult(90m, 10m);
+
+            appointmentRepositoryMock.Setup(r => r.GetByIdAsync(appointmentId)).ReturnsAsync(appointment);
+            mapperMock.Setup(m => m.Map<AppointmentResponseDto>(appointment)).Returns(appointmentDto);
+            appointmentDiscountCalculatorMock.Setup(c => c.Calculate(procedures)).Returns(discountResult);
+
+            var result = await appointmentService.GetByIdAsync(appointmentId);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data.TotalCost, Is.EqualTo(90m));
+            Assert.That(result.Data.Discount, Is.EqualTo(10m));
+            appointmentDiscountCalculatorMock.Verify(c => c.Calculate(procedures), Times.Once);
         }
 
         [Test]
