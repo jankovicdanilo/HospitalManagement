@@ -1,14 +1,9 @@
 using FluentValidation;
 using HospitalManagement.Data;
-using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Repositories.Implementations;
 using HospitalManagement.Repositories.Interfaces;
-using HospitalManagement.Services.Background;
-using HospitalManagement.Services.Calculators.Implementations;
-using HospitalManagement.Services.Calculators.Interfaces;
 using HospitalManagement.Services.Implementations;
 using HospitalManagement.Services.Interfaces;
-using HospitalManagement.Services.Validations;
 using HospitalManagement.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -27,23 +22,11 @@ builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IPatientService, PatientService>();
-builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
-builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
-builder.Services.AddScoped<ITreatmentService,  TreatmentService>();
 builder.Services.AddScoped<IDoctorScheduleRepository , DoctorScheduleRepository>();
 builder.Services.AddScoped<IDoctorScheduleService , DoctorScheduleService>();
 builder.Services.AddScoped<IProcedureRepository, ProcedureRepository>();
 builder.Services.AddScoped<IProcedureService, ProcedureService>();
-builder.Services.AddScoped<IAppointmentProcedureRepository , AppointmentProcedureRepository>();
-builder.Services.AddScoped<IAppointmentProcedureService , AppointmentProcedureService>();
-builder.Services.AddScoped<IAppointmentValidation, AppointmentValidation>();
-builder.Services.AddScoped<ITreatmentValidation, TreatmentValidation>();
-builder.Services.AddScoped<IAppointmentProcedureValidation, AppointmentProcedureValidation>();
-builder.Services.AddScoped<IAppointmentDiscountCalculator, AppointmentDiscountCalculator>();
-builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
 builder.Services.AddAutoMapper(typeof(Program));
-builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));
 
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
@@ -60,8 +43,6 @@ var jwtSettings = new JwtSettings
 // Bind Jwt section from appsettings.json to JwtSettings class for DI
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("Jwt"));
-builder.Services.Configure<DiscountSettings>(
-    builder.Configuration.GetSection("DiscountSettings"));
 
 // Configure JWT authentication as the default scheme
 builder.Services.AddAuthentication(options =>
