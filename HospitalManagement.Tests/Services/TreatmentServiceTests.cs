@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-
+using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Treatment;
 using HospitalManagement.Repositories.Interfaces;

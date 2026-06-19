@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.AppointmentProcedure;
 using HospitalManagement.Repositories.Interfaces;
@@ -7,6 +6,7 @@ using HospitalManagement.Services.Implementations;
 using HospitalManagement.Services.Validations;
 using Microsoft.Extensions.Logging;
 using Moq;
+using HospitalManagement.Shared.Common;
 
 namespace HospitalManagement.Tests.Services
 {

@@ -1,13 +1,10 @@
 using FluentValidation;
-using HospitalManagement.Data;
-using HospitalManagement.Models.DTOs.Appointment;
-using HospitalManagement.Repositories.Implementations;
-using HospitalManagement.Repositories.Interfaces;
-using HospitalManagement.Services.Background;
-using HospitalManagement.Services.Implementations;
-using HospitalManagement.Services.Interfaces;
-using HospitalManagement.Services.Validations;
-using HospitalManagement.Settings;
+using HospitalManagement.Auth.Data;
+using HospitalManagement.Auth.Repositories.Implementations;
+using HospitalManagement.Auth.Repositories.Interfaces;
+using HospitalManagement.Auth.Services.Implementations;
+using HospitalManagement.Auth.Services.Interfaces;
+using HospitalManagement.Auth.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -17,30 +14,13 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register HospitalDbContext with SQL Server using connection string from appsettings.json
-builder.Services.AddDbContext<HospitalDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalDb")));
+// Add services to the container.
+builder.Services.AddDbContext<AuthDbContext>(options =>
+options.UseSqlServer(builder.Configuration.GetConnectionString("AuthDb")));
 
-builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
-builder.Services.AddScoped<IDoctorService, DoctorService>();
-builder.Services.AddScoped<IPatientRepository, PatientRepository>();
-builder.Services.AddScoped<IPatientService, PatientService>();
-builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
-builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
-builder.Services.AddScoped<ITreatmentService,  TreatmentService>();
-builder.Services.AddScoped<IDoctorScheduleRepository , DoctorScheduleRepository>();
-builder.Services.AddScoped<IDoctorScheduleService , DoctorScheduleService>();
-builder.Services.AddScoped<IProcedureRepository, ProcedureRepository>();
-builder.Services.AddScoped<IProcedureService, ProcedureService>();
-builder.Services.AddScoped<IAppointmentProcedureRepository , AppointmentProcedureRepository>();
-builder.Services.AddScoped<IAppointmentProcedureService , AppointmentProcedureService>();
-builder.Services.AddScoped<IAppointmentValidation, AppointmentValidation>();
-builder.Services.AddScoped<ITreatmentValidation, TreatmentValidation>();
-builder.Services.AddScoped<IAppointmentProcedureValidation, AppointmentProcedureValidation>();
-builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAutoMapper(typeof(Program));
-builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));
 
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
@@ -116,7 +96,6 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Required for Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-
 // Configure Swagger with JWT support so protected endpoints can be tested directly in Swagger UI
 builder.Services.AddSwaggerGen(options =>
 {
@@ -150,24 +129,21 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-using(var scope = app.Services.CreateScope())
+using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<HospitalDbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
     context.Database.Migrate();
+    await SeedData.SeedAdminAsync(context);
 }
 
-// Enable Swagger only in development environment
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-//app.UseMiddleware<ExceptionHandlingMiddleware>();
-
 app.UseHttpsRedirection();
-
-// UseAuthentication must come before UseAuthorization - order matters
 app.UseAuthentication();
 app.UseAuthorization();
 
