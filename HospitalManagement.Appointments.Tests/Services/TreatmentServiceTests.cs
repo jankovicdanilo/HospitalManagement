@@ -1,14 +1,14 @@
 ﻿using AutoMapper;
+using HospitalManagement.Appointments.Models.Domain;
+using HospitalManagement.Appointments.Models.DTOs.Treatment;
+using HospitalManagement.Appointments.Repositories.Interfaces;
+using HospitalManagement.Appointments.Services.Implementations;
+using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Shared.Common;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Treatment;
-using HospitalManagement.Repositories.Interfaces;
-using HospitalManagement.Services.Implementations;
-using HospitalManagement.Services.Validations;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace HospitalManagement.Tests.Services
+namespace HospitalManagement.Appointments.Tests.Services
 {
     [TestFixture]
     internal class TreatmentServiceTests
@@ -27,13 +27,12 @@ namespace HospitalManagement.Tests.Services
             mapperMock = new Mock<IMapper>();
             loggerMock = new Mock<ILogger<TreatmentService>>();
 
-            treatmentService = new TreatmentService
-                (
-                    treatmentRepositoryMock.Object, 
-                    mapperMock.Object,
-                    treatmentValidationMock.Object,
-                    loggerMock.Object
-                );
+            treatmentService = new TreatmentService(
+                treatmentRepositoryMock.Object,
+                mapperMock.Object,
+                treatmentValidationMock.Object,
+                loggerMock.Object
+            );
         }
 
         [Test]
@@ -41,11 +40,10 @@ namespace HospitalManagement.Tests.Services
         {
             int appointmentId = 1;
             var request = new TreatmentCreateRequestDto { AppointmentId = appointmentId };
-            var treatment = new Treatment { AppointmentId= appointmentId };
+            var treatment = new Treatment { AppointmentId = appointmentId };
             var treatmentDto = new TreatmentCreateResponseDto { AppointmentId = appointmentId };
 
-            treatmentValidationMock.Setup(v => v.ValidateAll(request))
-                .ReturnsAsync(Result.Ok("Validation ok"));
+            treatmentValidationMock.Setup(v => v.ValidateAll(request)).ReturnsAsync(Result.Ok("Validation ok"));
             mapperMock.Setup(m => m.Map<Treatment>(request)).Returns(treatment);
             treatmentRepositoryMock.Setup(r => r.CreateAsync(treatment)).ReturnsAsync(treatment);
             mapperMock.Setup(m => m.Map<TreatmentCreateResponseDto>(treatment)).Returns(treatmentDto);
