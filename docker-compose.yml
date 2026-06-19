@@ -21,6 +21,8 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
+    volumes:
+      - ./logs/api:/app/logs
     depends_on:
       - db
 
@@ -36,6 +38,8 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
+    volumes:
+      - ./logs/auth:/app/logs
     depends_on:
       - db
 
