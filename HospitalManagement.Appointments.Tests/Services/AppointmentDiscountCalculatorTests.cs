@@ -1,14 +1,9 @@
-﻿using HospitalManagement.Models.Domain;
-using HospitalManagement.Services.Calculators.Implementations;
-using HospitalManagement.Settings;
+﻿using HospitalManagement.Appointments.Models.Domain;
+using HospitalManagement.Appointments.Services.Calculators.Implementations;
+using HospitalManagement.Appointments.Settings;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace HospitalManagement.Tests.Services
+namespace HospitalManagement.Appointments.Tests.Services
 {
     [TestFixture]
     internal class AppointmentDiscountCalculatorTests
@@ -36,14 +31,15 @@ namespace HospitalManagement.Tests.Services
         private static List<AppointmentProcedure> BuildProcedures(int count, decimal pricePerProcedure)
         {
             var procedures = new List<AppointmentProcedure>();
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 procedures.Add(new AppointmentProcedure
                 {
-                    Procedure = new Procedure { Id = 1, Name = $"Procedure{i}", Price = pricePerProcedure }
+                    ProcedureId = i + 1,
+                    ProcedureName = $"Procedure{i}",
+                    ProcedurePrice = pricePerProcedure  // snapshot field, no Procedure navigation needed
                 });
             }
-
             return procedures;
         }
 

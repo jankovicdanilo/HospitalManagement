@@ -1,14 +1,14 @@
 ﻿using AutoMapper;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.AppointmentProcedure;
-using HospitalManagement.Repositories.Interfaces;
-using HospitalManagement.Services.Implementations;
-using HospitalManagement.Services.Validations;
+using HospitalManagement.Appointments.Models.Domain;
+using HospitalManagement.Appointments.Models.DTOs.AppointmentProcedure;
+using HospitalManagement.Appointments.Repositories.Interfaces;
+using HospitalManagement.Appointments.Services.Implementations;
+using HospitalManagement.Appointments.Services.Validations;
+using HospitalManagement.Shared.Common;
 using Microsoft.Extensions.Logging;
 using Moq;
-using HospitalManagement.Shared.Common;
 
-namespace HospitalManagement.Tests.Services
+namespace HospitalManagement.Appointments.Tests.Services
 {
     [TestFixture]
     internal class AppointmentProcedureServiceTests
@@ -27,13 +27,12 @@ namespace HospitalManagement.Tests.Services
             appointmentProcedureValidationMock = new Mock<IAppointmentProcedureValidation>();
             loggerMock = new Mock<ILogger<AppointmentProcedureService>>();
 
-            appointmentProcedureService = new AppointmentProcedureService
-                (
-                    appointmentProcedureRepositoryMock.Object,
-                    mapperMock.Object,
-                    appointmentProcedureValidationMock.Object,
-                    loggerMock.Object
-                );
+            appointmentProcedureService = new AppointmentProcedureService(
+                appointmentProcedureRepositoryMock.Object,
+                mapperMock.Object,
+                appointmentProcedureValidationMock.Object,
+                loggerMock.Object
+            );
         }
 
         [Test]
@@ -43,17 +42,17 @@ namespace HospitalManagement.Tests.Services
             int procedureId = 1;
             var request = new AppointmentProcedureCreateRequestDto { AppointmentId = appointmentId, ProcedureId = procedureId };
             var appointmentProcedure = new AppointmentProcedure { AppointmentId = appointmentId, ProcedureId = procedureId };
-            var apointmentProceduredto = new AppointmentProcedureCreateResponseDto { AppointmentId = appointmentId, ProcedureId = procedureId };
+            var appointmentProcedureDto = new AppointmentProcedureCreateResponseDto { AppointmentId = appointmentId, ProcedureId = procedureId };
 
             appointmentProcedureValidationMock.Setup(v => v.ValidateForCreate(request.AppointmentId, request.ProcedureId)).ReturnsAsync(Result.Ok("Validation ok"));
             mapperMock.Setup(m => m.Map<AppointmentProcedure>(request)).Returns(appointmentProcedure);
             appointmentProcedureRepositoryMock.Setup(r => r.CreateAsync(appointmentProcedure)).ReturnsAsync(appointmentProcedure);
-            mapperMock.Setup(m => m.Map<AppointmentProcedureCreateResponseDto>(appointmentProcedure)).Returns(apointmentProceduredto);
+            mapperMock.Setup(m => m.Map<AppointmentProcedureCreateResponseDto>(appointmentProcedure)).Returns(appointmentProcedureDto);
 
             var result = await appointmentProcedureService.CreateAsync(request);
 
             Assert.That(result.Success, Is.True);
-            Assert.That(result.Data, Is.EqualTo(apointmentProceduredto));
+            Assert.That(result.Data, Is.EqualTo(appointmentProcedureDto));
         }
 
         [Test]
@@ -81,8 +80,7 @@ namespace HospitalManagement.Tests.Services
             var appointmentProcedureDto = new AppointmentProcedureResponseDto { AppointmentId = appointmentId, ProcedureId = procedureId };
 
             appointmentProcedureValidationMock.Setup(v => v.ValidateForGet(appointmentId, procedureId)).ReturnsAsync(Result.Ok("Validation ok"));
-            appointmentProcedureRepositoryMock.Setup(r => r.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId))
-                .ReturnsAsync((appointmentProcedure));
+            appointmentProcedureRepositoryMock.Setup(r => r.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId)).ReturnsAsync(appointmentProcedure);
             mapperMock.Setup(m => m.Map<AppointmentProcedureResponseDto>(appointmentProcedure)).Returns(appointmentProcedureDto);
 
             var result = await appointmentProcedureService.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId);
@@ -113,8 +111,7 @@ namespace HospitalManagement.Tests.Services
             int procedureId = 1;
 
             appointmentProcedureValidationMock.Setup(v => v.ValidateForGet(appointmentId, procedureId)).ReturnsAsync(Result.Ok("Validation ok"));
-            appointmentProcedureRepositoryMock.Setup(r => r.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId))
-                .ReturnsAsync((AppointmentProcedure?)null);
+            appointmentProcedureRepositoryMock.Setup(r => r.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId)).ReturnsAsync((AppointmentProcedure?)null);
 
             var result = await appointmentProcedureService.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId);
 
@@ -161,8 +158,7 @@ namespace HospitalManagement.Tests.Services
             int appointmentId = 1;
             int procedureId = 1;
 
-            appointmentProcedureValidationMock.Setup(v => v.ValidateForDelete(appointmentId, procedureId))
-                .ReturnsAsync(Result.Ok("Validation ok"));
+            appointmentProcedureValidationMock.Setup(v => v.ValidateForDelete(appointmentId, procedureId)).ReturnsAsync(Result.Ok("Validation ok"));
             appointmentProcedureRepositoryMock.Setup(r => r.DeleteAsync(appointmentId, procedureId)).ReturnsAsync((AppointmentProcedure?)null);
 
             var result = await appointmentProcedureService.DeleteAsync(appointmentId, procedureId);
