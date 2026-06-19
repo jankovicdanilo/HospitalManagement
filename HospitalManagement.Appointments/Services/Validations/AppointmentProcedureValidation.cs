@@ -1,6 +1,7 @@
 ﻿using HospitalManagement.Shared.Common;
 using HospitalManagement.Appointments.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
+using HospitalManagement.Appointments.Clients.Interfaces;
 
 // TODO: IProcedureRepository will be replaced by IMainApiClient.GetProcedureAsync
 // once that's defined
@@ -11,12 +12,15 @@ namespace HospitalManagement.Appointments.Services.Validations
     {
         private readonly IAppointmentRepository appointmentRepository;
         private readonly IAppointmentProcedureRepository appointmentProcedureRepository;
+        private readonly IMainApiClient mainApiClient;
 
         public AppointmentProcedureValidation(IAppointmentRepository appointmentRepository,
-            IAppointmentProcedureRepository appointmentProcedureRepository)
+            IAppointmentProcedureRepository appointmentProcedureRepository,
+            IMainApiClient mainApiClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.appointmentProcedureRepository = appointmentProcedureRepository;
+            this.mainApiClient = mainApiClient;
         }
 
         public async Task<Result> ValidateForCreate(int appointmentId, int procedureId)
@@ -29,7 +33,8 @@ namespace HospitalManagement.Appointments.Services.Validations
             if (appointment.Status != AppointmentStatus.Pending)
                 return Result.Fail("Procedures can only be modified on Pending appointments", "INVALID_STATUS");
 
-            if (!await CheckProcedureId(procedureId))
+            var procedure = await mainApiClient.GetProcedureAsync(procedureId);
+            if (procedure == null)
                 return Result.Fail($"Procedure with id {procedureId} not found", "INVALID_PROCEDURE_ID");
 
             if (await IsDuplicate(appointmentId, procedureId))
@@ -45,7 +50,8 @@ namespace HospitalManagement.Appointments.Services.Validations
             if (appointment == null)
                 return Result.Fail($"Appointment with id {appointmentId} not found", "INVALID_APPOINTMENT_ID");
 
-            if (!await CheckProcedureId(procedureId))
+            var procedure = await mainApiClient.GetProcedureAsync(procedureId);
+            if (procedure == null)
                 return Result.Fail($"Procedure with id {procedureId} not found", "INVALID_PROCEDURE_ID");
 
             return Result.Ok("Validation ok");
@@ -58,7 +64,8 @@ namespace HospitalManagement.Appointments.Services.Validations
             if (appointment == null)
                 return Result.Fail($"Appointment with id {appointmentId} not found", "INVALID_APPOINTMENT_ID");
 
-            if (!await CheckProcedureId(procedureId))
+            var procedure = await mainApiClient.GetProcedureAsync(procedureId);
+            if (procedure == null)
                 return Result.Fail($"Procedure with id {procedureId} not found", "INVALID_PROCEDURE_ID");
 
             var link = await appointmentProcedureRepository.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId);
