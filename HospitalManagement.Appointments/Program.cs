@@ -1,4 +1,6 @@
 using FluentValidation;
+using HospitalManagement.Appointments.Clients.Implementations;
+using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Data;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
 using HospitalManagement.Appointments.Repositories.Implementations;
@@ -39,6 +41,12 @@ builder.Services.AddScoped<ITreatmentValidation, TreatmentValidation>();
 
 // Calculators
 builder.Services.AddScoped<IAppointmentDiscountCalculator, AppointmentDiscountCalculator>();
+
+// HTTP client for cross-service calls to main API
+builder.Services.AddHttpClient<IMainApiClient, MainApiClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["MainApi:BaseUrl"]!);
+});
 
 // Background services
 builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
