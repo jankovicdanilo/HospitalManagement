@@ -4,6 +4,7 @@
     {
         public int Id { get; set; }
         public string? PatientName { get; set; }
-        public List<AppointmentHistoryDto> Appointments { get; set; } = new List<AppointmentHistoryDto>();
+        // TODO: cross-service — appointment history requires HTTP call to appointment microservice
+        // public List<AppointmentHistoryDto> Appointments { get; set; } = new List<AppointmentHistoryDto>();
     }
 }

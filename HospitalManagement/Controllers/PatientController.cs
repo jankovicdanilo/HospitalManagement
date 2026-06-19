@@ -93,18 +93,20 @@ namespace HospitalManagement.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{patientId:int}/history")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetMedicalHistoryAsync(int patientId)
-        {
-            var result = await patientService.GetMedicalHistoryAsync(patientId);
+        // TODO: cross-service endpoint — requires HTTP call to appointment microservice
+        // Temporarily disabled until IMainApiClient is wired into the main API
+        //[HttpGet("{patientId:int}/history")]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> GetMedicalHistoryAsync(int patientId)
+        //{
+        //    var result = await patientService.GetMedicalHistoryAsync(patientId);
 
-            if (!result.Success)
-            {
-                return NotFound(new {result.Message, result.ErrorCode});
-            }
+        //    if (!result.Success)
+        //    {
+        //        return NotFound(new {result.Message, result.ErrorCode});
+        //    }
 
-            return Ok(result);
-        }
+        //    return Ok(result);
+        //}
     }
 }

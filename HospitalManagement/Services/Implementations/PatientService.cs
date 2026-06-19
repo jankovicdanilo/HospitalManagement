@@ -109,17 +109,12 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<PatientMedicalHistoryDto>> GetMedicalHistoryAsync(int patientId)
         {
-            var patientDomain = await patientRepository.GetMedicalHistoryAsync(patientId);
-            
-            if(patientDomain == null)
-            {
-                logger.LogWarning("Patient with id {Id} not found", patientId);
-                return Result<PatientMedicalHistoryDto>.Fail($"Patient with id {patientId} doesn't exist", "INVALID_ID");
-            }
-
-            var result = mapper.Map<PatientMedicalHistoryDto>(patientDomain);
-
-            return Result<PatientMedicalHistoryDto>.Ok(result);
+            // TODO: cross-service call to appointment microservice needed
+            // Appointments now live in HospitalManagementAppointments database
+            await Task.CompletedTask;
+            return Result<PatientMedicalHistoryDto>.Fail(
+                "Medical history temporarily unavailable — pending cross-service implementation",
+                "NOT_IMPLEMENTED");
         }
     }
 }

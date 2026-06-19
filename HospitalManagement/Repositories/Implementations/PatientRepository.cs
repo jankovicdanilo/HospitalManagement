@@ -82,12 +82,9 @@ namespace HospitalManagement.Repositories.Implementations
 
         public async Task<Patient?> GetMedicalHistoryAsync(int patientId)
         {
-            return await dbContext.Patients.
-                Include(a => a.Appointments)
-                    .ThenInclude(d => d.Doctor)
-                .Include(a => a.Appointments)
-                    .ThenInclude(t => t.Treatment)
-                .FirstOrDefaultAsync(p => p.Id == patientId);
+            // TODO: cross-service call to appointment microservice needed
+            await Task.CompletedTask;
+            return null;
         }
     }
 }

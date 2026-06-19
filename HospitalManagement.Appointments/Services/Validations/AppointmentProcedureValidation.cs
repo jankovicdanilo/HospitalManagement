@@ -10,15 +10,12 @@ namespace HospitalManagement.Appointments.Services.Validations
     public class AppointmentProcedureValidation : IAppointmentProcedureValidation
     {
         private readonly IAppointmentRepository appointmentRepository;
-        private readonly IProcedureRepository procedureRepository;
         private readonly IAppointmentProcedureRepository appointmentProcedureRepository;
 
         public AppointmentProcedureValidation(IAppointmentRepository appointmentRepository,
-            IProcedureRepository procedureRepository,
             IAppointmentProcedureRepository appointmentProcedureRepository)
         {
             this.appointmentRepository = appointmentRepository;
-            this.procedureRepository = procedureRepository;
             this.appointmentProcedureRepository = appointmentProcedureRepository;
         }
 
@@ -78,11 +75,6 @@ namespace HospitalManagement.Appointments.Services.Validations
         private async Task<bool> IsDuplicate(int appointmentId, int procedureId)
         {
             return await appointmentProcedureRepository.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId) != null;
-        }
-
-        private async Task<bool> CheckProcedureId(int procedureId)
-        {
-            return await procedureRepository.GetByIdAsync(procedureId) != null;
         }
     }
 }
