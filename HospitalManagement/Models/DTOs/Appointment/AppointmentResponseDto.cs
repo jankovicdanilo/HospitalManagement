@@ -14,5 +14,6 @@ namespace HospitalManagement.Models.DTOs.Appointment
         public string? Notes { get; set; }
         public List<ProcedureResponseDto> Procedures { get; set; } = [];
         public decimal TotalCost { get; set; }
+        public decimal Discount { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
+using HospitalManagement.Models.Enums;
 using HospitalManagement.Repositories.Interfaces;
 
 namespace HospitalManagement.Services.Validations
