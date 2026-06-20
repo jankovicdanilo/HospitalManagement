@@ -29,7 +29,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             this.hospitalManagementClient = hospitalManagementClient;
         }
 
-        public async Task<Result<AppointmentProcedureCreateResponseDto>> CreateAsync(AppointmentProcedureCreateRequestDto request)
+        public async Task<Result<AppointmentProcedureCreateResponseDto>> CreateAsync
+            (AppointmentProcedureCreateRequestDto request)
         {
             var validatedAppointmentProcedure = await appointmentProcedureValidation.ValidateForCreate(request.AppointmentId, request.ProcedureId);
 
@@ -49,6 +50,11 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             var appointmentProcedureDomain = mapper.Map<AppointmentProcedure>(request);
             appointmentProcedureDomain.ProcedureName = procedure.Name;
+            appointmentProcedureDomain.ProcedurePrice = procedure.Price;
+
+            var procedure = await mainApiClient.GetProcedureAsync(request.ProcedureId);
+
+            appointmentProcedureDomain.ProcedureName = procedure!.Name;
             appointmentProcedureDomain.ProcedurePrice = procedure.Price;
 
             appointmentProcedureDomain = await appointmentProcedureRepository.CreateAsync(appointmentProcedureDomain);

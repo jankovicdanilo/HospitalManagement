@@ -177,6 +177,13 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             mapper.Map(request, appointmentDomain);
 
+            var patient = await mainApiClient.GetPatientAsync(request.PatientId);
+            var doctor = await mainApiClient.GetDoctorAsync(request.DoctorId);
+
+            appointmentDomain.PatientName = $"{patient!.Name} {patient!.LastName}";
+            appointmentDomain.PatientEmail = patient.Email;
+            appointmentDomain.DoctorName = $"{doctor!.FirstName} {doctor.LastName}";
+
             appointmentDomain = await appointmentRepository.UpdateAsync(appointmentDomain);
 
             logger.LogInformation("Appointment with id {Id} updated", appointmentDomain.Id);
