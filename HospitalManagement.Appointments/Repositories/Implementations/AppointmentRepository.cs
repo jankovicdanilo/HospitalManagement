@@ -21,6 +21,7 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
         {
             return await dbContext.Appointments
                 .Include(x => x.AppointmentProcedures)
+                .Include(x => x.Treatment)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
@@ -72,6 +73,7 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
         {
             var query = dbContext.Appointments
                 .Include(x => x.AppointmentProcedures)
+                .Include(x => x.Treatment)
                 .AsQueryable();
 
             if (filter.DoctorId.HasValue)

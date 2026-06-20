@@ -21,6 +21,10 @@ namespace HospitalManagement.Shared.Http
         {
             var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
 
+            Console.WriteLine($"AuthTokenHandler fired. HttpContext: " +
+                $"{(httpContextAccessor.HttpContext == null ? "NULL" : "OK")}, Token: " +
+                $"{(string.IsNullOrEmpty(token) ? "EMPTY" : "PRESENT")}");
+
             if (!string.IsNullOrEmpty(token))
             {
                 requestMessage.Headers.Authorization = System.Net.Http.Headers.AuthenticationHeaderValue.Parse(token);

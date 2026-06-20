@@ -20,8 +20,8 @@ public partial class Appointment
 
     public string? Notes { get; set; }
 
-    // Snapshot fields — captured at creation time, since Doctor/Patient
-    // now live in the main API's separate database.
+    /* Snapshot fields — captured at creation time, since Doctor/Patient
+     now live in the main API's separate database.*/
     public string PatientName { get; set; } = null!;
 
     public string PatientEmail { get; set; } = null!;

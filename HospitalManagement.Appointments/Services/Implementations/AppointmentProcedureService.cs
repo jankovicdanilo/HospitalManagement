@@ -5,6 +5,7 @@ using HospitalManagement.Appointments.Models.DTOs.AppointmentProcedure;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
+using HospitalManagement.Appointments.Clients.Interfaces;
 
 namespace HospitalManagement.Appointments.Services.Implementations
 {
@@ -14,17 +15,21 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly IMapper mapper;
         private readonly IAppointmentProcedureValidation appointmentProcedureValidation;
         private readonly ILogger<AppointmentProcedureService> logger;
+        private readonly IMainApiClient mainApiClient;
 
         public AppointmentProcedureService(IAppointmentProcedureRepository appointmentProcedureRepository,
-            IMapper mapper, IAppointmentProcedureValidation appointmentProcedureValidation, ILogger<AppointmentProcedureService> logger)
+            IMapper mapper, IAppointmentProcedureValidation appointmentProcedureValidation,
+            ILogger<AppointmentProcedureService> logger, IMainApiClient mainApiClient)
         {
             this.appointmentProcedureRepository = appointmentProcedureRepository;
             this.mapper = mapper;
             this.appointmentProcedureValidation = appointmentProcedureValidation;
             this.logger = logger;
+            this.mainApiClient = mainApiClient;
         }
 
-        public async Task<Result<AppointmentProcedureCreateResponseDto>> CreateAsync(AppointmentProcedureCreateRequestDto request)
+        public async Task<Result<AppointmentProcedureCreateResponseDto>> CreateAsync
+            (AppointmentProcedureCreateRequestDto request)
         {
             var validatedAppointmentProcedure = await appointmentProcedureValidation.ValidateForCreate(request.AppointmentId, request.ProcedureId);
 
@@ -35,6 +40,11 @@ namespace HospitalManagement.Appointments.Services.Implementations
             }
 
             var appointmentProcedureDomain = mapper.Map<AppointmentProcedure>(request);
+
+            var procedure = await mainApiClient.GetProcedureAsync(request.ProcedureId);
+
+            appointmentProcedureDomain.ProcedureName = procedure!.Name;
+            appointmentProcedureDomain.ProcedurePrice = procedure.Price;
 
             appointmentProcedureDomain = await appointmentProcedureRepository.CreateAsync(appointmentProcedureDomain);
 
