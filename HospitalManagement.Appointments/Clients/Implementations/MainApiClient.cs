@@ -39,7 +39,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             }
         }
 
-        public async Task<ExternalPatientDto> GetPatientAsync(int patientId)
+        public async Task<ExternalPatientDto?> GetPatientAsync(int patientId)
         {
             try
             {
@@ -58,41 +58,16 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             }
         }
 
-        //public async Task<ExternalProcedureDto?> GetProcedureAsync(int procedureId)
-        //{
-        //    try
-        //    {
-        //        var response = await httpClient.GetAsync($"api/procedure/{procedureId}");
-        //        if (!response.IsSuccessStatusCode)
-        //            return null;
-        //        var json = await response.Content.ReadAsStringAsync();
-        //        var result = JsonSerializer.Deserialize<ApiResponse<ExternalProcedureDto>>(json, JsonOptions);
-
-        //        return result?.Data;
-        //    }
-        //    catch(Exception ex)
-        //    {
-        //        logger.LogError(ex, "Failed to get procedure {ProcedureId} from main API", procedureId);
-        //        return null;
-        //    }
-        //}
-
         public async Task<ExternalProcedureDto?> GetProcedureAsync(int procedureId)
         {
             try
             {
                 var url = $"api/procedure/{procedureId}";
-                logger.LogInformation("Calling main API: {BaseAddress}{Url}", httpClient.BaseAddress, url);
-
                 var response = await httpClient.GetAsync(url);
-                logger.LogInformation("Response status: {StatusCode}", response.StatusCode);
-
                 var json = await response.Content.ReadAsStringAsync();
-                logger.LogInformation("Response body: {Json}", json);
-
                 if (!response.IsSuccessStatusCode) return null;
                 var result = JsonSerializer.Deserialize<ApiResponse<ExternalProcedureDto>>(json, JsonOptions);
-                logger.LogInformation("Deserialized data: {Data}", result?.Data?.Name);
+
                 return result?.Data;
             }
             catch (Exception ex)
