@@ -2,11 +2,13 @@
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Appointment;
+using HospitalManagement.Models.Enums;
 using HospitalManagement.Repositories.Interfaces;
+using HospitalManagement.Services.Calculators.Interfaces;
+using HospitalManagement.Services.Calculators.Results;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Services.Validations;
 using Microsoft.Extensions.Options;
-using HospitalManagement.Models.Enums;
 
 namespace HospitalManagement.Services.Implementations
 {
@@ -20,11 +22,12 @@ namespace HospitalManagement.Services.Implementations
         private readonly IDoctorRepository doctorRepository;
         private readonly IDoctorScheduleRepository doctorScheduleRepository;
         private readonly AppointmentSettings appointmentSettings;
+        private readonly IAppointmentDiscountCalculator appointmentDiscountCalculator;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IPatientRepository patientRepository, IDoctorRepository doctorRepository, IDoctorScheduleRepository doctorScheduleRepository,
-            IOptions<AppointmentSettings> appointmentSettings)
+            IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator) 
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
@@ -34,6 +37,7 @@ namespace HospitalManagement.Services.Implementations
             this.doctorRepository  = doctorRepository;
             this.doctorScheduleRepository = doctorScheduleRepository;
             this.appointmentSettings = appointmentSettings.Value;
+            this.appointmentDiscountCalculator = appointmentDiscountCalculator;
         }
 
         public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
@@ -50,9 +54,16 @@ namespace HospitalManagement.Services.Implementations
                 PageSize = filter.PageSize
             };
 
+            foreach(var (item, dto) in items.Zip(mapped))
+            {
+                var calculateDiscount = GetDiscountResult(item);
+                dto.TotalCost = calculateDiscount.TotalCost;
+                dto.Discount = calculateDiscount.Discount;
+            }
+
             return Result<PagedResult<AppointmentListResponseDto>>.Ok(pagedResult);
         }
-
+        
         public async Task<Result<AppointmentResponseDto>> GetByIdAsync(int id)
         {
             var appointmentDomain = await appointmentRepository.GetByIdAsync(id);
@@ -63,10 +74,13 @@ namespace HospitalManagement.Services.Implementations
             }
                 
             var result = mapper.Map<AppointmentResponseDto>(appointmentDomain);
+            var calculateDiscount = GetDiscountResult(appointmentDomain);
+            result.TotalCost = calculateDiscount.TotalCost;
+            result.Discount = calculateDiscount.Discount;
 
             return Result<AppointmentResponseDto>.Ok(result);
         }
-
+        
         public async Task<Result<AppointmentCreateResponseDto>> CreateAsync(AppointmentCreateRequestDto request)
         {
             var validatedAppointment = await appointmentValidation.ValidateAll(request);
@@ -217,6 +231,18 @@ namespace HospitalManagement.Services.Implementations
             logger.LogInformation("Appointment with id {Id} status updated to {Status}", request.Id, request.Status);
 
             return Result.Ok("Appointment status updated");
+        }
+
+        private DiscountResult GetDiscountResult(Appointment appointment)
+        {
+            if (appointment.Status != AppointmentStatus.Completed)
+            {
+                return new DiscountResult(appointment.AppointmentProcedures.Sum(ap => ap.Procedure.Price), 0);
+            }
+
+            var discountResult = appointmentDiscountCalculator.Calculate(appointment.AppointmentProcedures); ;
+
+            return discountResult;
         }
     }
 }

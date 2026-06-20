@@ -4,6 +4,8 @@ using HospitalManagement.Models.DTOs.Appointment;
 using HospitalManagement.Repositories.Implementations;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Background;
+using HospitalManagement.Services.Calculators.Implementations;
+using HospitalManagement.Services.Calculators.Interfaces;
 using HospitalManagement.Services.Implementations;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Services.Validations;
@@ -38,6 +40,7 @@ builder.Services.AddScoped<IAppointmentProcedureService , AppointmentProcedureSe
 builder.Services.AddScoped<IAppointmentValidation, AppointmentValidation>();
 builder.Services.AddScoped<ITreatmentValidation, TreatmentValidation>();
 builder.Services.AddScoped<IAppointmentProcedureValidation, AppointmentProcedureValidation>();
+builder.Services.AddScoped<IAppointmentDiscountCalculator, AppointmentDiscountCalculator>();
 builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));
@@ -57,6 +60,8 @@ var jwtSettings = new JwtSettings
 // Bind Jwt section from appsettings.json to JwtSettings class for DI
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<DiscountSettings>(
+    builder.Configuration.GetSection("DiscountSettings"));
 
 // Configure JWT authentication as the default scheme
 builder.Services.AddAuthentication(options =>

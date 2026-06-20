@@ -14,10 +14,8 @@ namespace HospitalManagement.Mappings
                     opt => opt.MapFrom(src => src.Doctor.FirstName + " " + src.Doctor.LastName))
                 .ForMember(dest => dest.PatientName,
                     opt => opt.MapFrom(src => src.Patient.Name + " " + src.Patient.LastName))
-                .ForMember(dest => dest.Procedures, 
-                    opt => opt.MapFrom(src => src.AppointmentProcedures.Select(ap => ap.Procedure)))
-                .ForMember(dest => dest.TotalCost, 
-                    opt => opt.MapFrom(src => src.AppointmentProcedures.Sum(ap => ap.Procedure.Price)));
+                .ForMember(dest => dest.Procedures,
+                    opt => opt.MapFrom(src => src.AppointmentProcedures.Select(ap => ap.Procedure)));
 
             CreateMap<Appointment, AppointmentHistoryDto>()
                 .ForMember(dest => dest.DoctorName,
@@ -27,23 +25,19 @@ namespace HospitalManagement.Mappings
 
             CreateMap<Appointment, AppointmentResponseDto>()
                 .ForMember(dest => dest.Procedures,
-                    opt => opt.MapFrom(src => src.AppointmentProcedures.Select(ap => ap.Procedure)))
-                .ForMember(dest => dest.TotalCost,
-                    opt => opt.MapFrom(src => src.AppointmentProcedures.Sum(ap => ap.Procedure.Price)));
+                    opt => opt.MapFrom(src => src.AppointmentProcedures.Select(ap => ap.Procedure)));
+
             CreateMap<Appointment, AppointmentUpdateRequestDto>().ReverseMap();
 
             CreateMap<Appointment, AppointmentUpdateResponseDto>()
                 .ForMember(dest => dest.Procedures,
-                    opt => opt.MapFrom(src => src.AppointmentProcedures.Select(ap => ap.Procedure)))
-                .ForMember(dest => dest.TotalCost,
-                    opt => opt.MapFrom(src => src.AppointmentProcedures.Sum(ap => ap.Procedure.Price)));
+                    opt => opt.MapFrom(src => src.AppointmentProcedures.Select(ap => ap.Procedure)));
+
             CreateMap<Appointment, AppointmentCreateRequestDto>().ReverseMap();
 
             CreateMap<Appointment, AppointmentCreateResponseDto>()
                 .ForMember(dest => dest.Procedures,
-                    opt => opt.MapFrom(src => src.AppointmentProcedures.Select(ap => ap.Procedure)))
-                .ForMember(dest => dest.TotalCost,
-                    opt => opt.MapFrom(src => src.AppointmentProcedures.Sum(ap => ap.Procedure.Price)));
+                    opt => opt.MapFrom(src => src.AppointmentProcedures.Select(ap => ap.Procedure)));
         }
     }
 }
