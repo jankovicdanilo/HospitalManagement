@@ -10,6 +10,7 @@ using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Shared.Common;
 using Microsoft.Extensions.Options;
+using HospitalManagement.Appointments.Clients.Interfaces;
 
 namespace HospitalManagement.Appointments.Services.Implementations
 {
@@ -110,6 +111,13 @@ namespace HospitalManagement.Appointments.Services.Implementations
             }
 
             var appointmentDomain = mapper.Map<Appointment>(request);
+
+            var patient = await mainApiClient.GetPatientAsync(request.PatientId);
+            var doctor = await mainApiClient.GetDoctorAsync(request.DoctorId);
+
+            appointmentDomain.PatientName = $"{patient!.Name} {patient.LastName}";
+            appointmentDomain.PatientEmail = patient.Email;
+            appointmentDomain.DoctorName = $"{doctor!.FirstName} {doctor.LastName}";
 
             appointmentDomain = await appointmentRepository.CreateAsync(appointmentDomain);
 
