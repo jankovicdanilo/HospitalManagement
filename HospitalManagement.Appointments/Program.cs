@@ -42,11 +42,15 @@ builder.Services.AddScoped<ITreatmentValidation, TreatmentValidation>();
 // Calculators
 builder.Services.AddScoped<IAppointmentDiscountCalculator, AppointmentDiscountCalculator>();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<HospitalManagement.Shared.Http.AuthTokenHandler>();
+
 // HTTP client for cross-service calls to main API
 builder.Services.AddHttpClient<IMainApiClient, MainApiClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["MainApi:BaseUrl"]!);
-});
+})
+    .AddHttpMessageHandler<HospitalManagement.Shared.Http.AuthTokenHandler>();
 
 // Background services
 builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
