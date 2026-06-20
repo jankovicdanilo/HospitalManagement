@@ -3,6 +3,7 @@ using HospitalManagement.Models.DTOs.Procedure;
 using HospitalManagement.Shared.Controllers;
 using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HospitalManagement.Controllers
 {
@@ -67,6 +68,7 @@ namespace HospitalManagement.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
         {

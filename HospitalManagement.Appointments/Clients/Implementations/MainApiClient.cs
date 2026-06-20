@@ -9,11 +9,116 @@ namespace HospitalManagement.Appointments.Clients.Implementations
         private readonly HttpClient httpClient;
         private readonly ILogger<MainApiClient> logger;
 
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
         public MainApiClient(HttpClient httpClient, ILogger<MainApiClient> logger)
         {
             this.httpClient = httpClient;
             this.logger = logger;
+        }
+
+        public async Task<ExternalDoctorDto?> GetDoctorAsync(int doctorId)
+        {
+            try
+            {
+                var response = await httpClient.GetAsync($"api/doctor/{doctorId}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<ApiResponse<ExternalDoctorDto>>(json, JsonOptions);
+
+                return result?.Data;
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Failed to get doctor {DoctorId} from main API", doctorId);
+                return null;
+            }
+        }
+
+        public async Task<ExternalPatientDto> GetPatientAsync(int patientId)
+        {
+            try
+            {
+                var response = await httpClient.GetAsync($"api/patient/{patientId}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<ApiResponse<ExternalPatientDto>>(json, JsonOptions);
+
+                return result?.Data;
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Failed to get patient {PatientId} from main API", patientId);
+                return null;
+            }
+        }
+
+        //public async Task<ExternalProcedureDto?> GetProcedureAsync(int procedureId)
+        //{
+        //    try
+        //    {
+        //        var response = await httpClient.GetAsync($"api/procedure/{procedureId}");
+        //        if (!response.IsSuccessStatusCode)
+        //            return null;
+        //        var json = await response.Content.ReadAsStringAsync();
+        //        var result = JsonSerializer.Deserialize<ApiResponse<ExternalProcedureDto>>(json, JsonOptions);
+
+        //        return result?.Data;
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        logger.LogError(ex, "Failed to get procedure {ProcedureId} from main API", procedureId);
+        //        return null;
+        //    }
+        //}
+
+        public async Task<ExternalProcedureDto?> GetProcedureAsync(int procedureId)
+        {
+            try
+            {
+                var url = $"api/procedure/{procedureId}";
+                logger.LogInformation("Calling main API: {BaseAddress}{Url}", httpClient.BaseAddress, url);
+
+                var response = await httpClient.GetAsync(url);
+                logger.LogInformation("Response status: {StatusCode}", response.StatusCode);
+
+                var json = await response.Content.ReadAsStringAsync();
+                logger.LogInformation("Response body: {Json}", json);
+
+                if (!response.IsSuccessStatusCode) return null;
+                var result = JsonSerializer.Deserialize<ApiResponse<ExternalProcedureDto>>(json, JsonOptions);
+                logger.LogInformation("Deserialized data: {Data}", result?.Data?.Name);
+                return result?.Data;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to get procedure {ProcedureId} from main API", procedureId);
+                return null;
+            }
+        }
+
+        public async Task<ExternalDoctorScheduleDto?> GetDoctorScheduleAsync(int doctorId, DayOfWeek dayOfWeek)
+        {
+            try
+            {
+                var response = await httpClient.GetAsync($"api/doctorschedule/doctor/{doctorId}/day/{dayOfWeek}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<ApiResponse<ExternalDoctorScheduleDto>>(json, JsonOptions);
+
+                return result?.Data;
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Failed to get schedule for doctor {DoctorId} on {DayOfWeek}", doctorId, dayOfWeek);
+                return null;
+            }
         }
     }
 
