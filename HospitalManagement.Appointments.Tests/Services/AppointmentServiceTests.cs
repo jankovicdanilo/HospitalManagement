@@ -2,6 +2,7 @@
 using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
+using HospitalManagement.Appointments.Models.DTOs.External;
 using HospitalManagement.Appointments.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Services.Calculators.Interfaces;
@@ -143,6 +144,8 @@ namespace HospitalManagement.Appointments.Tests.Services
             var request = new AppointmentCreateRequestDto { PatientId = patientId, DoctorId = doctorId };
             var appointment = new Appointment { Id = appointmentId };
             var appointmentDto = new AppointmentCreateResponseDto { Id = appointmentId };
+            var patient = new ExternalPatientDto { Name = "Marko", LastName = "Petrovic", Email = "marko@test.com" };
+            var doctor = new ExternalDoctorDto { FirstName = "Ana", LastName = "Kovac" };
 
             appointmentValidationMock.Setup(v => v.ValidateAll(request)).ReturnsAsync(Result.Ok("Validation ok"));
             hospitalClientMock.Setup(h => h.GetPatientAsync(patientId)).ReturnsAsync
@@ -184,8 +187,12 @@ namespace HospitalManagement.Appointments.Tests.Services
             var request = new AppointmentUpdateRequestDto { Id = appointmentId, DoctorId = 1, PatientId = 1 };
             var appointment = new Appointment { Id = appointmentId };
             var appointmentDto = new AppointmentUpdateResponseDto { Id = appointmentId };
+            var patient = new ExternalPatientDto { Name = "Marko", LastName = "Petrovic", Email = "marko@test.com" };
+            var doctor = new ExternalDoctorDto { FirstName = "Ana", LastName = "Kovac" };
 
             appointmentValidationMock.Setup(v => v.ValidateAll(request)).ReturnsAsync(Result.Ok("Validation ok"));
+            hospitalManagementClientMock.Setup(c => c.GetPatientAsync(request.PatientId)).ReturnsAsync(patient);
+            hospitalManagementClientMock.Setup(c => c.GetDoctorAsync(request.DoctorId)).ReturnsAsync(doctor);
             appointmentRepositoryMock.Setup(r => r.GetByIdAsync(request.Id)).ReturnsAsync(appointment);
             hospitalClientMock.Setup(h => h.GetPatientAsync(patientId)).ReturnsAsync
                 (new PatientResponseDto { Id = patientId });

@@ -2,6 +2,7 @@
 using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.AppointmentProcedure;
+using HospitalManagement.Appointments.Models.DTOs.External;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Validations;
@@ -30,6 +31,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             appointmentProcedureValidationMock = new Mock<IAppointmentProcedureValidation>();
             hospitalClientMock = new Mock<IHospitalManagementClient>();
             loggerMock = new Mock<ILogger<AppointmentProcedureService>>();
+            hospitalManagementClientMock = new Mock<IHospitalManagementClient>();
 
             appointmentProcedureService = new AppointmentProcedureService(
                 appointmentProcedureRepositoryMock.Object,
