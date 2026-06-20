@@ -3,20 +3,17 @@ using HospitalManagement.Appointments.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Clients.Interfaces;
 
-// TODO: IProcedureRepository will be replaced by IMainApiClient.GetProcedureAsync
-// once that's defined
-
 namespace HospitalManagement.Appointments.Services.Validations
 {
     public class AppointmentProcedureValidation : IAppointmentProcedureValidation
     {
         private readonly IAppointmentRepository appointmentRepository;
         private readonly IAppointmentProcedureRepository appointmentProcedureRepository;
-        private readonly IMainApiClient mainApiClient;
+        private readonly IHospitalManagementClient mainApiClient;
 
         public AppointmentProcedureValidation(IAppointmentRepository appointmentRepository,
             IAppointmentProcedureRepository appointmentProcedureRepository,
-            IMainApiClient mainApiClient)
+            IHospitalManagementClient mainApiClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.appointmentProcedureRepository = appointmentProcedureRepository;

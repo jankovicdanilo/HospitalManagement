@@ -21,12 +21,12 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly ILogger<AppointmentService> logger;
         private readonly AppointmentSettings appointmentSettings;
         private readonly IAppointmentDiscountCalculator appointmentDiscountCalculator;
-        private readonly IMainApiClient mainApiClient;
+        private readonly IHospitalManagementClient mainApiClient;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator,
-            IMainApiClient mainApiClient)
+            IHospitalManagementClient mainApiClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;

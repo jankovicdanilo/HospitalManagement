@@ -22,7 +22,7 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IMapper> mapperMock;
         private Mock<IAppointmentValidation> appointmentValidationMock;
         private Mock<ILogger<AppointmentService>> loggerMock;
-        private Mock<IMainApiClient> mainApiClientMock;
+        private Mock<IHospitalManagementClient> mainApiClientMock;
         private IOptions<AppointmentSettings> appointmentSettings;
         private Mock<IAppointmentDiscountCalculator> appointmentDiscountCalculatorMock;
         private AppointmentService appointmentService;
@@ -34,7 +34,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             mapperMock = new Mock<IMapper>();
             appointmentValidationMock = new Mock<IAppointmentValidation>();
             loggerMock = new Mock<ILogger<AppointmentService>>();
-            mainApiClientMock = new Mock<IMainApiClient>();
+            mainApiClientMock = new Mock<IHospitalManagementClient>();
             appointmentDiscountCalculatorMock = new Mock<IAppointmentDiscountCalculator>();
             appointmentSettings = Options.Create(new AppointmentSettings { SlotSizeMinutes = 30 });
 
