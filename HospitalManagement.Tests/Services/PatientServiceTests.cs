@@ -3,8 +3,8 @@ using HospitalManagement.Repositories.Interfaces;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using HospitalManagement.Services.Implementations;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Patient;
+using .Domain;
+using .DTOs.Patient;
 
 namespace HospitalManagement.Tests.Services
 {

@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using HospitalManagement.Shared.Common;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Doctor;
+using .Domain;
+using .DTOs.Doctor;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
 using Microsoft.Extensions.Logging;

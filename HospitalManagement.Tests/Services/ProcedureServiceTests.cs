@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Procedure;
+using .Domain;
+using .DTOs.Procedure;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
 using Microsoft.Extensions.Logging;
