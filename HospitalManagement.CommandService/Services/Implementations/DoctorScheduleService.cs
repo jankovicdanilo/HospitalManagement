@@ -4,6 +4,8 @@ using HospitalManagement.CommandService.Models.DTOs.DoctorSchedule;
 using HospitalManagement.CommandService.Repositories.Interfaces;
 using HospitalManagement.CommandService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Events;
+using MassTransit;
 
 namespace HospitalManagement.CommandService.Services.Implementations
 {
@@ -12,13 +14,15 @@ namespace HospitalManagement.CommandService.Services.Implementations
         private readonly IDoctorScheduleRepository doctorScheduleRepository;
         private readonly IMapper mapper;
         private readonly ILogger<DoctorScheduleService> logger;
+        private readonly IPublishEndpoint publishEndpoint;
 
         public DoctorScheduleService(IDoctorScheduleRepository doctorScheduleRepository, IMapper mapper,
-            ILogger<DoctorScheduleService> logger)
+            ILogger<DoctorScheduleService> logger, IPublishEndpoint publishEndpoint)
         {
             this.doctorScheduleRepository = doctorScheduleRepository;
             this.mapper = mapper;
             this.logger = logger;
+            this.publishEndpoint = publishEndpoint;
         }
 
         public async Task<Result<DoctorScheduleCreateResponseDto>> CreateAsync(DoctorScheduleCreateRequestDto request)
@@ -36,6 +40,17 @@ namespace HospitalManagement.CommandService.Services.Implementations
                 return Result<DoctorScheduleCreateResponseDto>.Fail($"Doctor already has a schedule for {request.DayOfWeek}", "DUPLICATE_SCHEDULE");
             }
             var doctorScheduleDomain = mapper.Map<DoctorSchedule>(request);
+
+            await publishEndpoint.Publish(new DoctorScheduleCreated(
+                CorrelationId: Guid.NewGuid(),
+                Id: doctorScheduleDomain!.Id,
+                DoctorId: doctorScheduleDomain.DoctorId,
+                DayOfWeek: doctorScheduleDomain.DayOfWeek,
+                StartHour: doctorScheduleDomain.StartHour,
+                EndHour: doctorScheduleDomain.EndHour));
+
+            logger.LogInformation("Doctor schedule created with id {Id}, DoctorScheduleCreated event published", doctorScheduleDomain.Id);
+
             doctorScheduleDomain = await doctorScheduleRepository.CreateAsync(doctorScheduleDomain);
             logger.LogInformation("Doctor schedule with id {Id} created", doctorScheduleDomain.Id);
             var result = mapper.Map<DoctorScheduleCreateResponseDto>(doctorScheduleDomain);
@@ -60,7 +75,17 @@ namespace HospitalManagement.CommandService.Services.Implementations
             existing.StartHour = request.StartHour;
             existing.EndHour = request.EndHour;
             existing = await doctorScheduleRepository.UpdateAsync(existing);
-            logger.LogInformation("Doctor schedule with id {Id} updated", request.Id);
+
+
+            await publishEndpoint.Publish(new DoctorScheduleUpdated(
+                CorrelationId: Guid.NewGuid(),
+                Id: existing.Id,
+                DoctorId: existing.DoctorId,
+                DayOfWeek: existing.DayOfWeek,
+                StartHour: existing.StartHour,
+                EndHour: existing.EndHour));
+
+            logger.LogInformation("Doctor schedule with id {Id} updated, DoctorScheduleUpdated event published", existing.Id);
             var result = mapper.Map<DoctorScheduleUpdateResponseDto>(existing);
             return Result<DoctorScheduleUpdateResponseDto>.Ok(result);
         }
@@ -73,7 +98,12 @@ namespace HospitalManagement.CommandService.Services.Implementations
                 logger.LogWarning("Doctor schedule for id {Id} not found for deletion", id);
                 return Result.Fail($"Doctor schedule id {id} not found", "INVALID_ID");
             }
-            logger.LogInformation("Doctor schedule with id {Id} deleted", id);
+
+            await publishEndpoint.Publish(new DoctorScheduleDeleted(
+                CorrelationId: Guid.NewGuid(),
+                Id: id));
+
+            logger.LogInformation("Doctor schedule with id {Id} deleted, DoctorScheduleDeleted event published", id);
             return Result.Ok($"Doctor schedule with id {id} deleted");
         }
     }
