@@ -25,7 +25,7 @@ namespace HospitalManagement.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Appointment", b =>
+            modelBuilder.Entity(".Domain.Appointment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -64,7 +64,7 @@ namespace HospitalManagement.Migrations
                     b.ToTable("Appointment", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Doctor", b =>
+            modelBuilder.Entity(".Domain.Doctor", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -102,7 +102,7 @@ namespace HospitalManagement.Migrations
                     b.ToTable("Doctor", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.DoctorSchedule", b =>
+            modelBuilder.Entity(".Domain.DoctorSchedule", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -130,7 +130,7 @@ namespace HospitalManagement.Migrations
                     b.ToTable("DoctorSchedule", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Patient", b =>
+            modelBuilder.Entity(".Domain.Patient", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -166,7 +166,7 @@ namespace HospitalManagement.Migrations
                     b.ToTable("Patient", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Treatment", b =>
+            modelBuilder.Entity(".Domain.Treatment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -197,7 +197,7 @@ namespace HospitalManagement.Migrations
                     b.ToTable("Treatment", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.User", b =>
+            modelBuilder.Entity(".Domain.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -241,15 +241,15 @@ namespace HospitalManagement.Migrations
                     b.ToTable("User", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Appointment", b =>
+            modelBuilder.Entity(".Domain.Appointment", b =>
                 {
-                    b.HasOne("HospitalManagement.Models.Domain.Doctor", "Doctor")
+                    b.HasOne(".Domain.Doctor", "Doctor")
                         .WithMany("Appointments")
                         .HasForeignKey("DoctorId")
                         .IsRequired()
                         .HasConstraintName("FK__Appointme__Docto__3B75D760");
 
-                    b.HasOne("HospitalManagement.Models.Domain.Patient", "Patient")
+                    b.HasOne(".Domain.Patient", "Patient")
                         .WithMany("Appointments")
                         .HasForeignKey("PatientId")
                         .IsRequired()
@@ -260,9 +260,9 @@ namespace HospitalManagement.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.DoctorSchedule", b =>
+            modelBuilder.Entity(".Domain.DoctorSchedule", b =>
                 {
-                    b.HasOne("HospitalManagement.Models.Domain.Doctor", "Doctor")
+                    b.HasOne(".Domain.Doctor", "Doctor")
                         .WithMany("Schedules")
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -271,30 +271,30 @@ namespace HospitalManagement.Migrations
                     b.Navigation("Doctor");
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Treatment", b =>
+            modelBuilder.Entity(".Domain.Treatment", b =>
                 {
-                    b.HasOne("HospitalManagement.Models.Domain.Appointment", "Appointment")
+                    b.HasOne(".Domain.Appointment", "Appointment")
                         .WithOne("Treatment")
-                        .HasForeignKey("HospitalManagement.Models.Domain.Treatment", "AppointmentId")
+                        .HasForeignKey(".Domain.Treatment", "AppointmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Appointment");
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Appointment", b =>
+            modelBuilder.Entity(".Domain.Appointment", b =>
                 {
                     b.Navigation("Treatment");
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Doctor", b =>
+            modelBuilder.Entity(".Domain.Doctor", b =>
                 {
                     b.Navigation("Appointments");
 
                     b.Navigation("Schedules");
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Patient", b =>
+            modelBuilder.Entity(".Domain.Patient", b =>
                 {
                     b.Navigation("Appointments");
                 });

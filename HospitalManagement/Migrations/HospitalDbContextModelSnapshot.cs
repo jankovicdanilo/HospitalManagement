@@ -22,7 +22,7 @@ namespace HospitalManagement.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Doctor", b =>
+            modelBuilder.Entity(".Domain.Doctor", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -60,7 +60,7 @@ namespace HospitalManagement.Migrations
                     b.ToTable("Doctor", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.DoctorSchedule", b =>
+            modelBuilder.Entity(".Domain.DoctorSchedule", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -88,7 +88,7 @@ namespace HospitalManagement.Migrations
                     b.ToTable("DoctorSchedule", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Patient", b =>
+            modelBuilder.Entity(".Domain.Patient", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -124,7 +124,7 @@ namespace HospitalManagement.Migrations
                     b.ToTable("Patient", (string)null);
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Procedure", b =>
+            modelBuilder.Entity(".Domain.Procedure", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -145,9 +145,9 @@ namespace HospitalManagement.Migrations
                     b.ToTable("Procedures");
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.DoctorSchedule", b =>
+            modelBuilder.Entity(".Domain.DoctorSchedule", b =>
                 {
-                    b.HasOne("HospitalManagement.Models.Domain.Doctor", "Doctor")
+                    b.HasOne(".Domain.Doctor", "Doctor")
                         .WithMany("Schedules")
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -156,7 +156,7 @@ namespace HospitalManagement.Migrations
                     b.Navigation("Doctor");
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Doctor", b =>
+            modelBuilder.Entity(".Domain.Doctor", b =>
                 {
                     b.Navigation("Schedules");
                 });
