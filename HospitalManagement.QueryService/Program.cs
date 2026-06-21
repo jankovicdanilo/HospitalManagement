@@ -5,6 +5,7 @@ using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Implementations;
 using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Settings;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,20 @@ builder.Services.AddScoped<IProcedureRepository, ProcedureRepository>();
 builder.Services.AddScoped<IProcedureService, ProcedureService>();
 
 builder.Services.AddAutoMapper(typeof(Program));
+
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host("localhost", "/", h =>
+        {
+            h.Username("guest");
+            h.Password("guest");
+        });
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
