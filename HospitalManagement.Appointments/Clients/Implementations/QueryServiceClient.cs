@@ -111,7 +111,11 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             {
                 var response = await httpClient.GetAsync($"api/doctorschedule/doctor/{doctorId}/day/{dayOfWeek}");
                 if (!response.IsSuccessStatusCode)
-                    return null;
+                {
+                    logger.LogWarning("GetDoctorAsync returned {StatusCode} for doctor {DoctorId}",
+                            response.StatusCode, doctorId); return null;
+                }
+                    
                 var json = await response.Content.ReadAsStringAsync();
                 var result = JsonSerializer.Deserialize<ApiResponse<DoctorScheduleResponseDto>>(json, JsonOptions);
 
