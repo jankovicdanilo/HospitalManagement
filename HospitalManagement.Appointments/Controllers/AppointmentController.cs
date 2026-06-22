@@ -117,5 +117,18 @@ namespace HospitalManagement.Appointments.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("patient/{patientId:int}/history")]
+        public async Task<IActionResult> GetPatientHistoryAsync([FromRoute] int patientId)
+        {
+            var result = await appointmentService.GetPatientHistoryAsync(patientId);
+
+            if (!result.Success)
+            {
+                return NotFound(new { result.Message, result.ErrorCode });
+            }
+
+            return Ok(result);
+        }
     }
 }
