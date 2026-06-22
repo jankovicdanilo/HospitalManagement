@@ -21,6 +21,7 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IAppointmentProcedureValidation> appointmentProcedureValidationMock;
         private Mock<ILogger<AppointmentProcedureService>> loggerMock;
         private Mock<IHospitalManagementClient> hospitalClientMock;
+        private Mock<IQueryServiceClient> hospitalManagementClientMock;
         private AppointmentProcedureService appointmentProcedureService;
 
         [SetUp]
@@ -31,7 +32,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             appointmentProcedureValidationMock = new Mock<IAppointmentProcedureValidation>();
             hospitalClientMock = new Mock<IHospitalManagementClient>();
             loggerMock = new Mock<ILogger<AppointmentProcedureService>>();
-            hospitalManagementClientMock = new Mock<IHospitalManagementClient>();
+            hospitalManagementClientMock = new Mock<IQueryServiceClient>();
 
             appointmentProcedureService = new AppointmentProcedureService(
                 appointmentProcedureRepositoryMock.Object,

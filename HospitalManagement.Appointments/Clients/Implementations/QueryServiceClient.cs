@@ -4,10 +4,10 @@ using System.Text.Json;
 
 namespace HospitalManagement.Appointments.Clients.Implementations
 {
-    public class HospitalManagementClient : IHospitalManagementClient
+    public class QueryServiceClient : IQueryServiceClient
     {
         private readonly HttpClient httpClient;
-        private readonly ILogger<HospitalManagementClient> logger;
+        private readonly ILogger<QueryServiceClient> logger;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -15,7 +15,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             Converters = {new System.Text.Json.Serialization.JsonStringEnumConverter()}
         };
 
-        public HospitalManagementClient(HttpClient httpClient, ILogger<HospitalManagementClient> logger)
+        public QueryServiceClient(HttpClient httpClient, ILogger<QueryServiceClient> logger)
         {
             this.httpClient = httpClient;
             this.logger = logger;

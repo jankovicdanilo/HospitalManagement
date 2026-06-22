@@ -55,10 +55,10 @@ try
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddTransient<AuthTokenHandler>();
 
-    // HTTP client for cross-service calls to main API
-    builder.Services.AddHttpClient<IHospitalManagementClient, HospitalManagementClient>(client =>
+    // HTTP client for cross-service calls to QueryService
+    builder.Services.AddHttpClient<IQueryServiceClient, QueryServiceClient>(client =>
     {
-        client.BaseAddress = new Uri(builder.Configuration["HospitalManagement_BaseUrl"]!);
+        client.BaseAddress = new Uri(builder.Configuration["QueryService:BaseUrl"]!);
     })
         .AddHttpMessageHandler<AuthTokenHandler>();
 
