@@ -10,7 +10,7 @@ namespace HospitalManagement.Shared.Events
     (
         Guid CorrelationId,
         int Id,
-        string FirstName,
+        string Name,
         string LastName,
         string Email,
         string? Phone,
@@ -21,7 +21,7 @@ namespace HospitalManagement.Shared.Events
     (
         Guid CorrelationId,
         int Id,
-        string FirstName,
+        string Name,
         string LastName,
         string Email,
         string? Phone

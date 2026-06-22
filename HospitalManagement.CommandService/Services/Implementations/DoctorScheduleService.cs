@@ -41,6 +41,10 @@ namespace HospitalManagement.CommandService.Services.Implementations
             }
             var doctorScheduleDomain = mapper.Map<DoctorSchedule>(request);
 
+            logger.LogInformation("Doctor schedule created with id {Id}, DoctorScheduleCreated event published", doctorScheduleDomain.Id);
+
+            doctorScheduleDomain = await doctorScheduleRepository.CreateAsync(doctorScheduleDomain);
+
             await publishEndpoint.Publish(new DoctorScheduleCreated(
                 CorrelationId: Guid.NewGuid(),
                 Id: doctorScheduleDomain!.Id,
@@ -49,9 +53,6 @@ namespace HospitalManagement.CommandService.Services.Implementations
                 StartHour: doctorScheduleDomain.StartHour,
                 EndHour: doctorScheduleDomain.EndHour));
 
-            logger.LogInformation("Doctor schedule created with id {Id}, DoctorScheduleCreated event published", doctorScheduleDomain.Id);
-
-            doctorScheduleDomain = await doctorScheduleRepository.CreateAsync(doctorScheduleDomain);
             logger.LogInformation("Doctor schedule with id {Id} created", doctorScheduleDomain.Id);
             var result = mapper.Map<DoctorScheduleCreateResponseDto>(doctorScheduleDomain);
             return Result<DoctorScheduleCreateResponseDto>.Ok(result);
