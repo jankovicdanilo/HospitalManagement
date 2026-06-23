@@ -22,7 +22,7 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IMapper> mapperMock;
         private Mock<IAppointmentValidation> appointmentValidationMock;
         private Mock<ILogger<AppointmentService>> loggerMock;
-        private Mock<IMainApiClient> mainApiClientMock;
+        private Mock<IHospitalManagementClient> hospitalClientMock;
         private IOptions<AppointmentSettings> appointmentSettings;
         private Mock<IAppointmentDiscountCalculator> appointmentDiscountCalculatorMock;
         private AppointmentService appointmentService;
@@ -34,7 +34,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             mapperMock = new Mock<IMapper>();
             appointmentValidationMock = new Mock<IAppointmentValidation>();
             loggerMock = new Mock<ILogger<AppointmentService>>();
-            mainApiClientMock = new Mock<IMainApiClient>();
+            hospitalClientMock = new Mock<IHospitalManagementClient>();
             appointmentDiscountCalculatorMock = new Mock<IAppointmentDiscountCalculator>();
             appointmentSettings = Options.Create(new AppointmentSettings { SlotSizeMinutes = 30 });
 
@@ -264,7 +264,6 @@ namespace HospitalManagement.Appointments.Tests.Services
         [Test]
         public async Task GetFreeSlotsAsync_ReturnsNotImplemented()
         {
-            // GetFreeSlotsAsync is temporarily stubbed pending IMainApiClient wiring
             var result = await appointmentService.GetFreeSlotsAsync(1, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)));
 
             Assert.That(result.Success, Is.False);

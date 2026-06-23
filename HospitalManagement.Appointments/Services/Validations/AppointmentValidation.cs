@@ -5,39 +5,36 @@ using HospitalManagement.Appointments.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Clients.Interfaces;
 
-// TODO: IDoctorRepository, IPatientRepository, IDoctorScheduleRepository
-// will be replaced by IMainApiClient once that's defined
-
 namespace HospitalManagement.Appointments.Services.Validations
 {
     public class AppointmentValidation : IAppointmentValidation
     {
-        private readonly IMainApiClient mainApiClient;
+        private readonly IHospitalManagementClient hospitalClient;
         private readonly IAppointmentRepository appointmentRepository;
 
         public AppointmentValidation(IAppointmentRepository appointmentRepository,
-            IMainApiClient mainApiClient)
+            IHospitalManagementClient hospitalClient)
         {
             this.appointmentRepository = appointmentRepository;
-            this.mainApiClient = mainApiClient;
+            this.hospitalClient = hospitalClient;
         }
 
         public async Task<Result> ValidateAll(AppointmentCreateRequestDto request)
         {
-            var doctor = await mainApiClient.GetDoctorAsync(request.DoctorId);
+            var doctor = await hospitalClient.GetDoctorAsync(request.DoctorId);
             if(doctor == null)
             {
                 return Result.Fail($"Doctor with the id {request.DoctorId} not found", "INVALID_DOCTOR_ID");
             }
 
-            var patient = await mainApiClient.GetPatientAsync(request.PatientId);
+            var patient = await hospitalClient.GetPatientAsync(request.PatientId);
             if (patient == null)
             {
                 return Result.Fail($"Patient with the id {request.PatientId} not found", "INVALID_PATIENT_ID");
             }
                
 
-            var schedule = await mainApiClient.GetDoctorScheduleAsync(request.DoctorId, request.DateTime.DayOfWeek);
+            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, request.DateTime.DayOfWeek);
 
             if (schedule == null)
             {
@@ -58,15 +55,15 @@ namespace HospitalManagement.Appointments.Services.Validations
 
         public async Task<Result> ValidateAll(AppointmentUpdateRequestDto request)
         {
-            var doctor = await mainApiClient.GetDoctorAsync(request.DoctorId);
+            var doctor = await hospitalClient.GetDoctorAsync(request.DoctorId);
             if (doctor == null)
                 return Result.Fail($"Doctor with the id {request.DoctorId} not found", "INVALID_DOCTOR_ID");
 
-            var patient = await mainApiClient.GetPatientAsync(request.PatientId);
+            var patient = await hospitalClient.GetPatientAsync(request.PatientId);
             if (patient == null)
                 return Result.Fail($"Patient with the id {request.PatientId} not found", "INVALID_PATIENT_ID");
 
-            var schedule = await mainApiClient.GetDoctorScheduleAsync(request.DoctorId, request.DateTime.DayOfWeek);
+            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, request.DateTime.DayOfWeek);
             if (schedule == null)
                 return Result.Fail($"Doctor does not work on " +
                     $"{request.DateTime.ToString("dddd, dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)}", "DOCTOR_NOT_AVAILABLE");

@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,21 +11,19 @@ namespace HospitalManagement.Shared.Http
 {
     public class AuthTokenHandler : DelegatingHandler
     {
-        private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly TokenStore tokenStore;
 
-        public AuthTokenHandler(IHttpContextAccessor httpContextAccessor)
+        public AuthTokenHandler(TokenStore tokenStore)
         {
-            this.httpContextAccessor = httpContextAccessor;
+            this.tokenStore = tokenStore;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage requestMessage,
             CancellationToken cancellationToken)
         {
-            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
-
-            if (!string.IsNullOrEmpty(token))
+            if (!string.IsNullOrEmpty(tokenStore.Token))
             {
-                requestMessage.Headers.Authorization = System.Net.Http.Headers.AuthenticationHeaderValue.Parse(token);
+                requestMessage.Headers.Authorization = AuthenticationHeaderValue.Parse(tokenStore.Token);
             }
 
             return await base.SendAsync(requestMessage, cancellationToken);

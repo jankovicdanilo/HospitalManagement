@@ -2,7 +2,7 @@
 
 namespace HospitalManagement.Appointments.Clients.Interfaces
 {
-    public interface IMainApiClient
+    public interface IHospitalManagementClient
     {
         Task<ExternalDoctorDto?> GetDoctorAsync(int doctorId);
         Task<ExternalPatientDto?> GetPatientAsync(int patientId);

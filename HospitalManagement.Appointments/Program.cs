@@ -12,6 +12,7 @@ using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Appointments.Settings;
+using HospitalManagement.Shared.Http;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -42,13 +43,13 @@ builder.Services.AddScoped<ITreatmentValidation, TreatmentValidation>();
 // Calculators
 builder.Services.AddScoped<IAppointmentDiscountCalculator, AppointmentDiscountCalculator>();
 
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddTransient<HospitalManagement.Shared.Http.AuthTokenHandler>();
+builder.Services.AddScoped<TokenStore>();
+builder.Services.AddTransient<AuthTokenHandler>();
 
-// HTTP client for cross-service calls to main API
-builder.Services.AddHttpClient<IMainApiClient, MainApiClient>(client =>
+//HTTP client for cross-service calls to main API
+builder.Services.AddHttpClient<IHospitalManagementClient, HospitalManagementClient>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["MainApi:BaseUrl"]!);
+    client.BaseAddress = new Uri(builder.Configuration["QueryService:BaseUrl"]!);
 })
     .AddHttpMessageHandler<HospitalManagement.Shared.Http.AuthTokenHandler>();
 
@@ -167,6 +168,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<TokenForwardingMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

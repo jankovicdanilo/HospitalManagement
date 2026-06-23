@@ -16,9 +16,6 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
 
         public async Task<AppointmentProcedure?> CreateAsync(AppointmentProcedure request)
         {
-            // ProcedureName and ProcedurePrice must already be populated by the
-            // caller (AppointmentProcedureService), via a live lookup against the
-            // main API's Procedure endpoint, before this method is called.
             await dbContext.AppointmentProcedures.AddAsync(request);
             await dbContext.SaveChangesAsync();
 
