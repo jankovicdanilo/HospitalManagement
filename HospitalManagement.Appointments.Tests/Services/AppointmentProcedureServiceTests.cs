@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.AppointmentProcedure;
+using HospitalManagement.Appointments.Models.DTOs.External;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Validations;
@@ -17,6 +19,7 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IMapper> mapperMock;
         private Mock<IAppointmentProcedureValidation> appointmentProcedureValidationMock;
         private Mock<ILogger<AppointmentProcedureService>> loggerMock;
+        private Mock<IHospitalManagementClient> hospitalManagementClientMock;
         private AppointmentProcedureService appointmentProcedureService;
 
         [SetUp]
@@ -26,12 +29,14 @@ namespace HospitalManagement.Appointments.Tests.Services
             mapperMock = new Mock<IMapper>();
             appointmentProcedureValidationMock = new Mock<IAppointmentProcedureValidation>();
             loggerMock = new Mock<ILogger<AppointmentProcedureService>>();
+            hospitalManagementClientMock = new Mock<IHospitalManagementClient>();
 
             appointmentProcedureService = new AppointmentProcedureService(
                 appointmentProcedureRepositoryMock.Object,
                 mapperMock.Object,
                 appointmentProcedureValidationMock.Object,
-                loggerMock.Object
+                loggerMock.Object,
+                hospitalManagementClientMock.Object
             );
         }
 
@@ -44,7 +49,10 @@ namespace HospitalManagement.Appointments.Tests.Services
             var appointmentProcedure = new AppointmentProcedure { AppointmentId = appointmentId, ProcedureId = procedureId };
             var appointmentProcedureDto = new AppointmentProcedureCreateResponseDto { AppointmentId = appointmentId, ProcedureId = procedureId };
 
-            appointmentProcedureValidationMock.Setup(v => v.ValidateForCreate(request.AppointmentId, request.ProcedureId)).ReturnsAsync(Result.Ok("Validation ok"));
+            appointmentProcedureValidationMock.Setup(v => v.ValidateForCreate(request.AppointmentId, request.ProcedureId))
+                .ReturnsAsync(Result.Ok("Validation ok"));
+            var procedure = new ExternalProcedureDto { Name = "Blood Test", Price = 50m };
+            hospitalManagementClientMock.Setup(c => c.GetProcedureAsync(procedureId)).ReturnsAsync(procedure);
             mapperMock.Setup(m => m.Map<AppointmentProcedure>(request)).Returns(appointmentProcedure);
             appointmentProcedureRepositoryMock.Setup(r => r.CreateAsync(appointmentProcedure)).ReturnsAsync(appointmentProcedure);
             mapperMock.Setup(m => m.Map<AppointmentProcedureCreateResponseDto>(appointmentProcedure)).Returns(appointmentProcedureDto);

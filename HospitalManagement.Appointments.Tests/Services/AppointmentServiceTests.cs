@@ -2,6 +2,7 @@
 using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
+using HospitalManagement.Appointments.Models.DTOs.External;
 using HospitalManagement.Appointments.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Services.Calculators.Interfaces;
@@ -22,7 +23,7 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IMapper> mapperMock;
         private Mock<IAppointmentValidation> appointmentValidationMock;
         private Mock<ILogger<AppointmentService>> loggerMock;
-        private Mock<IHospitalManagementClient> mainApiClientMock;
+        private Mock<IHospitalManagementClient> hospitalManagementClientMock;
         private IOptions<AppointmentSettings> appointmentSettings;
         private Mock<IAppointmentDiscountCalculator> appointmentDiscountCalculatorMock;
         private AppointmentService appointmentService;
@@ -34,7 +35,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             mapperMock = new Mock<IMapper>();
             appointmentValidationMock = new Mock<IAppointmentValidation>();
             loggerMock = new Mock<ILogger<AppointmentService>>();
-            mainApiClientMock = new Mock<IHospitalManagementClient>();
+            hospitalManagementClientMock = new Mock<IHospitalManagementClient>();
             appointmentDiscountCalculatorMock = new Mock<IAppointmentDiscountCalculator>();
             appointmentSettings = Options.Create(new AppointmentSettings { SlotSizeMinutes = 30 });
 
@@ -44,7 +45,8 @@ namespace HospitalManagement.Appointments.Tests.Services
                 appointmentValidationMock.Object,
                 loggerMock.Object,
                 appointmentSettings,
-                appointmentDiscountCalculatorMock.Object
+                appointmentDiscountCalculatorMock.Object,
+                hospitalManagementClientMock.Object
             );
         }
 
@@ -141,8 +143,12 @@ namespace HospitalManagement.Appointments.Tests.Services
             var request = new AppointmentCreateRequestDto { PatientId = patientId, DoctorId = doctorId };
             var appointment = new Appointment { Id = appointmentId };
             var appointmentDto = new AppointmentCreateResponseDto { Id = appointmentId };
+            var patient = new ExternalPatientDto { Name = "Marko", LastName = "Petrovic", Email = "marko@test.com" };
+            var doctor = new ExternalDoctorDto { FirstName = "Ana", LastName = "Kovac" };
 
             appointmentValidationMock.Setup(v => v.ValidateAll(request)).ReturnsAsync(Result.Ok("Validation ok"));
+            hospitalManagementClientMock.Setup(c => c.GetPatientAsync(patientId)).ReturnsAsync(patient);
+            hospitalManagementClientMock.Setup(c => c.GetDoctorAsync(doctorId)).ReturnsAsync(doctor);
             mapperMock.Setup(m => m.Map<Appointment>(request)).Returns(appointment);
             appointmentRepositoryMock.Setup(r => r.CreateAsync(appointment)).ReturnsAsync(appointment);
             mapperMock.Setup(m => m.Map<AppointmentCreateResponseDto>(appointment)).Returns(appointmentDto);
@@ -176,8 +182,12 @@ namespace HospitalManagement.Appointments.Tests.Services
             var request = new AppointmentUpdateRequestDto { Id = appointmentId, DoctorId = 1, PatientId = 1 };
             var appointment = new Appointment { Id = appointmentId };
             var appointmentDto = new AppointmentUpdateResponseDto { Id = appointmentId };
+            var patient = new ExternalPatientDto { Name = "Marko", LastName = "Petrovic", Email = "marko@test.com" };
+            var doctor = new ExternalDoctorDto { FirstName = "Ana", LastName = "Kovac" };
 
             appointmentValidationMock.Setup(v => v.ValidateAll(request)).ReturnsAsync(Result.Ok("Validation ok"));
+            hospitalManagementClientMock.Setup(c => c.GetPatientAsync(request.PatientId)).ReturnsAsync(patient);
+            hospitalManagementClientMock.Setup(c => c.GetDoctorAsync(request.DoctorId)).ReturnsAsync(doctor);
             appointmentRepositoryMock.Setup(r => r.GetByIdAsync(request.Id)).ReturnsAsync(appointment);
             appointmentRepositoryMock.Setup(r => r.UpdateAsync(appointment)).ReturnsAsync(appointment);
             mapperMock.Setup(m => m.Map<AppointmentUpdateResponseDto>(appointment)).Returns(appointmentDto);
@@ -262,13 +272,48 @@ namespace HospitalManagement.Appointments.Tests.Services
         }
 
         [Test]
-        public async Task GetFreeSlotsAsync_ReturnsNotImplemented()
+        public async Task GetFreeSlotsAsync_ReturnsSuccess()
         {
-            // GetFreeSlotsAsync is temporarily stubbed pending IMainApiClient wiring
-            var result = await appointmentService.GetFreeSlotsAsync(1, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)));
+            int doctorId = 1;
+            var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
+            var schedule = new ExternalDoctorScheduleDto { StartHour = 8, EndHour = 16 };
+
+            hospitalManagementClientMock.Setup(c => c.GetDoctorScheduleAsync(doctorId, date.DayOfWeek))
+                .ReturnsAsync(schedule);
+            appointmentRepositoryMock.Setup(r => r.GetByDoctorIdAndDateAsync(doctorId, date))
+                .ReturnsAsync(new List<Appointment>());
+
+            var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Is.Not.Empty);
+        }
+
+        [Test]
+        public async Task GetFreeSlotsAsync_DoctorNotAvailable_ReturnsFailure()
+        {
+            int doctorId = 1;
+            var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
+
+            hospitalManagementClientMock.Setup(c => c.GetDoctorScheduleAsync(doctorId, date.DayOfWeek))
+                .ReturnsAsync((ExternalDoctorScheduleDto?)null);
+
+            var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
 
             Assert.That(result.Success, Is.False);
-            Assert.That(result.ErrorCode, Is.EqualTo("NOT_IMPLEMENTED"));
+            Assert.That(result.ErrorCode, Is.EqualTo("DOCTOR_NOT_AVAILABLE"));
+        }
+
+        [Test]
+        public async Task GetFreeSlotsAsync_PastDate_ReturnsFailure()
+        {
+            int doctorId = 1;
+            var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
+
+            var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("INVALID_DATE"));
         }
 
         [Test]
