@@ -21,7 +21,32 @@ scheduling independently.
 This system is built as a set of microservices, each owning its own database and
 communicating over HTTP.
 
-![HMS Component Diagram](./docs/architecture.png)
+```mermaid
+graph TD
+    Auth["Auth Service<br/>Issues JWT tokens"]
+    APP["AppointmentService<br/>Appointments/AppointmentProcedures/Treatments"]
+    QS["QueryService<br/>Doctor/DoctorSchedule/Patient/Procedure"]
+    CMD["CommandService<br/>Doctor/DoctorSchedule/Patient/Procedure"]
+    RMQ([RabbitMQ])
+    AuthDB[(AuthDB)]
+    AppDB[(AppointmentsDB)]
+    QueryDB[(QueryDB)]
+    CommandDB[(CommandDB)]
+
+    Auth -->|validate JWT| APP
+    Auth -->|validate JWT| QS
+    Auth -->|validate JWT| CMD
+    Auth -->|read/write| AuthDB
+
+    APP -->|read/write| AppDB
+    APP -->|GET doctor/patient/procedure| QS
+    QS -->|GET patient history| APP
+    QS -->|read| QueryDB
+
+    CMD -->|publish events| RMQ
+    CMD -->|read/write| CommandDB
+    RMQ -->|consume events| QS
+```
 
 ### Services
 
