@@ -94,7 +94,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (patient == null)
             {
                 logger.LogWarning("Patient with id {PatientId} not found", request.PatientId);
-                return Result<AppointmentCreateResponseDto>.Fail($"Patient with id {request.PatientId} not found", "INVALID_PATIENT_ID");
+                return Result<AppointmentCreateResponseDto>.Fail($"Patient with id {request.PatientId} not found", 
+                    "INVALID_PATIENT_ID");
             }
 
             if (doctor == null)

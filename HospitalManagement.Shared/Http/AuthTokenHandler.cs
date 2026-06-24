@@ -11,19 +11,21 @@ namespace HospitalManagement.Shared.Http
 {
     public class AuthTokenHandler : DelegatingHandler
     {
-        private readonly TokenStore tokenStore;
+        private readonly IHttpContextAccessor httpContextAccessor;
 
-        public AuthTokenHandler(TokenStore tokenStore)
+        public AuthTokenHandler(IHttpContextAccessor httpContextAccessor)
         {
-            this.tokenStore = tokenStore;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage requestMessage,
             CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(tokenStore.Token))
+            var token = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+
+            if (!string.IsNullOrEmpty(token))
             {
-                requestMessage.Headers.Authorization = AuthenticationHeaderValue.Parse(tokenStore.Token);
+                requestMessage.Headers.Authorization = System.Net.Http.Headers.AuthenticationHeaderValue.Parse(token);
             }
 
             return await base.SendAsync(requestMessage, cancellationToken);

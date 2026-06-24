@@ -24,10 +24,13 @@ namespace HospitalManagement.Appointments.Clients.Implementations
         {
             try
             {
+                logger.LogInformation("Calling main API for doctor {DoctorId} at {BaseAddress}", doctorId, httpClient.BaseAddress);
                 var response = await httpClient.GetAsync($"api/doctor/{doctorId}");
+                logger.LogInformation("Response status: {StatusCode}", response.StatusCode);
                 if (!response.IsSuccessStatusCode)
                     return null;
                 var json = await response.Content.ReadAsStringAsync();
+                logger.LogInformation("Response body: {Json}", json);
                 var result = JsonSerializer.Deserialize<ApiResponse<ExternalDoctorDto>>(json, JsonOptions);
 
                 return result?.Data;

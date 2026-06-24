@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
-using HospitalManagement.Shared.Common;
+using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
+using HospitalManagement.Appointments.Models.DTOs.Appointment;
 using HospitalManagement.Appointments.Models.DTOs.AppointmentProcedure;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
+using HospitalManagement.Shared.Common;
 
 namespace HospitalManagement.Appointments.Services.Implementations
 {
@@ -14,14 +16,17 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly IMapper mapper;
         private readonly IAppointmentProcedureValidation appointmentProcedureValidation;
         private readonly ILogger<AppointmentProcedureService> logger;
+        private readonly IHospitalManagementClient hospitalManagementClient;
 
         public AppointmentProcedureService(IAppointmentProcedureRepository appointmentProcedureRepository,
-            IMapper mapper, IAppointmentProcedureValidation appointmentProcedureValidation, ILogger<AppointmentProcedureService> logger)
+            IMapper mapper, IAppointmentProcedureValidation appointmentProcedureValidation, 
+            ILogger<AppointmentProcedureService> logger, IHospitalManagementClient hospitalManagementClient)
         {
             this.appointmentProcedureRepository = appointmentProcedureRepository;
             this.mapper = mapper;
             this.appointmentProcedureValidation = appointmentProcedureValidation;
             this.logger = logger;
+            this.hospitalManagementClient = hospitalManagementClient;
         }
 
         public async Task<Result<AppointmentProcedureCreateResponseDto>> CreateAsync(AppointmentProcedureCreateRequestDto request)
@@ -34,7 +39,17 @@ namespace HospitalManagement.Appointments.Services.Implementations
                 return Result<AppointmentProcedureCreateResponseDto>.Fail(validatedAppointmentProcedure.Message, validatedAppointmentProcedure.ErrorCode);
             }
 
+            var procedure = await hospitalManagementClient.GetProcedureAsync(request.ProcedureId);
+            if(procedure == null)
+            {
+                logger.LogWarning("Procedure with id {ProcedureId} not found", request.ProcedureId);
+                return Result<AppointmentProcedureCreateResponseDto>.Fail($"Procedure with id {request.ProcedureId} not found",
+                    "INVALID_PROCEDURE_ID");
+            }
+
             var appointmentProcedureDomain = mapper.Map<AppointmentProcedure>(request);
+            appointmentProcedureDomain.ProcedureName = procedure.Name;
+            appointmentProcedureDomain.ProcedurePrice = procedure.Price;
 
             appointmentProcedureDomain = await appointmentProcedureRepository.CreateAsync(appointmentProcedureDomain);
 

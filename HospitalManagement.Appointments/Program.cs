@@ -43,13 +43,13 @@ builder.Services.AddScoped<ITreatmentValidation, TreatmentValidation>();
 // Calculators
 builder.Services.AddScoped<IAppointmentDiscountCalculator, AppointmentDiscountCalculator>();
 
-builder.Services.AddScoped<TokenStore>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<AuthTokenHandler>();
 
 //HTTP client for cross-service calls to main API
 builder.Services.AddHttpClient<IHospitalManagementClient, HospitalManagementClient>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["QueryService:BaseUrl"]!);
+    client.BaseAddress = new Uri(builder.Configuration["HospitalManagement_BaseUrl"]!);
 })
     .AddHttpMessageHandler<HospitalManagement.Shared.Http.AuthTokenHandler>();
 
@@ -168,7 +168,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<TokenForwardingMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
