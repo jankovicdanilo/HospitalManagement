@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using HospitalManagement.Shared.Common;
+using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
 using HospitalManagement.Appointments.Models.Enums;
@@ -8,6 +8,7 @@ using HospitalManagement.Appointments.Services.Calculators.Interfaces;
 using HospitalManagement.Appointments.Services.Calculators.Results;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
+using HospitalManagement.Shared.Common;
 using Microsoft.Extensions.Options;
 
 namespace HospitalManagement.Appointments.Services.Implementations
@@ -20,14 +21,12 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly ILogger<AppointmentService> logger;
         private readonly AppointmentSettings appointmentSettings;
         private readonly IAppointmentDiscountCalculator appointmentDiscountCalculator;
-
-        // TODO: IPatientRepository, IDoctorRepository, IDoctorScheduleRepository
-        // replaced by IMainApiClient (HTTP client to main API)
-        // add it here once IMainApiClient interface is defined
+        private readonly IHospitalManagementClient hospitalManagementClient;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
-            IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator)
+            IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator,
+            IHospitalManagementClient hospitalManagementClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
@@ -35,6 +34,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             this.logger = logger;
             this.appointmentSettings = appointmentSettings.Value;
             this.appointmentDiscountCalculator = appointmentDiscountCalculator;
+            this.hospitalManagementClient = hospitalManagementClient;
         }
 
         public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
@@ -88,19 +88,30 @@ namespace HospitalManagement.Appointments.Services.Implementations
                 return Result<AppointmentCreateResponseDto>.Fail(validatedAppointment.Message, validatedAppointment.ErrorCode);
             }
 
+            var patient = await hospitalManagementClient.GetPatientAsync(request.PatientId);
+            var doctor = await hospitalManagementClient.GetDoctorAsync(request.DoctorId);
+
+            if (patient == null)
+            {
+                logger.LogWarning("Patient with id {PatientId} not found", request.PatientId);
+                return Result<AppointmentCreateResponseDto>.Fail($"Patient with id {request.PatientId} not found", "INVALID_PATIENT_ID");
+            }
+
+            if (doctor == null)
+            {
+                logger.LogWarning("Doctor with id {DoctorId} not found", request.DoctorId);
+                return Result<AppointmentCreateResponseDto>.Fail($"Doctor with id {request.DoctorId} not found", "INVALID_DOCTOR_ID");
+            }
+
             var appointmentDomain = mapper.Map<Appointment>(request);
+            appointmentDomain.Doctor = doctor;
+            appointmentDomain.Patient = patient;
 
             appointmentDomain = await appointmentRepository.CreateAsync(appointmentDomain);
 
-            // TODO: replace patientRepository/doctorRepository calls with IMainApiClient
-            // var patient = await mainApiClient.GetPatientAsync(request.PatientId);
-            // var doctor = await mainApiClient.GetDoctorAsync(request.DoctorId);
-            // appointmentDomain.PatientName = patient.Name;
-            // appointmentDomain.PatientEmail = patient.Email;
-            // appointmentDomain.DoctorName = $"{doctor.FirstName} {doctor.LastName}";
-            // await appointmentRepository.UpdateAsync(appointmentDomain);
-
             logger.LogInformation("Appointment created with id {id}", appointmentDomain.Id);
+            logger.LogInformation("Email sent to {Email}: Appointment confirmed for {DateTime} with Dr. {Doctor}",
+                patient.Email, appointmentDomain.DateTime, $"{doctor.FirstName} {doctor.LastName}");
 
             var result = mapper.Map<AppointmentCreateResponseDto>(appointmentDomain);
 
@@ -135,7 +146,24 @@ namespace HospitalManagement.Appointments.Services.Implementations
                     "INVALID_STATUS");
             }
 
+            var patient = await hospitalManagementClient.GetPatientAsync(request.PatientId);
+            var doctor = await hospitalManagementClient.GetDoctorAsync(request.DoctorId);
+
+            if (patient == null)
+            {
+                logger.LogWarning("Patient with id {PatientId} not found", request.PatientId);
+                return Result<AppointmentUpdateResponseDto>.Fail($"Patient with id {request.PatientId} not found", "INVALID_PATIENT_ID");
+            }
+
+            if (doctor == null)
+            {
+                logger.LogWarning("Doctor with id {DoctorId} not found", request.DoctorId);
+                return Result<AppointmentUpdateResponseDto>.Fail($"Doctor with id {request.DoctorId} not found", "INVALID_DOCTOR_ID");
+            }
+
             mapper.Map(request, appointmentDomain);
+            appointmentDomain.Doctor = doctor;
+            appointmentDomain.Patient = patient;
 
             appointmentDomain = await appointmentRepository.UpdateAsync(appointmentDomain);
 
@@ -162,17 +190,50 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
         public async Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date)
         {
-            // TODO: replace doctorScheduleRepository call with IMainApiClient
-            // var doctorSchedule = await mainApiClient.GetDoctorScheduleAsync(doctorId, date.DayOfWeek);
-
             if (date < DateOnly.FromDateTime(DateTime.UtcNow))
             {
                 logger.LogWarning("Free slots requested for past date {Date}", date);
                 return Result<List<TimeSlotDto>>.Fail("Cannot get free slots for a past date", "INVALID_DATE");
             }
 
-            // TODO: remove this placeholder once IMainApiClient is wired in
-            return Result<List<TimeSlotDto>>.Fail("GetFreeSlotsAsync not yet implemented in microservice", "NOT_IMPLEMENTED");
+            var doctorSchedule = await hospitalManagementClient.GetDoctorScheduleAsync(doctorId, date.DayOfWeek);
+            if (doctorSchedule == null)
+            {
+                logger.LogWarning("Doctor {DoctorId} does not work on {DayOfWeek}", doctorId, date.DayOfWeek.ToString());
+                return Result<List<TimeSlotDto>>.Fail($"Doctor does not work on {date.DayOfWeek}", "DOCTOR_NOT_AVAILABLE");
+            }
+
+            var workStart = new TimeSpan(doctorSchedule.StartHour, 0, 0);
+            var workEnd = new TimeSpan(doctorSchedule.EndHour, 0, 0);
+            var slotSize = new TimeSpan(0, appointmentSettings.SlotSizeMinutes, 0);
+
+            var appointments = await appointmentRepository.GetByDoctorIdAndDateAsync(doctorId, date);
+
+            var freeSlots = new List<TimeSlotDto>();
+            var current = workStart;
+
+            while (current + slotSize <= workEnd)
+            {
+                var slotStart = date.ToDateTime(TimeOnly.FromTimeSpan(current));
+                var slotEnd = slotStart.Add(slotSize);
+
+                var isBooked = appointments.Any(a =>
+                    slotStart < a.DateTime.Add(a.Duration) &&
+                    slotEnd > a.DateTime);
+
+                if (!isBooked)
+                {
+                    freeSlots.Add(new TimeSlotDto
+                    {
+                        Start = TimeOnly.FromDateTime(slotStart),
+                        End = TimeOnly.FromDateTime(slotEnd)
+                    });
+                }
+
+                current = current.Add(slotSize);
+            }
+
+            return Result<List<TimeSlotDto>>.Ok(freeSlots);
         }
 
         public async Task<Result> UpdateStatusAsync(AppointmentStatusUpdateDto request)
@@ -204,7 +265,6 @@ namespace HospitalManagement.Appointments.Services.Implementations
         {
             if (appointment.Status != AppointmentStatus.Completed)
             {
-                // TODO: replace ap.Procedure.Price with ap.ProcedurePrice (snapshot field)
                 return new DiscountResult(appointment.AppointmentProcedures.Sum(ap => ap.ProcedurePrice), 0);
             }
 

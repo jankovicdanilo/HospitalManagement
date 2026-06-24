@@ -11,9 +11,13 @@ namespace HospitalManagement.Appointments.Mappings
         {
             CreateMap<Appointment, AppointmentListResponseDto>()
                 .ForMember(dest => dest.DoctorName,
-                    opt => opt.MapFrom(src => src.DoctorName))
+                    opt => opt.MapFrom(src => src.Doctor != null 
+                    ? $"{src.Doctor.FirstName} {src.Doctor.LastName}"
+                    : null))
                 .ForMember(dest => dest.PatientName,
-                    opt => opt.MapFrom(src => src.PatientName))
+                    opt => opt.MapFrom(src => src.Patient != null
+                    ? $"{src.Patient.Name} {src.Patient.LastName}"
+                : null))
                 .ForMember(dest => dest.Procedures,
                     opt => opt.MapFrom(src => src.AppointmentProcedures));
 
@@ -21,9 +25,13 @@ namespace HospitalManagement.Appointments.Mappings
 
             CreateMap<Appointment, AppointmentResponseDto>()
                 .ForMember(dest => dest.DoctorName,
-                    opt => opt.MapFrom(src => src.DoctorName))
+                    opt => opt.MapFrom(src => src.Doctor != null
+                    ? $"{src.Doctor.FirstName} {src.Doctor.LastName}"
+                    : null))
                 .ForMember(dest => dest.PatientName,
-                    opt => opt.MapFrom(src => src.PatientName))
+                    opt => opt.MapFrom(src => src.Patient != null
+                    ? $"{src.Patient.Name} {src.Patient.LastName}"
+                : null))
                 .ForMember(dest => dest.Procedures,
                     opt => opt.MapFrom(src => src.AppointmentProcedures));
 

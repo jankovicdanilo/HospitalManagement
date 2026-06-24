@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.Appointments.Models.Enums;
+using HospitalManagement.Shared.Models.DTOs.External;
 using System;
 using System.Collections.Generic;
 
@@ -10,7 +11,11 @@ public partial class Appointment
 
     public int PatientId { get; set; }
 
+    public ExternalPatientDto? Patient { get; set; } //not mapped to db
+
     public int DoctorId { get; set; }
+
+    public ExternalDoctorDto? Doctor { get; set; } //not mapped to db
 
     public DateTime DateTime { get; set; }
 
@@ -19,14 +24,6 @@ public partial class Appointment
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;
 
     public string? Notes { get; set; }
-
-    // Snapshot fields — captured at creation time, since Doctor/Patient
-    // now live in the main API's separate database.
-    public string PatientName { get; set; } = null!;
-
-    public string PatientEmail { get; set; } = null!;
-
-    public string DoctorName { get; set; } = null!;
 
     public virtual Treatment? Treatment { get; set; }
 

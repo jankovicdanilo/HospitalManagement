@@ -1,4 +1,4 @@
-﻿namespace HospitalManagement.Appointments.Models.DTOs.External
+﻿namespace HospitalManagement.Shared.Models.DTOs.External
 {
     public class ExternalDoctorDto
     {

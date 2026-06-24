@@ -12,11 +12,11 @@ namespace HospitalManagement.Appointments.Services.Validations
 {
     public class AppointmentValidation : IAppointmentValidation
     {
-        private readonly IMainApiClient mainApiClient;
+        private readonly IHospitalManagementClient mainApiClient;
         private readonly IAppointmentRepository appointmentRepository;
 
         public AppointmentValidation(IAppointmentRepository appointmentRepository,
-            IMainApiClient mainApiClient)
+            IHospitalManagementClient mainApiClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.mainApiClient = mainApiClient;

@@ -24,8 +24,10 @@ namespace HospitalManagement.Appointments.Controllers
             var result = await appointmentService.Delete(id);
 
             if (!result.Success)
+            {
                 return NotFound(new { result.Message, result.ErrorCode });
-
+            }
+                
             return Ok(result);
         }
 
@@ -36,13 +38,18 @@ namespace HospitalManagement.Appointments.Controllers
             var validation = await validator.ValidateAsync(request);
 
             if (!validation.IsValid)
+            {
                 return ValidationFailed(validation);
+            }
+                
 
             var result = await appointmentService.UpdateAsync(request);
 
             if (!result.Success)
+            {
                 return NotFound(new { result.Message, result.ErrorCode });
-
+            }
+                
             return Ok(result);
         }
 
@@ -51,6 +58,7 @@ namespace HospitalManagement.Appointments.Controllers
         public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentFilterDto filter)
         {
             var result = await appointmentService.GetAllAsync(filter);
+
             return Ok(result);
         }
 
@@ -60,7 +68,10 @@ namespace HospitalManagement.Appointments.Controllers
             var result = await appointmentService.GetByIdAsync(id);
 
             if (!result.Success)
+            {
                 return NotFound(new { result.Message, result.ErrorCode });
+            }
+                
 
             return Ok(result);
         }
@@ -73,13 +84,18 @@ namespace HospitalManagement.Appointments.Controllers
             var validation = await validator.ValidateAsync(request);
 
             if (!validation.IsValid)
+            {
                 return ValidationFailed(validation);
+
+            }
 
             var result = await appointmentService.CreateAsync(request);
 
             if (!result.Success)
+            {
                 return NotFound(new { result.Message, result.ErrorCode });
-
+            }
+                
             return Ok(result);
         }
 
@@ -91,13 +107,17 @@ namespace HospitalManagement.Appointments.Controllers
             var validation = await validator.ValidateAsync(request);
 
             if (!validation.IsValid)
+            {
                 return ValidationFailed(validation);
-
+            }
+                
             var result = await appointmentService.GetFreeSlotsAsync(request.DoctorId, request.Date);
 
             if (!result.Success)
+            {
                 return BadRequest(new { result.Message, result.ErrorCode });
-
+            }
+                
             return Ok(result);
         }
 
@@ -108,13 +128,17 @@ namespace HospitalManagement.Appointments.Controllers
             var validation = await validator.ValidateAsync(request);
 
             if (!validation.IsValid)
+            {
                 return ValidationFailed(validation);
-
+            }
+                
             var result = await appointmentService.UpdateStatusAsync(request);
 
             if (!result.Success)
+            {
                 return BadRequest(new { result.Message, result.ErrorCode });
-
+            }
+                
             return Ok(result);
         }
     }

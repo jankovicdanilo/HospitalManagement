@@ -30,14 +30,11 @@ public partial class AppointmentDbContext : DbContext
             entity.Property(e => e.Notes).HasMaxLength(500);
             entity.Property(e => e.Status).HasMaxLength(50).HasConversion<string>();
 
-            // DoctorId and PatientId are plain reference ids now, not real FKs —
-            // Doctor/Patient live in the main API's database.
-            // Existence enforced via live HTTP validation, not by the database.
-
-            entity.Property(e => e.PatientName).HasMaxLength(100);
-            entity.Property(e => e.PatientEmail).HasMaxLength(100);
-            entity.Property(e => e.DoctorName).HasMaxLength(200);
+            
         });
+
+        modelBuilder.Entity<Appointment>().Ignore(d => d.Doctor);
+        modelBuilder.Entity<Appointment>().Ignore(p => p.Patient);
 
         modelBuilder.Entity<AppointmentProcedure>(entity =>
         {

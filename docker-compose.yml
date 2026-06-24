@@ -8,6 +8,11 @@ services:
       - "1433:1433"
     volumes:
       - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -C -No -Q 'SELECT 1' || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
 
   api:
     build:
@@ -21,8 +26,11 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
+    volumes:
+      - ./logs/api:/app/logs
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   auth:
     build:
@@ -36,8 +44,11 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
+    volumes:
+      - ./logs/auth:/app/logs
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 
 volumes:

@@ -22,8 +22,10 @@ namespace HospitalManagement.Appointments.Controllers
             var result = await appointmentProcedureService.CreateAsync(request);
 
             if (!result.Success)
+            {
                 return NotFound(new { result.Message, result.ErrorCode });
-
+            }
+                
             return Ok(result);
         }
 
@@ -33,8 +35,10 @@ namespace HospitalManagement.Appointments.Controllers
             var result = await appointmentProcedureService.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId);
 
             if (!result.Success)
+            {
                 return NotFound(new { result.Message, result.ErrorCode });
-
+            }
+                
             return Ok(result);
         }
 
@@ -44,8 +48,10 @@ namespace HospitalManagement.Appointments.Controllers
             var result = await appointmentProcedureService.DeleteAsync(appointmentId, procedureId);
 
             if (!result.Success)
+            {
                 return NotFound(new { result.Message, result.ErrorCode });
-
+            }
+                
             return Ok(result);
         }
     }

@@ -43,7 +43,7 @@ builder.Services.AddScoped<ITreatmentValidation, TreatmentValidation>();
 builder.Services.AddScoped<IAppointmentDiscountCalculator, AppointmentDiscountCalculator>();
 
 // HTTP client for cross-service calls to main API
-builder.Services.AddHttpClient<IMainApiClient, MainApiClient>(client =>
+builder.Services.AddHttpClient<IHospitalManagementClient, HospitalManagementClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["MainApi:BaseUrl"]!);
 });

@@ -1,20 +1,20 @@
 ﻿using HospitalManagement.Appointments.Clients.Interfaces;
-using HospitalManagement.Appointments.Models.DTOs.External;
+using HospitalManagement.Shared.Models.DTOs.External;
 using System.Text.Json;
 
 namespace HospitalManagement.Appointments.Clients.Implementations
 {
-    public class MainApiClient : IMainApiClient
+    public class HospitalManagementClient : IHospitalManagementClient
     {
         private readonly HttpClient httpClient;
-        private readonly ILogger<MainApiClient> logger;
+        private readonly ILogger<HospitalManagementClient> logger;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNameCaseInsensitive = true
         };
 
-        public MainApiClient(HttpClient httpClient, ILogger<MainApiClient> logger)
+        public HospitalManagementClient(HttpClient httpClient, ILogger<HospitalManagementClient> logger)
         {
             this.httpClient = httpClient;
             this.logger = logger;
@@ -57,25 +57,6 @@ namespace HospitalManagement.Appointments.Clients.Implementations
                 return null;
             }
         }
-
-        //public async Task<ExternalProcedureDto?> GetProcedureAsync(int procedureId)
-        //{
-        //    try
-        //    {
-        //        var response = await httpClient.GetAsync($"api/procedure/{procedureId}");
-        //        if (!response.IsSuccessStatusCode)
-        //            return null;
-        //        var json = await response.Content.ReadAsStringAsync();
-        //        var result = JsonSerializer.Deserialize<ApiResponse<ExternalProcedureDto>>(json, JsonOptions);
-
-        //        return result?.Data;
-        //    }
-        //    catch(Exception ex)
-        //    {
-        //        logger.LogError(ex, "Failed to get procedure {ProcedureId} from main API", procedureId);
-        //        return null;
-        //    }
-        //}
 
         public async Task<ExternalProcedureDto?> GetProcedureAsync(int procedureId)
         {

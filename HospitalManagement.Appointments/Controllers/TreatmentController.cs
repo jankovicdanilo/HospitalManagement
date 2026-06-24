@@ -24,13 +24,17 @@ namespace HospitalManagement.Appointments.Controllers
             var validation = await validator.ValidateAsync(request);
 
             if (!validation.IsValid)
+            {
                 return ValidationFailed(validation);
-
+            }
+                
             var result = await treatmentService.CreateAsync(request);
 
             if (!result.Success)
+            {
                 return NotFound(new { result.Message, result.ErrorCode });
-
+            }
+                
             return Ok(result);
         }
     }
