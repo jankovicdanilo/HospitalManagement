@@ -11,11 +11,7 @@ public partial class Appointment
 
     public int PatientId { get; set; }
 
-    public ExternalPatientDto? Patient { get; set; } //not mapped to db
-
     public int DoctorId { get; set; }
-
-    public ExternalDoctorDto? Doctor { get; set; } //not mapped to db
 
     public DateTime DateTime { get; set; }
 

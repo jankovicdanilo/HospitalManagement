@@ -70,7 +70,12 @@ namespace HospitalManagement.Appointments.Services.Implementations
                 return Result<AppointmentResponseDto>.Fail($"Appointment with the id {id} not found", "INVALID_ID");
             }
 
+            var doctor = await hospitalManagementClient.GetDoctorAsync(appointmentDomain.DoctorId);
+            var patient = await hospitalManagementClient.GetPatientAsync(appointmentDomain.PatientId);
+
             var result = mapper.Map<AppointmentResponseDto>(appointmentDomain);
+            result.Doctor = doctor;
+            result.Patient = patient;
             var calculateDiscount = GetDiscountResult(appointmentDomain);
             result.TotalCost = calculateDiscount.TotalCost;
             result.Discount = calculateDiscount.Discount;
@@ -105,8 +110,6 @@ namespace HospitalManagement.Appointments.Services.Implementations
             }
 
             var appointmentDomain = mapper.Map<Appointment>(request);
-            appointmentDomain.Doctor = doctor;
-            appointmentDomain.Patient = patient;
 
             appointmentDomain = await appointmentRepository.CreateAsync(appointmentDomain);
 
@@ -115,6 +118,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
                 patient.Email, appointmentDomain.DateTime, $"{doctor.FirstName} {doctor.LastName}");
 
             var result = mapper.Map<AppointmentCreateResponseDto>(appointmentDomain);
+            result.Doctor = doctor;
+            result.Patient = patient;
 
             return Result<AppointmentCreateResponseDto>.Ok(result);
         }
@@ -163,14 +168,14 @@ namespace HospitalManagement.Appointments.Services.Implementations
             }
 
             mapper.Map(request, appointmentDomain);
-            appointmentDomain.Doctor = doctor;
-            appointmentDomain.Patient = patient;
 
             appointmentDomain = await appointmentRepository.UpdateAsync(appointmentDomain);
 
             logger.LogInformation("Appointment with id {Id} updated", appointmentDomain.Id);
 
             var result = mapper.Map<AppointmentUpdateResponseDto>(appointmentDomain);
+            result.Doctor = doctor;
+            result.Patient = patient;
 
             return Result<AppointmentUpdateResponseDto>.Ok(result);
         }

@@ -11,7 +11,8 @@ namespace HospitalManagement.Appointments.Clients.Implementations
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
+            Converters = {new System.Text.Json.Serialization.JsonStringEnumConverter()}
         };
 
         public HospitalManagementClient(HttpClient httpClient, ILogger<HospitalManagementClient> logger)
@@ -24,9 +25,8 @@ namespace HospitalManagement.Appointments.Clients.Implementations
         {
             try
             {
-                logger.LogInformation("Calling main API for doctor {DoctorId} at {BaseAddress}", doctorId, httpClient.BaseAddress);
+                
                 var response = await httpClient.GetAsync($"api/doctor/{doctorId}");
-                logger.LogInformation("Response status: {StatusCode}", response.StatusCode);
                 if (!response.IsSuccessStatusCode)
                     return null;
                 var json = await response.Content.ReadAsStringAsync();
@@ -42,7 +42,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             }
         }
 
-        public async Task<ExternalPatientDto> GetPatientAsync(int patientId)
+        public async Task<ExternalPatientDto?> GetPatientAsync(int patientId)
         {
             try
             {
@@ -50,6 +50,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
                 if (!response.IsSuccessStatusCode)
                     return null;
                 var json = await response.Content.ReadAsStringAsync();
+                logger.LogInformation("Response body: {Json}", json);
                 var result = JsonSerializer.Deserialize<ApiResponse<ExternalPatientDto>>(json, JsonOptions);
 
                 return result?.Data;
@@ -66,13 +67,10 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             try
             {
                 var url = $"api/procedure/{procedureId}";
-                logger.LogInformation("Calling main API: {BaseAddress}{Url}", httpClient.BaseAddress, url);
 
                 var response = await httpClient.GetAsync(url);
-                logger.LogInformation("Response status: {StatusCode}", response.StatusCode);
 
                 var json = await response.Content.ReadAsStringAsync();
-                logger.LogInformation("Response body: {Json}", json);
 
                 if (!response.IsSuccessStatusCode) return null;
                 var result = JsonSerializer.Deserialize<ApiResponse<ExternalProcedureDto>>(json, JsonOptions);

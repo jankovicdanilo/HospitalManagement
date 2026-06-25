@@ -33,9 +33,6 @@ public partial class AppointmentDbContext : DbContext
             
         });
 
-        modelBuilder.Entity<Appointment>().Ignore(d => d.Doctor);
-        modelBuilder.Entity<Appointment>().Ignore(p => p.Patient);
-
         modelBuilder.Entity<AppointmentProcedure>(entity =>
         {
             entity.HasKey(ap => new { ap.AppointmentId, ap.ProcedureId });
