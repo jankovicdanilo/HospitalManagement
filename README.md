@@ -22,30 +22,24 @@ This system is built as a set of microservices, each owning its own database and
 communicating over HTTP.
 
 ```mermaid
-graph TD
-    Auth["Auth Service<br/>Issues JWT tokens"]
-    APP["AppointmentService<br/>Appointments/AppointmentProcedures/Treatments"]
-    QS["QueryService<br/>Doctor/DoctorSchedule/Patient/Procedure"]
-    CMD["CommandService<br/>Doctor/DoctorSchedule/Patient/Procedure"]
-    RMQ([RabbitMQ])
-    AuthDB[(AuthDB)]
-    AppDB[(AppointmentsDB)]
-    QueryDB[(QueryDB)]
-    CommandDB[(CommandDB)]
+architecture-beta
+    group system(cloud)[Hospital Management System]
 
-    Auth -->|validate JWT| APP
-    Auth -->|validate JWT| QS
-    Auth -->|validate JWT| CMD
-    Auth -->|read/write| AuthDB
+    service authdb(database)[AuthDB] in system
+    service appdb(database)[AppointmentsDB] in system
+    service hmsdb(database)[HospitalManagementDB] in system
 
-    APP -->|read/write| AppDB
-    APP -->|GET doctor/patient/procedure| QS
-    QS -->|GET patient history| APP
-    QS -->|read| QueryDB
+    service auth(server)[Auth Service] in system
+    service app(server)[AppointmentService] in system
+    service hms(server)[HospitalManagement] in system
 
-    CMD -->|publish events| RMQ
-    CMD -->|read/write| CommandDB
-    RMQ -->|consume events| QS
+    hms:R -- L:hmsdb
+    app:R -- L:appdb
+    auth:R -- L:authdb
+
+    hms:T -- B:app
+    hms:T -- B:auth
+    app:B -- T:auth
 ```
 
 ### Services
