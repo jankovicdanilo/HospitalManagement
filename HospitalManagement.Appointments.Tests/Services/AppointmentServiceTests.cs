@@ -9,6 +9,7 @@ using HospitalManagement.Appointments.Services.Calculators.Results;
 using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -44,7 +45,8 @@ namespace HospitalManagement.Appointments.Tests.Services
                 appointmentValidationMock.Object,
                 loggerMock.Object,
                 appointmentSettings,
-                appointmentDiscountCalculatorMock.Object
+                appointmentDiscountCalculatorMock.Object,
+                hospitalClientMock.Object
             );
         }
 
@@ -143,6 +145,10 @@ namespace HospitalManagement.Appointments.Tests.Services
             var appointmentDto = new AppointmentCreateResponseDto { Id = appointmentId };
 
             appointmentValidationMock.Setup(v => v.ValidateAll(request)).ReturnsAsync(Result.Ok("Validation ok"));
+            hospitalClientMock.Setup(h => h.GetPatientAsync(patientId)).ReturnsAsync
+                (new PatientResponseDto { Id = patientId });
+            hospitalClientMock.Setup(x => x.GetDoctorAsync(doctorId)).ReturnsAsync
+                (new DoctorResponseDto { Id = doctorId });
             mapperMock.Setup(m => m.Map<Appointment>(request)).Returns(appointment);
             appointmentRepositoryMock.Setup(r => r.CreateAsync(appointment)).ReturnsAsync(appointment);
             mapperMock.Setup(m => m.Map<AppointmentCreateResponseDto>(appointment)).Returns(appointmentDto);
@@ -173,12 +179,18 @@ namespace HospitalManagement.Appointments.Tests.Services
         public async Task UpdateAsync_ReturnsSuccess()
         {
             int appointmentId = 1;
+            int doctorId = 1;
+            int patientId = 1;
             var request = new AppointmentUpdateRequestDto { Id = appointmentId, DoctorId = 1, PatientId = 1 };
             var appointment = new Appointment { Id = appointmentId };
             var appointmentDto = new AppointmentUpdateResponseDto { Id = appointmentId };
 
             appointmentValidationMock.Setup(v => v.ValidateAll(request)).ReturnsAsync(Result.Ok("Validation ok"));
             appointmentRepositoryMock.Setup(r => r.GetByIdAsync(request.Id)).ReturnsAsync(appointment);
+            hospitalClientMock.Setup(h => h.GetPatientAsync(patientId)).ReturnsAsync
+                (new PatientResponseDto { Id = patientId });
+            hospitalClientMock.Setup(x => x.GetDoctorAsync(doctorId)).ReturnsAsync
+                (new DoctorResponseDto { Id = doctorId });
             appointmentRepositoryMock.Setup(r => r.UpdateAsync(appointment)).ReturnsAsync(appointment);
             mapperMock.Setup(m => m.Map<AppointmentUpdateResponseDto>(appointment)).Returns(appointmentDto);
 
@@ -262,12 +274,75 @@ namespace HospitalManagement.Appointments.Tests.Services
         }
 
         [Test]
-        public async Task GetFreeSlotsAsync_ReturnsNotImplemented()
+        public async Task GetFreeSlotsAsync_PastDate_ReturnsInvalidDate()
         {
-            var result = await appointmentService.GetFreeSlotsAsync(1, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)));
+            var result = await appointmentService.GetFreeSlotsAsync(1, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)));
 
             Assert.That(result.Success, Is.False);
-            Assert.That(result.ErrorCode, Is.EqualTo("NOT_IMPLEMENTED"));
+            Assert.That(result.ErrorCode, Is.EqualTo("INVALID_DATE"));
+        }
+
+        [Test]
+        public async Task GetFreeSlotsAsync_DoctorHasNoSchedule_ReturnsDoctorNotAvailable()
+        {
+            var doctorId = 1;
+            var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
+
+            hospitalClientMock
+                .Setup(c => c.GetDoctorScheduleAsync(doctorId, date.DayOfWeek))
+                .ReturnsAsync((DoctorScheduleResponseDto?)null);
+
+            var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("DOCTOR_NOT_AVAILABLE"));
+        }
+
+        [Test]
+        public async Task GetFreeSlotsAsync_NoAppointments_ReturnsAllSlots()
+        {
+            var doctorId = 1;
+            var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
+
+            hospitalClientMock
+                .Setup(c => c.GetDoctorScheduleAsync(doctorId, date.DayOfWeek))
+                .ReturnsAsync(new DoctorScheduleResponseDto { StartHour = 8, EndHour = 10 });
+
+            appointmentRepositoryMock
+                .Setup(r => r.GetByDoctorIdAndDateAsync(doctorId, date))
+                .ReturnsAsync(new List<Appointment>());
+
+            var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Has.Count.EqualTo(4)); // 8:00, 8:30, 9:00, 9:30 with 30 min slots
+        }
+
+        [Test]
+        public async Task GetFreeSlotsAsync_AppointmentBooked_ExcludesBookedSlot()
+        {
+            var doctorId = 1;
+            var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
+
+            hospitalClientMock
+                .Setup(c => c.GetDoctorScheduleAsync(doctorId, date.DayOfWeek))
+                .ReturnsAsync(new DoctorScheduleResponseDto { StartHour = 8, EndHour = 10 });
+
+            var bookedAppointment = new Appointment
+            {
+                DateTime = date.ToDateTime(new TimeOnly(8, 0)),
+                Duration = TimeSpan.FromMinutes(30)
+            };
+
+            appointmentRepositoryMock
+                .Setup(r => r.GetByDoctorIdAndDateAsync(doctorId, date))
+                .ReturnsAsync(new List<Appointment> { bookedAppointment });
+
+            var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Has.Count.EqualTo(3)); // 8:30, 9:00, 9:30
+            Assert.That(result.Data!.Any(s => s.Start == new TimeOnly(8, 0)), Is.False);
         }
 
         [Test]

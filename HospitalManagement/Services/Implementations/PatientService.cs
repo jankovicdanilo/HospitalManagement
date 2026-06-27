@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
-using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
+using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Services.Implementations
 {

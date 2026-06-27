@@ -3,9 +3,6 @@ using HospitalManagement.Appointments.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Clients.Interfaces;
 
-// TODO: IProcedureRepository will be replaced by IMainApiClient.GetProcedureAsync
-// once that's defined
-
 namespace HospitalManagement.Appointments.Services.Validations
 {
     public class AppointmentProcedureValidation : IAppointmentProcedureValidation

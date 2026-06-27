@@ -54,7 +54,6 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentFilterDto filter)
         {
             var result = await appointmentService.GetAllAsync(filter);
@@ -77,7 +76,6 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
         public async Task<IActionResult> CreateAsync([FromBody] AppointmentCreateRequestDto request,
             [FromServices] IValidator<AppointmentCreateRequestDto> validator)
         {
@@ -100,7 +98,6 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet("free-slots")]
-        [AllowAnonymous]
         public async Task<IActionResult> FreeSlots([FromQuery] FreeSlotsRequestDto request,
             [FromServices] IValidator<FreeSlotsRequestDto> validator)
         {

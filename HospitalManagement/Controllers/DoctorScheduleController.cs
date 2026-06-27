@@ -92,7 +92,6 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpPut]
-        [AllowAnonymous]
         public async Task<IActionResult> UpdateAsync([FromBody] DoctorScheduleUpdateRequestDto request,
             [FromServices] IValidator<DoctorScheduleUpdateRequestDto> validator)
         {

@@ -68,7 +68,6 @@ namespace HospitalManagement.Controllers
             return Ok(result);
         }
 
-        [AllowAnonymous]
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetByIdAsync([FromRoute] int id)
         {

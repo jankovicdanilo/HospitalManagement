@@ -19,7 +19,6 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllAsync()
         {
             var result = await patientService.GetAllAsync();
