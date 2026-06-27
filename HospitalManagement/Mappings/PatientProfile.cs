@@ -9,7 +9,7 @@ namespace HospitalManagement.Mappings
         public PatientProfile()
         {
             CreateMap<Patient, PatientListDto>().ReverseMap();
-            CreateMap<Patient, PatientGetByIdDto>().ReverseMap();
+            CreateMap<Patient, PatientResponseDto>().ReverseMap();
             CreateMap<Patient, PatientCreateRequestDto>().ReverseMap();
             CreateMap<Patient, PatientCreateResponseDto>().ReverseMap();
             CreateMap<Patient, PatientUpdateRequestDto>().ReverseMap();

@@ -1,4 +1,4 @@
-﻿namespace HospitalManagement.Models.DTOs.Procedure
+﻿namespace HospitalManagement.Shared.Models.DTOs
 {
     public class ProcedureResponseDto
     {

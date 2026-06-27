@@ -1,5 +1,5 @@
 ﻿using HospitalManagement.Appointments.Clients.Interfaces;
-using HospitalManagement.Shared.Models.DTOs.External;
+using HospitalManagement.Shared.Models.DTOs;
 using System.Text.Json;
 
 namespace HospitalManagement.Appointments.Clients.Implementations
@@ -21,17 +21,16 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             this.logger = logger;
         }
 
-        public async Task<ExternalDoctorDto?> GetDoctorAsync(int doctorId)
+        public async Task<DoctorResponseDto?> GetDoctorAsync(int doctorId)
         {
             try
             {
-                
                 var response = await httpClient.GetAsync($"api/doctor/{doctorId}");
                 if (!response.IsSuccessStatusCode)
                     return null;
                 var json = await response.Content.ReadAsStringAsync();
                 logger.LogInformation("Response body: {Json}", json);
-                var result = JsonSerializer.Deserialize<ApiResponse<ExternalDoctorDto>>(json, JsonOptions);
+                var result = JsonSerializer.Deserialize<ApiResponse<DoctorResponseDto>>(json, JsonOptions);
 
                 return result?.Data;
             }
@@ -42,7 +41,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             }
         }
 
-        public async Task<ExternalPatientDto?> GetPatientAsync(int patientId)
+        public async Task<PatientResponseDto?> GetPatientAsync(int patientId)
         {
             try
             {
@@ -51,7 +50,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
                     return null;
                 var json = await response.Content.ReadAsStringAsync();
                 logger.LogInformation("Response body: {Json}", json);
-                var result = JsonSerializer.Deserialize<ApiResponse<ExternalPatientDto>>(json, JsonOptions);
+                var result = JsonSerializer.Deserialize<ApiResponse<PatientResponseDto>>(json, JsonOptions);
 
                 return result?.Data;
             }
@@ -62,7 +61,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             }
         }
 
-        public async Task<ExternalProcedureDto?> GetProcedureAsync(int procedureId)
+        public async Task<ProcedureResponseDto?> GetProcedureAsync(int procedureId)
         {
             try
             {
@@ -73,7 +72,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
                 var json = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode) return null;
-                var result = JsonSerializer.Deserialize<ApiResponse<ExternalProcedureDto>>(json, JsonOptions);
+                var result = JsonSerializer.Deserialize<ApiResponse<ProcedureResponseDto>>(json, JsonOptions);
                 logger.LogInformation("Deserialized data: {Data}", result?.Data?.Name);
                 return result?.Data;
             }
@@ -84,7 +83,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             }
         }
 
-        public async Task<ExternalDoctorScheduleDto?> GetDoctorScheduleAsync(int doctorId, DayOfWeek dayOfWeek)
+        public async Task<DoctorScheduleResponseDto?> GetDoctorScheduleAsync(int doctorId, DayOfWeek dayOfWeek)
         {
             try
             {
@@ -92,7 +91,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
                 if (!response.IsSuccessStatusCode)
                     return null;
                 var json = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ApiResponse<ExternalDoctorScheduleDto>>(json, JsonOptions);
+                var result = JsonSerializer.Deserialize<ApiResponse<DoctorScheduleResponseDto>>(json, JsonOptions);
 
                 return result?.Data;
             }

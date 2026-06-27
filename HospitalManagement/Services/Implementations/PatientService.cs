@@ -44,19 +44,19 @@ namespace HospitalManagement.Services.Implementations
             return Result<List<PatientListDto>>.Ok(result);
         }
 
-        public async Task<Result<PatientGetByIdDto?>> GetByIdAsync(int id)
+        public async Task<Result<PatientResponseDto?>> GetByIdAsync(int id)
         {
             var patientDomain = await patientRepository.GetByIdAsync(id);
 
             if(patientDomain == null)
             {
                 logger.LogWarning("Patient with id {Id} not found", id);
-                return Result<PatientGetByIdDto?>.Fail($"Patient with the id {id} doesn't exist", "INVALID_ID");
+                return Result<PatientResponseDto?>.Fail($"Patient with the id {id} doesn't exist", "INVALID_ID");
             }
 
-            var result = mapper.Map<PatientGetByIdDto>(patientDomain);
+            var result = mapper.Map<PatientResponseDto>(patientDomain);
 
-            return Result<PatientGetByIdDto?>.Ok(result);
+            return Result<PatientResponseDto?>.Ok(result);
         }
 
         public async Task<Result<PatientCreateResponseDto?>> CreateAsync(PatientCreateRequestDto request)

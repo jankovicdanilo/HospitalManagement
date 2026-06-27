@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using HospitalManagement.Services.Implementations;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Tests.Services
 {
@@ -57,10 +58,10 @@ namespace HospitalManagement.Tests.Services
         public async Task GetById_PatientExists_ReturnsSuccess()
         {
             var patient = new Patient { Id = 1, Name = "John" };
-            var patientDto = new PatientGetByIdDto { Id = 1, Name = "John" };
+            var patientDto = new PatientResponseDto { Id = 1, Name = "John" };
 
             patientRepositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(patient);
-            mapperMock.Setup(m => m.Map<PatientGetByIdDto>(patient)).Returns(patientDto);
+            mapperMock.Setup(m => m.Map<PatientResponseDto>(patient)).Returns(patientDto);
 
             var result = await patientService.GetByIdAsync(1);
 

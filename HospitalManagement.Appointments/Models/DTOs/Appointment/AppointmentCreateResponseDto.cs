@@ -1,6 +1,5 @@
-﻿using HospitalManagement.Appointments.Models.DTOs.AppointmentProcedure;
-using HospitalManagement.Appointments.Models.Enums;
-using HospitalManagement.Shared.Models.DTOs.External;
+﻿using HospitalManagement.Appointments.Models.Enums;
+using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Appointments.Models.DTOs.Appointment
 {
@@ -11,7 +10,7 @@ namespace HospitalManagement.Appointments.Models.DTOs.Appointment
         public TimeSpan Duration { get; set; }
         public AppointmentStatus Status { get; set; }
         public string? Notes { get; set; }
-        public ExternalDoctorDto? Doctor { get; set; }
-        public ExternalPatientDto? Patient { get; set; }
+        public DoctorResponseDto? Doctor { get; set; }
+        public PatientResponseDto? Patient { get; set; }
     }
 }

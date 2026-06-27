@@ -4,6 +4,7 @@ using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Procedure;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
+using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Services.Implementations
 {

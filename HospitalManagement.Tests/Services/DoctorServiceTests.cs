@@ -6,6 +6,7 @@ using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
 using Microsoft.Extensions.Logging;
 using Moq;
+using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Tests.Services
 {

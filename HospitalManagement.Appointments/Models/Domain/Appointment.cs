@@ -1,7 +1,4 @@
 ﻿using HospitalManagement.Appointments.Models.Enums;
-using HospitalManagement.Shared.Models.DTOs.External;
-using System;
-using System.Collections.Generic;
 
 namespace HospitalManagement.Appointments.Models.Domain;
 

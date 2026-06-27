@@ -1,4 +1,4 @@
-﻿namespace HospitalManagement.Models.DTOs.DoctorSchedule
+﻿namespace HospitalManagement.Shared.Models.DTOs
 {
     public class DoctorScheduleResponseDto
     {
