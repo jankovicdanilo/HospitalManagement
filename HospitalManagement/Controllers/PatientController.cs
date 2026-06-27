@@ -19,7 +19,6 @@ namespace HospitalManagement.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllAsync()
         {
             var result = await patientService.GetAllAsync();
@@ -85,25 +84,12 @@ namespace HospitalManagement.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await patientService.Delete(id);
+
             if (!result.Success)
             {
                 return NotFound(new { result.Message, result.ErrorCode });
             }
                 
-            return Ok(result);
-        }
-
-        [HttpGet("{patientId:int}/history")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetMedicalHistoryAsync(int patientId)
-        {
-            var result = await patientService.GetMedicalHistoryAsync(patientId);
-
-            if (!result.Success)
-            {
-                return NotFound(new {result.Message, result.ErrorCode});
-            }
-
             return Ok(result);
         }
     }

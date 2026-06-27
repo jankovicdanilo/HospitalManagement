@@ -16,43 +16,16 @@ public partial class HospitalDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Appointment> Appointments { get; set; }
-
     public virtual DbSet<Doctor> Doctors { get; set; }
 
     public virtual DbSet<Patient> Patients { get; set; }
-
-    public virtual DbSet<Treatment> Treatments { get; set; }
 
     public virtual DbSet<DoctorSchedule> DoctorSchedules { get; set; }
 
     public virtual DbSet<Procedure> Procedures { get; set; }
 
-    public virtual DbSet<AppointmentProcedure> AppointmentProcedures { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Appointment>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Appointm__3214EC07E4B95527");
-
-            entity.ToTable("Appointment");
-
-            entity.Property(e => e.DateTime).HasColumnType("datetime");
-            entity.Property(e => e.Notes).HasMaxLength(500);
-            entity.Property(e => e.Status).HasMaxLength(50).HasConversion<string>();
-
-            entity.HasOne(d => d.Doctor).WithMany(p => p.Appointments)
-                .HasForeignKey(d => d.DoctorId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Appointme__Docto__3B75D760");
-
-            entity.HasOne(d => d.Patient).WithMany(p => p.Appointments)
-                .HasForeignKey(d => d.PatientId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Appointme__Patie__3A81B327");
-        });
-
         modelBuilder.Entity<Doctor>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Doctor__3214EC078843893E");
@@ -78,19 +51,6 @@ public partial class HospitalDbContext : DbContext
             entity.Property(e => e.Phone).HasMaxLength(20);
         });
 
-        modelBuilder.Entity<Treatment>(entity =>
-        {
-            entity.ToTable("Treatment");
-
-            entity.Property(e => e.Description).HasMaxLength(1000);
-            entity.Property(e => e.Medication).HasMaxLength(500);
-
-            entity.HasOne(t => t.Appointment)
-                    .WithOne(a => a.Treatment)
-                    .HasForeignKey<Treatment>(t => t.AppointmentId)
-                    .OnDelete(DeleteBehavior.Cascade);
-        });
-
         modelBuilder.Entity<DoctorSchedule>(entity =>
         {
             entity.ToTable("DoctorSchedule");
@@ -101,19 +61,6 @@ public partial class HospitalDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.DayOfWeek).HasConversion<string>();
-        });
-
-        modelBuilder.Entity<AppointmentProcedure>(entity =>
-        {
-            entity.HasKey(ap => new { ap.AppointmentId, ap.ProcedureId });
-
-            entity.HasOne(ap => ap.Appointment)
-                  .WithMany(a => a.AppointmentProcedures)
-                  .HasForeignKey(ap => ap.AppointmentId);
-
-            entity.HasOne(ap => ap.Procedure)
-                  .WithMany(a => a.AppointmentProcedures)
-                  .HasForeignKey(ap => ap.ProcedureId);
         });
 
         modelBuilder.Entity<Procedure>(entity =>

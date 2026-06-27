@@ -1,5 +1,6 @@
 ﻿using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Services.Interfaces
 {

@@ -22,60 +22,6 @@ namespace HospitalManagement.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Appointment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DateTime")
-                        .HasColumnType("datetime");
-
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("int");
-
-                    b.Property<TimeSpan>("Duration")
-                        .HasColumnType("time");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id")
-                        .HasName("PK__Appointm__3214EC07E4B95527");
-
-                    b.HasIndex("DoctorId");
-
-                    b.HasIndex("PatientId");
-
-                    b.ToTable("Appointment", (string)null);
-                });
-
-            modelBuilder.Entity("HospitalManagement.Models.Domain.AppointmentProcedure", b =>
-                {
-                    b.Property<int>("AppointmentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProcedureId")
-                        .HasColumnType("int");
-
-                    b.HasKey("AppointmentId", "ProcedureId");
-
-                    b.HasIndex("ProcedureId");
-
-                    b.ToTable("AppointmentProcedures");
-                });
-
             modelBuilder.Entity("HospitalManagement.Models.Domain.Doctor", b =>
                 {
                     b.Property<int>("Id")
@@ -199,75 +145,6 @@ namespace HospitalManagement.Migrations
                     b.ToTable("Procedures");
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Treatment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AppointmentId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("Medication")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppointmentId")
-                        .IsUnique();
-
-                    b.ToTable("Treatment", (string)null);
-                });
-
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Appointment", b =>
-                {
-                    b.HasOne("HospitalManagement.Models.Domain.Doctor", "Doctor")
-                        .WithMany("Appointments")
-                        .HasForeignKey("DoctorId")
-                        .IsRequired()
-                        .HasConstraintName("FK__Appointme__Docto__3B75D760");
-
-                    b.HasOne("HospitalManagement.Models.Domain.Patient", "Patient")
-                        .WithMany("Appointments")
-                        .HasForeignKey("PatientId")
-                        .IsRequired()
-                        .HasConstraintName("FK__Appointme__Patie__3A81B327");
-
-                    b.Navigation("Doctor");
-
-                    b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("HospitalManagement.Models.Domain.AppointmentProcedure", b =>
-                {
-                    b.HasOne("HospitalManagement.Models.Domain.Appointment", "Appointment")
-                        .WithMany("AppointmentProcedures")
-                        .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("HospitalManagement.Models.Domain.Procedure", "Procedure")
-                        .WithMany("AppointmentProcedures")
-                        .HasForeignKey("ProcedureId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Appointment");
-
-                    b.Navigation("Procedure");
-                });
-
             modelBuilder.Entity("HospitalManagement.Models.Domain.DoctorSchedule", b =>
                 {
                     b.HasOne("HospitalManagement.Models.Domain.Doctor", "Doctor")
@@ -279,39 +156,9 @@ namespace HospitalManagement.Migrations
                     b.Navigation("Doctor");
                 });
 
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Treatment", b =>
-                {
-                    b.HasOne("HospitalManagement.Models.Domain.Appointment", "Appointment")
-                        .WithOne("Treatment")
-                        .HasForeignKey("HospitalManagement.Models.Domain.Treatment", "AppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Appointment");
-                });
-
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Appointment", b =>
-                {
-                    b.Navigation("AppointmentProcedures");
-
-                    b.Navigation("Treatment");
-                });
-
             modelBuilder.Entity("HospitalManagement.Models.Domain.Doctor", b =>
                 {
-                    b.Navigation("Appointments");
-
                     b.Navigation("Schedules");
-                });
-
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Patient", b =>
-                {
-                    b.Navigation("Appointments");
-                });
-
-            modelBuilder.Entity("HospitalManagement.Models.Domain.Procedure", b =>
-                {
-                    b.Navigation("AppointmentProcedures");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,5 +1,6 @@
-﻿using HospitalManagement.Shared.Common;
-using HospitalManagement.Models.DTOs.Patient;
+﻿using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Services.Interfaces
 {
@@ -10,7 +11,7 @@ namespace HospitalManagement.Services.Interfaces
 
         Task<Result<List<PatientListDto>>> GetAllAsync();
 
-        Task<Result<PatientGetByIdDto?>> GetByIdAsync(int id);
+        Task<Result<PatientResponseDto?>> GetByIdAsync(int id);
 
         Task<Result<PatientCreateResponseDto?>> CreateAsync(PatientCreateRequestDto request);
 

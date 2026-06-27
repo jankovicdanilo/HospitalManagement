@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Mappings
 {

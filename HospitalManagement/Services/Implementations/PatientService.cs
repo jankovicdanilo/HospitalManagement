@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
-using HospitalManagement.Shared.Common;
 using HospitalManagement.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
+using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Services.Implementations
 {
@@ -44,19 +45,19 @@ namespace HospitalManagement.Services.Implementations
             return Result<List<PatientListDto>>.Ok(result);
         }
 
-        public async Task<Result<PatientGetByIdDto?>> GetByIdAsync(int id)
+        public async Task<Result<PatientResponseDto?>> GetByIdAsync(int id)
         {
             var patientDomain = await patientRepository.GetByIdAsync(id);
 
             if(patientDomain == null)
             {
                 logger.LogWarning("Patient with id {Id} not found", id);
-                return Result<PatientGetByIdDto?>.Fail($"Patient with the id {id} doesn't exist", "INVALID_ID");
+                return Result<PatientResponseDto?>.Fail($"Patient with the id {id} doesn't exist", "INVALID_ID");
             }
 
-            var result = mapper.Map<PatientGetByIdDto>(patientDomain);
+            var result = mapper.Map<PatientResponseDto>(patientDomain);
 
-            return Result<PatientGetByIdDto?>.Ok(result);
+            return Result<PatientResponseDto?>.Ok(result);
         }
 
         public async Task<Result<PatientCreateResponseDto?>> CreateAsync(PatientCreateRequestDto request)
@@ -109,17 +110,12 @@ namespace HospitalManagement.Services.Implementations
 
         public async Task<Result<PatientMedicalHistoryDto>> GetMedicalHistoryAsync(int patientId)
         {
-            var patientDomain = await patientRepository.GetMedicalHistoryAsync(patientId);
-            
-            if(patientDomain == null)
-            {
-                logger.LogWarning("Patient with id {Id} not found", patientId);
-                return Result<PatientMedicalHistoryDto>.Fail($"Patient with id {patientId} doesn't exist", "INVALID_ID");
-            }
-
-            var result = mapper.Map<PatientMedicalHistoryDto>(patientDomain);
-
-            return Result<PatientMedicalHistoryDto>.Ok(result);
+            // TODO: cross-service call to appointment microservice needed
+            // Appointments now live in HospitalManagementAppointments database
+            await Task.CompletedTask;
+            return Result<PatientMedicalHistoryDto>.Fail(
+                "Medical history temporarily unavailable — pending cross-service implementation",
+                "NOT_IMPLEMENTED");
         }
     }
 }
