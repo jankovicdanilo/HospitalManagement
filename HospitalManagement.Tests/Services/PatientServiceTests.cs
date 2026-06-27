@@ -157,31 +157,5 @@ namespace HospitalManagement.Tests.Services
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("INVALID_EMAIL"));
         }
-
-        //[Test]
-        //public async Task GetMedicalHistoryAsync_PatientExists_ReturnsSuccess()
-        //{
-        //    var patient = new Patient { Id = 1 };
-        //    var dto = new PatientMedicalHistoryDto { };
-
-        //    patientRepositoryMock.Setup(r => r.GetMedicalHistoryAsync(1)).ReturnsAsync(patient);
-        //    mapperMock.Setup(m => m.Map<PatientMedicalHistoryDto>(patient)).Returns(dto);
-
-        //    var result = await patientService.GetMedicalHistoryAsync(1);
-
-        //    Assert.That(result.Success, Is.True);
-        //    Assert.That(result.Data, Is.EqualTo(dto));
-        //}
-
-        //[Test]
-        //public async Task GetMedicalHistoryAsync_PatientNotFound_ReturnsFailure()
-        //{
-        //    patientRepositoryMock.Setup(r => r.GetMedicalHistoryAsync(1)).ReturnsAsync((Patient?)null);
-
-        //    var result = await patientService.GetMedicalHistoryAsync(1);
-
-        //    Assert.That(result.Success, Is.False);
-        //    Assert.That(result.ErrorCode, Is.EqualTo("INVALID_ID"));
-        //}
     }
 }
