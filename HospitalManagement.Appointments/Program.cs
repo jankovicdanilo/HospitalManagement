@@ -10,6 +10,7 @@ using HospitalManagement.Appointments.Services.Calculators.Implementations;
 using HospitalManagement.Appointments.Services.Calculators.Interfaces;
 using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Interfaces;
+using HospitalManagement.Appointments.Services.Pdf;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Appointments.Settings;
 using HospitalManagement.Shared.Http;
@@ -35,6 +36,8 @@ builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IAppointmentProcedureService, AppointmentProcedureService>();
 builder.Services.AddScoped<ITreatmentService, TreatmentService>();
+builder.Services.AddScoped<IBillingService, BillingService>();
+builder.Services.AddScoped<IPdfGenerator, PdfGenerator>();
 
 // Validations
 builder.Services.AddScoped<IAppointmentValidation, AppointmentValidation>();

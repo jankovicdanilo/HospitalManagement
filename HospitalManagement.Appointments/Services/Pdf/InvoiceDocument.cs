@@ -94,6 +94,12 @@ namespace HospitalManagement.Appointments.Services.Pdf
                     col.Item().Text("Duration").Bold().FontColor(Colors.Grey.Medium);
                     col.Item().Text($"{data.Duration.TotalMinutes} min");
                 });
+
+                row.RelativeItem().Column(col =>
+                {
+                    col.Item().Text("Status").Bold().FontColor(Colors.Grey.Medium);
+                    col.Item().Text(data.Status.ToString()).Bold();
+                });
             });
         }
 

@@ -1,9 +1,11 @@
 ﻿using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
+using HospitalManagement.Appointments.Models.DTOs.AppointmentProcedure;
 using HospitalManagement.Appointments.Models.DTOs.Invoice;
 using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;
@@ -100,6 +102,74 @@ namespace HospitalManagement.Appointments.Tests.Services
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.Data, Has.Length.EqualTo(5));
+        }
+
+        [Test]
+        public async Task GenerateInvoiceAsync_AppointmentFound_MapsInvoiceDataCorrectly()
+        {
+            int appointmentId = 1;
+            var appointment = new AppointmentResponseDto
+            {
+                Id = 1,
+                DateTime = new DateTime(2024, 6, 15, 10, 0, 0),
+                Duration = TimeSpan.FromMinutes(30),
+                Notes = "Follow up required",
+                Patient = new PatientResponseDto { Name = "John", LastName = "Doe" },
+                Doctor = new DoctorResponseDto { FirstName = "Jane", LastName = "Smith" },
+                Procedures =
+                [
+                    new AppointmentProcedureResponseDto { ProcedureName = "Blood Test", ProcedurePrice = 50 },
+            new AppointmentProcedureResponseDto { ProcedureName = "X-Ray", ProcedurePrice = 80 }
+                ],
+                Discount = 10,
+                TotalCost = 120
+            };
+
+            appointmentServiceMock
+                .Setup(a => a.GetByIdAsync(appointmentId))
+                .ReturnsAsync(Result<AppointmentResponseDto>.Ok(appointment));
+
+            // this is the key part — capture what gets passed to Generate()
+            InvoiceData capturedData = null;
+            pdfGeneratorMock
+                .Setup(p => p.Generate(It.IsAny<InvoiceData>()))
+                .Callback<InvoiceData>(data => capturedData = data)
+                .Returns(new byte[5]);
+
+            await billingService.GenerateInvoiceAsync(appointmentId);
+
+            Assert.That(capturedData.PatientName, Is.EqualTo("John Doe"));
+            Assert.That(capturedData.DoctorName, Is.EqualTo("Jane Smith"));
+            Assert.That(capturedData.AppointmentDate, Is.EqualTo(appointment.DateTime));
+            Assert.That(capturedData.Duration, Is.EqualTo(appointment.Duration));
+            Assert.That(capturedData.Notes, Is.EqualTo(appointment.Notes));
+            Assert.That(capturedData.Subtotal, Is.EqualTo(130));
+            Assert.That(capturedData.Discount, Is.EqualTo(10));
+            Assert.That(capturedData.TotalAmount, Is.EqualTo(120));
+            Assert.That(capturedData.Procedures.Count, Is.EqualTo(2));
+            Assert.That(capturedData.Procedures[0].Name, Is.EqualTo("Blood Test"));
+            Assert.That(capturedData.Procedures[1].Name, Is.EqualTo("X-Ray"));
+        }
+
+        [Test]
+        public async Task GenerateInvoiceAsync_AppointmentHasIncompleteData_ReturnsFailure()
+        {
+            int appointmentId = 1;
+            var appointment = new AppointmentResponseDto
+            {
+                Id = appointmentId,
+                Patient = null,
+                Doctor = null
+            };
+
+            appointmentServiceMock
+                .Setup(a => a.GetByIdAsync(appointmentId))
+                .ReturnsAsync(Result<AppointmentResponseDto>.Ok(appointment));
+
+            var result = await billingService.GenerateInvoiceAsync(appointmentId);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("INVALID_DATA"));
         }
     }
 }
