@@ -41,8 +41,8 @@ namespace HospitalManagement.Appointments.Tests.Services
             int appointmentId = 1;
 
             appointmentServiceMock.Setup
-                (a => a.GetByIdAsync(appointmentId)).ReturnsAsync
-                (Result<AppointmentResponseDto>.Fail(
+                (a => a.GetByIdAsync(appointmentId))
+                    .ReturnsAsync(Result<AppointmentResponseDto>.Fail(
             $"Appointment with the id {appointmentId} not found", "INVALID_ID"));
 
             var result = await billingService.GenerateInvoiceAsync(appointmentId);
@@ -58,14 +58,48 @@ namespace HospitalManagement.Appointments.Tests.Services
             var appointment = new AppointmentResponseDto { Id = appointmentId };
 
             appointmentServiceMock.Setup(
-                a => a.GetByIdAsync(appointmentId)).
-                ReturnsAsync(Result<AppointmentResponseDto>.Fail(
+                a => a.GetByIdAsync(appointmentId))
+                .ReturnsAsync(Result<AppointmentResponseDto>.Fail(
         $"Appointment with the id {appointmentId} not found", "INVALID_ID"));
 
             await billingService.GenerateInvoiceAsync(appointmentId);
 
             pdfGeneratorMock.Verify(p => p.Generate
             (It.IsAny<InvoiceData>()), Times.Never);
+        }
+
+        [Test]
+        public async Task GenerateInvoiceAsync_AppointmentFound_CallsPdfGenerator()
+        {
+            int appointmentId = 1;
+            var appointment = new AppointmentResponseDto { Id = appointmentId };
+
+            appointmentServiceMock.Setup(
+                a => a.GetByIdAsync(appointmentId))
+                .ReturnsAsync(Result<AppointmentResponseDto>.Ok(appointment));
+            pdfGeneratorMock.Setup(
+                p => p.Generate(It.IsAny<InvoiceData>()))
+                .Returns(new byte[5]);
+
+            var result = await billingService.GenerateInvoiceAsync(appointmentId);
+
+            pdfGeneratorMock.Verify(p => p.Generate(It.IsAny<InvoiceData>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GenerateInvoiceAsync_AppointmentFound_ReturnPdfBytes()
+        {
+            int appointmentId = 1;
+            var appointment = new AppointmentResponseDto { Id = appointmentId };
+
+            appointmentServiceMock.Setup(
+                a => a.GetByIdAsync(appointmentId)).ReturnsAsync(Result<AppointmentResponseDto>.Ok(appointment));
+            pdfGeneratorMock.Setup(p => p.Generate(It.IsAny<InvoiceData>())).Returns(new byte[5]);
+
+            var result = await billingService.GenerateInvoiceAsync(appointmentId);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Has.Length.EqualTo(5));
         }
     }
 }

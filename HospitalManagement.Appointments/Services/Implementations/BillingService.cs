@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Appointments.Models.DTOs.Invoice;
+﻿using HospitalManagement.Appointments.Models.DTOs.Appointment;
+using HospitalManagement.Appointments.Models.DTOs.Invoice;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Shared.Common;
 
@@ -24,15 +25,19 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             if (!appointment.Success)
             {
+                logger.LogWarning("Appointment with id {Id} not found", appointmentId);
                 return Result<byte[]>.Fail(appointment.Message, appointment.ErrorCode);
             }
 
-            throw new NotImplementedException();
+            var invoiceData = MapToInvoiceData(appointment.Data);
+            var pdfBytes = pdfGenerator.Generate(invoiceData);
+
+            return Result<byte[]>.Ok(pdfBytes);
         }
 
-        public Task<Result<InvoiceData>> GetInvoiceDataAsync(int appointmentId)
+        private InvoiceData MapToInvoiceData(AppointmentResponseDto appointment)
         {
-            throw new NotImplementedException();
+            return new InvoiceData();
         }
     }
 }

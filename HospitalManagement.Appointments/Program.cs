@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NLog.Web;
+using QuestPDF.Infrastructure;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,6 +61,8 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 // Read JWT settings for token validation
 var jwtSettings = new JwtSettings
