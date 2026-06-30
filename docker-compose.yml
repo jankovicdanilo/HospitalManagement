@@ -6,7 +6,7 @@ services:
       SA_PASSWORD: ${DB_PASSWORD}
       ACCEPT_EULA: "Y"
     ports:
-      - "1433:1433"
+      - "14330:1433"
     volumes:
       - sqldata:/var/opt/mssql
     healthcheck:
