@@ -74,7 +74,13 @@ namespace HospitalManagement.Appointments.Tests.Services
         public async Task GenerateInvoiceAsync_AppointmentFound_CallsPdfGenerator()
         {
             int appointmentId = 1;
-            var appointment = new AppointmentResponseDto { Id = appointmentId };
+            var appointment = new AppointmentResponseDto
+            {
+                Id = appointmentId,
+                Patient = new PatientResponseDto { Name = "John", LastName = "Doe" },
+                Doctor = new DoctorResponseDto { FirstName = "Jane", LastName = "Smith" },
+                Procedures = []
+            };
 
             appointmentServiceMock.Setup(
                 a => a.GetByIdAsync(appointmentId))
@@ -92,7 +98,13 @@ namespace HospitalManagement.Appointments.Tests.Services
         public async Task GenerateInvoiceAsync_AppointmentFound_ReturnPdfBytes()
         {
             int appointmentId = 1;
-            var appointment = new AppointmentResponseDto { Id = appointmentId };
+            var appointment = new AppointmentResponseDto
+            {
+                Id = appointmentId,
+                Patient = new PatientResponseDto { Name = "John", LastName = "Doe" },
+                Doctor = new DoctorResponseDto { FirstName = "Jane", LastName = "Smith" },
+                Procedures = []
+            };
 
             appointmentServiceMock.Setup(
                 a => a.GetByIdAsync(appointmentId)).ReturnsAsync(Result<AppointmentResponseDto>.Ok(appointment));
@@ -119,7 +131,7 @@ namespace HospitalManagement.Appointments.Tests.Services
                 Procedures =
                 [
                     new AppointmentProcedureResponseDto { ProcedureName = "Blood Test", ProcedurePrice = 50 },
-            new AppointmentProcedureResponseDto { ProcedureName = "X-Ray", ProcedurePrice = 80 }
+                    new AppointmentProcedureResponseDto { ProcedureName = "X-Ray", ProcedurePrice = 80 }
                 ],
                 Discount = 10,
                 TotalCost = 120
@@ -129,8 +141,7 @@ namespace HospitalManagement.Appointments.Tests.Services
                 .Setup(a => a.GetByIdAsync(appointmentId))
                 .ReturnsAsync(Result<AppointmentResponseDto>.Ok(appointment));
 
-            // this is the key part — capture what gets passed to Generate()
-            InvoiceData capturedData = null;
+            InvoiceData? capturedData = null;
             pdfGeneratorMock
                 .Setup(p => p.Generate(It.IsAny<InvoiceData>()))
                 .Callback<InvoiceData>(data => capturedData = data)
