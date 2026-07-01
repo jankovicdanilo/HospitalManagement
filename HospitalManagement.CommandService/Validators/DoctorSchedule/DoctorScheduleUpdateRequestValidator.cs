@@ -1,5 +1,5 @@
 using FluentValidation;
-using HospitalManagement.CommandService.Models.DTOs.DoctorSchedule;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
 
 namespace HospitalManagement.CommandService.Validators.DoctorSchedule
 {

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
@@ -10,7 +10,6 @@ using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Shared.Common;
 using Microsoft.Extensions.Options;
-using HospitalManagement.Appointments.Clients.Interfaces;
 
 namespace HospitalManagement.Appointments.Services.Implementations
 {
@@ -22,12 +21,12 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly ILogger<AppointmentService> logger;
         private readonly AppointmentSettings appointmentSettings;
         private readonly IAppointmentDiscountCalculator appointmentDiscountCalculator;
-        private readonly IHospitalManagementClient hospitalManagementClient;
+        private readonly IQueryServiceClient hospitalManagementClient;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator,
-            IHospitalManagementClient hospitalManagementClient)
+            IQueryServiceClient hospitalManagementClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
@@ -112,13 +111,6 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             var appointmentDomain = mapper.Map<Appointment>(request);
 
-            var patient = await queryServiceClient.GetPatientAsync(request.PatientId);
-            var doctor = await queryServiceClient.GetDoctorAsync(request.DoctorId);
-
-            appointmentDomain.PatientName = $"{patient!.Name} {patient.LastName}";
-            appointmentDomain.PatientEmail = patient.Email;
-            appointmentDomain.DoctorName = $"{doctor!.FirstName} {doctor.LastName}";
-
             appointmentDomain = await appointmentRepository.CreateAsync(appointmentDomain);
 
             logger.LogInformation("Appointment created with id {id}", appointmentDomain.Id);
@@ -176,13 +168,6 @@ namespace HospitalManagement.Appointments.Services.Implementations
             }
 
             mapper.Map(request, appointmentDomain);
-
-            var patient = await queryServiceClient.GetPatientAsync(request.PatientId);
-            var doctor = await queryServiceClient.GetDoctorAsync(request.DoctorId);
-
-            appointmentDomain.PatientName = $"{patient!.Name} {patient!.LastName}";
-            appointmentDomain.PatientEmail = patient.Email;
-            appointmentDomain.DoctorName = $"{doctor!.FirstName} {doctor.LastName}";
 
             appointmentDomain = await appointmentRepository.UpdateAsync(appointmentDomain);
 
@@ -284,7 +269,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
         public async Task<Result<List<AppointmentResponseDto>>> GetPatientHistoryAsync(int patientId)
         {
-            var patient = await queryServiceClient.GetPatientAsync(patientId);
+            var patient = await hospitalManagementClient.GetPatientAsync(patientId);
 
             if(patient == null)
             {

@@ -1,4 +1,4 @@
-using HospitalManagement.CommandService.Models.Procedure;
+using HospitalManagement.Shared.Models.DTOs.Procedure;
 using HospitalManagement.Shared.Common;
 
 namespace HospitalManagement.CommandService.Services.Interfaces

@@ -1,5 +1,9 @@
 ﻿using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Shared.Models.DTOs;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
+using HospitalManagement.Shared.Models.DTOs.Patient;
+using HospitalManagement.Shared.Models.DTOs.Procedure;
 using System.Text.Json;
 
 namespace HospitalManagement.Appointments.Clients.Implementations
@@ -12,7 +16,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNameCaseInsensitive = true,
-            Converters = {new System.Text.Json.Serialization.JsonStringEnumConverter()}
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
         };
 
         public QueryServiceClient(HttpClient httpClient, ILogger<QueryServiceClient> logger)
@@ -34,7 +38,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
 
                 return result?.Data;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get doctor {DoctorId} from main API", doctorId);
                 return null;
@@ -54,7 +58,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
 
                 return result?.Data;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get patient {PatientId} from main API", patientId);
                 return null;
@@ -62,25 +66,6 @@ namespace HospitalManagement.Appointments.Clients.Implementations
         }
 
         public async Task<ProcedureResponseDto?> GetProcedureAsync(int procedureId)
-        //{
-        //    try
-        //    {
-        //        var response = await httpClient.GetAsync($"api/procedure/{procedureId}");
-
-        //            return null;
-
-        //        var result = JsonSerializer.Deserialize<ApiResponse<ExternalProcedureDto>>(json, JsonOptions);
-
-        //        return result?.Data;
-                var result = JsonSerializer.Deserialize<ApiResponse<ProcedureResponseDto>>(json, JsonOptions);
-                logger.LogInformation("Deserialized data: {Data}", result?.Data?.Name);
-        //    {
-        //        logger.LogError(ex, "Failed to get procedure {ProcedureId} from main API", procedureId);
-        //        return null;
-        //    }
-        //}
-
-        public async Task<ExternalProcedureDto?> GetProcedureAsync(int procedureId)
         {
             try
             {
@@ -94,7 +79,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
                 logger.LogInformation("Response body: {Json}", json);
 
                 if (!response.IsSuccessStatusCode) return null;
-                var result = JsonSerializer.Deserialize<ApiResponse<ExternalProcedureDto>>(json, JsonOptions);
+                var result = JsonSerializer.Deserialize<ApiResponse<ProcedureResponseDto>>(json, JsonOptions);
                 logger.LogInformation("Deserialized data: {Data}", result?.Data?.Name);
                 return result?.Data;
             }
@@ -115,13 +100,13 @@ namespace HospitalManagement.Appointments.Clients.Implementations
                     logger.LogWarning("GetDoctorAsync returned {StatusCode} for doctor {DoctorId}",
                             response.StatusCode, doctorId); return null;
                 }
-                    
+
                 var json = await response.Content.ReadAsStringAsync();
                 var result = JsonSerializer.Deserialize<ApiResponse<DoctorScheduleResponseDto>>(json, JsonOptions);
 
                 return result?.Data;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get schedule for doctor {DoctorId} on {DayOfWeek}", doctorId, dayOfWeek);
                 return null;
@@ -129,7 +114,6 @@ namespace HospitalManagement.Appointments.Clients.Implementations
         }
     }
 
-    // Wrapper matching API's Result<T> response shape
     internal class ApiResponse<T>
     {
         public T? Data { get; set; }

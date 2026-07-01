@@ -1,8 +1,8 @@
 using AutoMapper;
-using HospitalManagement.QueryService.Models.Doctor;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 
 namespace HospitalManagement.QueryService.Services.Implementations
 {

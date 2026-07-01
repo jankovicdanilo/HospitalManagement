@@ -1,4 +1,4 @@
-using HospitalManagement.QueryService.Models.DTOs.DoctorSchedule;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
 using HospitalManagement.Shared.Common;
 
 namespace HospitalManagement.QueryService.Services.Interfaces

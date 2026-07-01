@@ -1,9 +1,9 @@
 using FluentValidation;
-using HospitalManagement.CommandService.Data;
 using HospitalManagement.CommandService.Repositories.Implementations;
 using HospitalManagement.CommandService.Repositories.Interfaces;
 using HospitalManagement.CommandService.Services.Implementations;
 using HospitalManagement.CommandService.Services.Interfaces;
+using HospitalManagement.Shared.Data;
 using HospitalManagement.Shared.Settings;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -15,8 +15,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<CommandDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("CommandDb")));
+builder.Services.AddDbContext<HospitalManagementDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalManagementCQRS"),
+        b => b.MigrationsAssembly("HospitalManagement.CommandService")));
 
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
@@ -28,20 +29,6 @@ builder.Services.AddScoped<IProcedureRepository, ProcedureRepository>();
 builder.Services.AddScoped<IProcedureService, ProcedureService>();
 
 builder.Services.AddAutoMapper(typeof(Program));
-
-builder.Services.AddMassTransit(x =>
-{
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host(builder.Configuration["RabbitMq:Host"], "/", h =>
-        {
-            h.Username(builder.Configuration["RabbitMq:Username"]!);
-            h.Password(builder.Configuration["RabbitMq:Password"]!);
-        });
-
-        cfg.ConfigureEndpoints(context);
-    });
-});
 
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
@@ -139,7 +126,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<CommandDbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<HospitalManagementDbContext>();
     context.Database.Migrate();
 }
 

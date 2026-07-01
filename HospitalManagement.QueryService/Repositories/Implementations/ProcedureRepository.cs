@@ -1,5 +1,5 @@
-using HospitalManagement.QueryService.Data;
-using HospitalManagement.QueryService.Models.ReadModels;
+using HospitalManagement.Shared.Data;
+using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,19 +7,19 @@ namespace HospitalManagement.QueryService.Repositories.Implementations
 {
     public class ProcedureRepository : IProcedureRepository
     {
-        private readonly QueryDbContext dbContext;
+        private readonly HospitalManagementDbContext dbContext;
 
-        public ProcedureRepository(QueryDbContext dbContext)
+        public ProcedureRepository(HospitalManagementDbContext dbContext)
         {
             this.dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<ProcedureReadModel>> GetAllAsync()
+        public async Task<IEnumerable<Procedure>> GetAllAsync()
         {
             return await dbContext.Procedures.AsNoTracking().ToListAsync();
         }
 
-        public async Task<ProcedureReadModel?> GetByIdAsync(int id)
+        public async Task<Procedure?> GetByIdAsync(int id)
         {
             return await dbContext.Procedures.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
         }

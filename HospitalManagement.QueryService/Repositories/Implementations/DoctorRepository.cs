@@ -1,5 +1,5 @@
-using HospitalManagement.QueryService.Data;
-using HospitalManagement.QueryService.Models.ReadModels;
+using HospitalManagement.Shared.Data;
+using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,19 +7,19 @@ namespace HospitalManagement.QueryService.Repositories.Implementations
 {
     public class DoctorRepository : IDoctorRepository
     {
-        private readonly QueryDbContext dbContext;
+        private readonly HospitalManagementDbContext dbContext;
 
-        public DoctorRepository(QueryDbContext dbContext)
+        public DoctorRepository(HospitalManagementDbContext dbContext)
         {
             this.dbContext = dbContext;
         }
 
-        public async Task<List<DoctorReadModel>> GetAllAsync()
+        public async Task<List<Doctor>> GetAllAsync()
         {
             return await dbContext.Doctors.AsNoTracking().ToListAsync();
         }
 
-        public async Task<DoctorReadModel?> GetByIdAsync(int id)
+        public async Task<Doctor?> GetByIdAsync(int id)
         {
             return await dbContext.Doctors.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
         }

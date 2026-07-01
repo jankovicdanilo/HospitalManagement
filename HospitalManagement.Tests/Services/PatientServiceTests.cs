@@ -1,11 +1,12 @@
-﻿using Moq;
-using HospitalManagement.Repositories.Interfaces;
-using AutoMapper;
-using Microsoft.Extensions.Logging;
-using HospitalManagement.Services.Implementations;
-using HospitalManagement.Models.Domain;
+﻿using AutoMapper;
 using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Repositories.Interfaces;
+using HospitalManagement.Services.Implementations;
+using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.Shared.Models.DTOs;
+using HospitalManagement.Shared.Models.DTOs.Patient;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace HospitalManagement.Tests.Services
 {

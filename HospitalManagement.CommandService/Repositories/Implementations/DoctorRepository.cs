@@ -1,5 +1,5 @@
-using HospitalManagement.CommandService.Data;
-using HospitalManagement.CommandService.Models.Domain;
+using HospitalManagement.Shared.Data;
+using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.CommandService.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,9 +7,9 @@ namespace HospitalManagement.CommandService.Repositories.Implementations
 {
     public class DoctorRepository : IDoctorRepository
     {
-        private readonly CommandDbContext dbContext;
+        private readonly HospitalManagementDbContext dbContext;
 
-        public DoctorRepository(CommandDbContext dbContext)
+        public DoctorRepository(HospitalManagementDbContext dbContext)
         {
             this.dbContext = dbContext;
         }

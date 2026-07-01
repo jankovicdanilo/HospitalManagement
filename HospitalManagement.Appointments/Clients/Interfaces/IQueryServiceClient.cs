@@ -1,4 +1,7 @@
-﻿using HospitalManagement.Shared.Models.DTOs;
+﻿using HospitalManagement.Shared.Models.DTOs.Procedure;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
+using HospitalManagement.Shared.Models.DTOs.Patient;
 
 namespace HospitalManagement.Appointments.Clients.Interfaces
 {

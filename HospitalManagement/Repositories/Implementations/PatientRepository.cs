@@ -1,6 +1,6 @@
-﻿using Dapper;
+using Dapper;
 using HospitalManagement.Data;
-using HospitalManagement.Models.Domain;
+using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
 using HospitalManagement.Repositories.Interfaces;
 using Microsoft.Data.SqlClient;

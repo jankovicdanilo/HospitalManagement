@@ -1,5 +1,5 @@
-using HospitalManagement.CommandService.Models.Doctor;
-using HospitalManagement.CommandService.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 using HospitalManagement.Shared.Common;
 
 namespace HospitalManagement.CommandService.Services.Interfaces

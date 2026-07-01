@@ -1,5 +1,6 @@
-﻿using FluentValidation;
+using FluentValidation;
 using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Shared.Models.DTOs.Patient;
 
 namespace HospitalManagement.Validators.Patient
 {

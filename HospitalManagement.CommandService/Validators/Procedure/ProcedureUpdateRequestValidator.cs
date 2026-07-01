@@ -1,5 +1,5 @@
 using FluentValidation;
-using HospitalManagement.CommandService.Models.Procedure;
+using HospitalManagement.Shared.Models.DTOs.Procedure;
 
 namespace HospitalManagement.CommandService.Validators.Procedure
 {

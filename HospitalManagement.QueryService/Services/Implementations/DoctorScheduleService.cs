@@ -1,5 +1,5 @@
 using AutoMapper;
-using HospitalManagement.QueryService.Models.DTOs.DoctorSchedule;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Common;

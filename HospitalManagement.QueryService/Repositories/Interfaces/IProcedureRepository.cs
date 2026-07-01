@@ -1,10 +1,10 @@
-using HospitalManagement.QueryService.Models.ReadModels;
+using HospitalManagement.Shared.Models.Domain;
 
 namespace HospitalManagement.QueryService.Repositories.Interfaces
 {
     public interface IProcedureRepository
     {
-        Task<IEnumerable<ProcedureReadModel>> GetAllAsync();
-        Task<ProcedureReadModel?> GetByIdAsync(int id);
+        Task<IEnumerable<Procedure>> GetAllAsync();
+        Task<Procedure?> GetByIdAsync(int id);
     }
 }

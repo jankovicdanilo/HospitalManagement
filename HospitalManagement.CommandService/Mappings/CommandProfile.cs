@@ -1,10 +1,11 @@
 using AutoMapper;
-using HospitalManagement.CommandService.Models.Doctor;
-using HospitalManagement.CommandService.Models.Domain;
-using HospitalManagement.CommandService.Models.DTOs.Doctor;
-using HospitalManagement.CommandService.Models.DTOs.DoctorSchedule;
-using HospitalManagement.CommandService.Models.Patient;
-using HospitalManagement.CommandService.Models.Procedure;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.Domain;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
+using HospitalManagement.Shared.Models.DTOs.Patient;
+using HospitalManagement.Shared.Models.DTOs.Patient;
+using HospitalManagement.Shared.Models.DTOs.Procedure;
 
 namespace HospitalManagement.CommandService.Mappings
 {

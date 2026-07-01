@@ -1,11 +1,11 @@
-using HospitalManagement.QueryService.Models.ReadModels;
+using HospitalManagement.Shared.Models.Domain;
 
 namespace HospitalManagement.QueryService.Repositories.Interfaces
 {
     public interface IPatientRepository
     {
-        Task<List<PatientReadModel>> GetAllAsync();
-        Task<PatientReadModel?> GetByIdAsync(int id);
-        Task<PatientReadModel?> GetByEmailAsync(string email);
+        Task<List<Patient>> GetAllAsync();
+        Task<Patient?> GetByIdAsync(int id);
+        Task<Patient?> GetByEmailAsync(string email);
     }
 }

@@ -1,4 +1,4 @@
-using HospitalManagement.QueryService.Models.Procedure;
+using HospitalManagement.Shared.Models.DTOs.Procedure;
 using HospitalManagement.Shared.Common;
 
 namespace HospitalManagement.QueryService.Services.Interfaces

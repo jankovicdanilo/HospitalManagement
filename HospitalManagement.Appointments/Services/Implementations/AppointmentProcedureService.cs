@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
@@ -16,11 +16,11 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly IMapper mapper;
         private readonly IAppointmentProcedureValidation appointmentProcedureValidation;
         private readonly ILogger<AppointmentProcedureService> logger;
-        private readonly IHospitalManagementClient hospitalManagementClient;
+        private readonly IQueryServiceClient hospitalManagementClient;
 
         public AppointmentProcedureService(IAppointmentProcedureRepository appointmentProcedureRepository,
             IMapper mapper, IAppointmentProcedureValidation appointmentProcedureValidation, 
-            ILogger<AppointmentProcedureService> logger, IHospitalManagementClient hospitalManagementClient)
+            ILogger<AppointmentProcedureService> logger, IQueryServiceClient hospitalManagementClient)
         {
             this.appointmentProcedureRepository = appointmentProcedureRepository;
             this.mapper = mapper;
@@ -50,11 +50,6 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             var appointmentProcedureDomain = mapper.Map<AppointmentProcedure>(request);
             appointmentProcedureDomain.ProcedureName = procedure.Name;
-            appointmentProcedureDomain.ProcedurePrice = procedure.Price;
-
-            var procedure = await mainApiClient.GetProcedureAsync(request.ProcedureId);
-
-            appointmentProcedureDomain.ProcedureName = procedure!.Name;
             appointmentProcedureDomain.ProcedurePrice = procedure.Price;
 
             appointmentProcedureDomain = await appointmentProcedureRepository.CreateAsync(appointmentProcedureDomain);

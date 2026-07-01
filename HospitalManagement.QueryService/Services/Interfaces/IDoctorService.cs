@@ -1,5 +1,5 @@
-using HospitalManagement.QueryService.Models.Doctor;
 using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 
 namespace HospitalManagement.QueryService.Services.Interfaces
 {

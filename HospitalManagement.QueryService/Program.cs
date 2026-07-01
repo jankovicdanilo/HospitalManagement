@@ -1,14 +1,12 @@
 using FluentValidation;
 using HospitalManagement.QueryService.Clients.Implementations;
 using HospitalManagement.QueryService.Clients.Interfaces;
-using HospitalManagement.QueryService.Consumers;
-using HospitalManagement.QueryService.Data;
 using HospitalManagement.QueryService.Repositories.Implementations;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Implementations;
 using HospitalManagement.QueryService.Services.Interfaces;
+using HospitalManagement.Shared.Data;
 using HospitalManagement.Shared.Settings;
-using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -18,8 +16,8 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<QueryDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("QueryDb")));
+builder.Services.AddDbContext<HospitalManagementDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalManagementCQRS")));
 
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
@@ -40,30 +38,6 @@ builder.Services.AddHttpClient<IAppointmentServiceClient, AppointmentServiceClie
     .AddHttpMessageHandler<HospitalManagement.Shared.Http.AuthTokenHandler>();
 
 builder.Services.AddAutoMapper(typeof(Program));
-
-builder.Services.AddMassTransit(x =>
-{
-    x.AddConsumer<DoctorConsumer>();
-    x.AddConsumer<PatientConsumer>();
-    x.AddConsumer<ProcedureConsumer>();
-    x.AddConsumer<DoctorScheduleConsumer>();
-
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host(builder.Configuration["RabbitMq:Host"], "/", h =>
-        {
-            h.Username(builder.Configuration["RabbitMq:Username"]!);
-            h.Password(builder.Configuration["RabbitMq:Password"]!);
-        });
-
-        cfg.UseMessageRetry(r => r.Intervals(
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromSeconds(15),
-            TimeSpan.FromSeconds(30)));
-
-        cfg.ConfigureEndpoints(context);
-    });
-});
 
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
@@ -156,12 +130,6 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<QueryDbContext>();
-    context.Database.Migrate();
-}
 
 if (app.Environment.IsDevelopment())
 {

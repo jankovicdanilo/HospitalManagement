@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using HospitalManagement.Models.Domain;
+using HospitalManagement.Shared.Models.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace HospitalManagement.Data;
