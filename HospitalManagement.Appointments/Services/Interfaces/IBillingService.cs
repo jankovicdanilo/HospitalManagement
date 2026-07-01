@@ -5,6 +5,6 @@ namespace HospitalManagement.Appointments.Services.Interfaces
 {
     public interface IBillingService
     {
-        Task<Result<byte[]>> GenerateInvoiceAsync(int appointmentId);
+        Task<Result<InvoiceResult>> GenerateInvoiceAsync(int appointmentId);
     }
 }

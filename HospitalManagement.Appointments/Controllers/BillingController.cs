@@ -29,7 +29,8 @@ namespace HospitalManagement.Appointments.Controllers
                 return NotFound(new { result.Message, result.ErrorCode });
             }
 
-            return File(result.Data, "application/pdf", $"invoice_{appointmentId}.pdf");
+            return File(result.Data.PdfBytes, "application/pdf",
+                    $"{result.Data.PatientName}_{result.Data.InvoiceNumber}.pdf");
         }
     }
 }

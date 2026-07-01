@@ -1,4 +1,6 @@
-﻿using HospitalManagement.Appointments.Models.Domain;
+﻿using AutoMapper;
+using HospitalManagement.Appointments.Mappings;
+using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
 using HospitalManagement.Appointments.Models.DTOs.AppointmentProcedure;
 using HospitalManagement.Appointments.Models.DTOs.Invoice;
@@ -21,6 +23,7 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IAppointmentService> appointmentServiceMock;
         private Mock<IPdfGenerator> pdfGeneratorMock;
         private Mock<ILogger<BillingService>> loggerMock;
+        private IMapper mapper;
         private BillingService billingService;
 
         [SetUp]
@@ -29,11 +32,17 @@ namespace HospitalManagement.Appointments.Tests.Services
             appointmentServiceMock = new Mock<IAppointmentService>();
             pdfGeneratorMock = new Mock<IPdfGenerator>();
             loggerMock = new Mock<ILogger<BillingService>>();
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile<InvoiceProfile>();
+            });
+            mapper = config.CreateMapper();
             billingService = new BillingService
             (
                 appointmentServiceMock.Object,
                 pdfGeneratorMock.Object,
-                loggerMock.Object
+                loggerMock.Object,
+                mapper
             );
         }
 
@@ -113,7 +122,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             var result = await billingService.GenerateInvoiceAsync(appointmentId);
 
             Assert.That(result.Success, Is.True);
-            Assert.That(result.Data, Has.Length.EqualTo(5));
+            Assert.That(result.Data.PdfBytes, Has.Length.EqualTo(5));
         }
 
         [Test]
