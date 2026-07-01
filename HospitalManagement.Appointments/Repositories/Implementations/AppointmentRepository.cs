@@ -117,5 +117,16 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
 
             return appointments.Where(a => a.DateTime.Add(a.Duration).AddHours(1) < now);
         }
+
+        public async Task<List<Appointment>> GetByPatientIdAsync(int patientId)
+        {
+            return await dbContext.Appointments
+                .Include(x => x.AppointmentProcedures)
+                .Include(x => x.Treatment)
+                .Where(x => x.PatientId == patientId)
+                .OrderByDescending(x => x.DateTime)
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }

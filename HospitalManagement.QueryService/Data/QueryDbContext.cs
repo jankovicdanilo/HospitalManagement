@@ -20,6 +20,7 @@ namespace HospitalManagement.QueryService.Data
             modelBuilder.Entity<DoctorReadModel>(entity =>
             {
                 entity.ToTable("Doctor");
+                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(e => e.Email).HasMaxLength(100);
                 entity.Property(e => e.FirstName).HasMaxLength(100);
                 entity.Property(e => e.LastName).HasMaxLength(100);
@@ -30,6 +31,7 @@ namespace HospitalManagement.QueryService.Data
             modelBuilder.Entity<PatientReadModel>(entity =>
             {
                 entity.ToTable("Patient");
+                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(e => e.Email).HasMaxLength(100);
                 entity.Property(e => e.LastName).HasMaxLength(100);
                 entity.Property(e => e.Name).HasMaxLength(100);
@@ -39,11 +41,13 @@ namespace HospitalManagement.QueryService.Data
             modelBuilder.Entity<DoctorScheduleReadModel>(entity =>
             {
                 entity.ToTable("DoctorSchedule");
+                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(e => e.DayOfWeek).HasConversion<string>();
             });
 
             modelBuilder.Entity<ProcedureReadModel>(entity =>
             {
+                entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(p => p.Price).HasPrecision(18, 2);
             });
         }

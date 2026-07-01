@@ -5,6 +5,9 @@ using HospitalManagement.CommandService.Models.DTOs.Doctor;
 using HospitalManagement.CommandService.Repositories.Interfaces;
 using HospitalManagement.CommandService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Events;
+using MassTransit;
+using MassTransit.Serialization;
 
 namespace HospitalManagement.CommandService.Services.Implementations
 {
@@ -13,19 +16,32 @@ namespace HospitalManagement.CommandService.Services.Implementations
         private readonly IDoctorRepository doctorRepository;
         private readonly IMapper mapper;
         private readonly ILogger<DoctorService> logger;
+        private readonly IPublishEndpoint publishEndpoint;
 
-        public DoctorService(IDoctorRepository doctorRepository, IMapper mapper, ILogger<DoctorService> logger)
+        public DoctorService(IDoctorRepository doctorRepository, IMapper mapper,
+            ILogger<DoctorService> logger, IPublishEndpoint publishEndpoint)
         {
             this.doctorRepository = doctorRepository;
             this.mapper = mapper;
             this.logger = logger;
+            this.publishEndpoint = publishEndpoint;
         }
 
         public async Task<Result<DoctorResponseDto>> CreateAsync(DoctorCreateRequestDto request)
         {
             var doctorDomain = mapper.Map<Doctor>(request);
             doctorDomain = await doctorRepository.CreateAsync(doctorDomain);
-            logger.LogInformation("Doctor created with id {Id}", doctorDomain.Id);
+
+            await publishEndpoint.Publish(new DoctorCreated(
+                CorrelationId: Guid.NewGuid(),
+                Id: doctorDomain!.Id,
+                FirstName: doctorDomain.FirstName,
+                LastName: doctorDomain.LastName,
+                Specialization: doctorDomain.Specialization,
+                Email: doctorDomain.Email,
+                Phone: doctorDomain.Phone));
+
+            logger.LogInformation("Doctor created with id {Id}, DoctorCreated event published", doctorDomain.Id);
             var result = mapper.Map<DoctorResponseDto>(doctorDomain);
             return Result<DoctorResponseDto>.Ok(result);
         }
@@ -40,7 +56,17 @@ namespace HospitalManagement.CommandService.Services.Implementations
             }
             mapper.Map(request, doctorDomain);
             doctorDomain = await doctorRepository.UpdateAsync(doctorDomain);
-            logger.LogInformation("Doctor with id {Id} updated", doctorDomain.Id);
+
+            await publishEndpoint.Publish(new DoctorUpdated(
+                CorrelationId: Guid.NewGuid(),
+                Id:  doctorDomain.Id,
+                FirstName: doctorDomain.FirstName,
+                LastName: doctorDomain.LastName,
+                Specialization: doctorDomain.Specialization,
+                Email: doctorDomain.Email,
+                Phone: doctorDomain.Phone));
+
+            logger.LogInformation("Doctor updated with id {Id}, DoctorUpdated event published", doctorDomain.Id);
             var result = mapper.Map<DoctorResponseDto>(doctorDomain);
             return Result<DoctorResponseDto>.Ok(result);
         }
@@ -54,7 +80,12 @@ namespace HospitalManagement.CommandService.Services.Implementations
                 return Result.Fail($"Doctor with the id {id} does not exist", "INVALID_ID", ErrorType.NotFound);
             }
             await doctorRepository.Delete(id);
-            logger.LogInformation("Doctor with id {Id} deleted", id);
+
+            await publishEndpoint.Publish(new DoctorDeleted(
+                CorrelationId: Guid.NewGuid(),
+                Id: id));
+
+            logger.LogInformation("Doctor deleted with id {Id}, DoctorDeleted event published", id);
             return Result.Ok("Doctor has been deleted!");
         }
     }
