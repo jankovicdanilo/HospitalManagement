@@ -62,17 +62,64 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
-      MainApi__BaseUrl: "http://hospitalmanagement:8080/"
+      QueryService__BaseUrl: ${QUERY_SERVICE_URL}
     depends_on:
       db:
+        condition: service_healthy
+      queryservice:
+        condition: service_started
+
+  command:
+    container_name: hospitalmanagement-command
+    build:
+      context: .
+      dockerfile: HospitalManagement.CommandService/Dockerfile
+    ports:
+      - "8083:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__CommandDb: "Server=db;Database=HospitalManagementCommand;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__Username: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASS}
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  queryservice:
+    container_name: hospitalmanagement-query
+    build:
+      context: .
+      dockerfile: HospitalManagement.QueryService/Dockerfile
+    ports:
+      - "8084:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__QueryDb: "Server=db;Database=HospitalManagementQuery;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      RabbitMq__Host: "rabbitmq"
+      RabbitMq__Username: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASS}
+      AppointmentService__BaseUrl: ${APPOINTMENT_SERVICE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   rabbitmq:
     container_name: hospitalmanagement-rabbitmq
     image: rabbitmq:3-management
     ports:
-      - "5672:5672"   # AMQP protocol port
-      - "15672:15672" # Management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
