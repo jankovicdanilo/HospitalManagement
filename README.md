@@ -49,7 +49,7 @@ user registration, login, and JWT token issuance. It is the only service that ge
 tokens. All other services validate incoming tokens using the same shared signing key
 but never generate them.
 
-**Main HMS API** (`HospitalManagement`) owns the core domain entities: Doctor,
+**HMS API** (`HospitalManagement`) owns the core domain entities: Doctor,
 DoctorSchedule, Patient, and Procedure catalog. It exposes standard CRUD endpoints
 for each and serves as the source of truth for all non-appointment data.
 
