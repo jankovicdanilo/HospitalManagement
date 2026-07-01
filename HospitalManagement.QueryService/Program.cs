@@ -1,4 +1,6 @@
 using FluentValidation;
+using HospitalManagement.QueryService.Clients.Implementations;
+using HospitalManagement.QueryService.Clients.Interfaces;
 using HospitalManagement.QueryService.Consumers;
 using HospitalManagement.QueryService.Data;
 using HospitalManagement.QueryService.Repositories.Implementations;
@@ -27,6 +29,15 @@ builder.Services.AddScoped<IDoctorScheduleRepository, DoctorScheduleRepository>(
 builder.Services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
 builder.Services.AddScoped<IProcedureRepository, ProcedureRepository>();
 builder.Services.AddScoped<IProcedureService, ProcedureService>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<HospitalManagement.Shared.Http.AuthTokenHandler>();
+
+builder.Services.AddHttpClient<IAppointmentServiceClient, AppointmentServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["AppointmentService:BaseUrl"]!);
+})
+    .AddHttpMessageHandler<HospitalManagement.Shared.Http.AuthTokenHandler>();
 
 builder.Services.AddAutoMapper(typeof(Program));
 

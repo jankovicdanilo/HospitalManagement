@@ -21,12 +21,12 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly ILogger<AppointmentService> logger;
         private readonly AppointmentSettings appointmentSettings;
         private readonly IAppointmentDiscountCalculator appointmentDiscountCalculator;
-        private readonly IHospitalManagementClient mainApiClient;
+        private readonly IQueryServiceClient queryServiceClient;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator,
-            IHospitalManagementClient mainApiClient)
+            IQueryServiceClient mainApiClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
@@ -34,7 +34,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             this.logger = logger;
             this.appointmentSettings = appointmentSettings.Value;
             this.appointmentDiscountCalculator = appointmentDiscountCalculator;
-            this.mainApiClient = mainApiClient;
+            this.queryServiceClient = mainApiClient;
         }
 
         public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
@@ -90,8 +90,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             var appointmentDomain = mapper.Map<Appointment>(request);
 
-            var patient = await mainApiClient.GetPatientAsync(request.PatientId);
-            var doctor = await mainApiClient.GetDoctorAsync(request.DoctorId);
+            var patient = await queryServiceClient.GetPatientAsync(request.PatientId);
+            var doctor = await queryServiceClient.GetDoctorAsync(request.DoctorId);
 
             appointmentDomain.PatientName = $"{patient!.Name} {patient.LastName}";
             appointmentDomain.PatientEmail = patient.Email;
@@ -138,8 +138,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             mapper.Map(request, appointmentDomain);
 
-            var patient = await mainApiClient.GetPatientAsync(request.PatientId);
-            var doctor = await mainApiClient.GetDoctorAsync(request.DoctorId);
+            var patient = await queryServiceClient.GetPatientAsync(request.PatientId);
+            var doctor = await queryServiceClient.GetDoctorAsync(request.DoctorId);
 
             appointmentDomain.PatientName = $"{patient!.Name} {patient!.LastName}";
             appointmentDomain.PatientEmail = patient.Email;
@@ -176,7 +176,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
                 return Result<List<TimeSlotDto>>.Fail("Cannot get free slots for a past date", "INVALID_DATE");
             }
 
-            var doctorSchedule = await mainApiClient.GetDoctorScheduleAsync(doctorId, date.DayOfWeek);
+            var doctorSchedule = await queryServiceClient.GetDoctorScheduleAsync(doctorId, date.DayOfWeek);
             if(doctorSchedule == null)
             {
                 logger.LogWarning("Doctor {DoctorId} does not work on {DayOfWeek}", doctorId, date.DayOfWeek.ToString());
@@ -239,6 +239,34 @@ namespace HospitalManagement.Appointments.Services.Implementations
             logger.LogInformation("Appointment with id {Id} status updated to {Status}", request.Id, request.Status);
 
             return Result.Ok("Appointment status updated");
+        }
+
+        public async Task<Result<List<AppointmentResponseDto>>> GetPatientHistoryAsync(int patientId)
+        {
+            var patient = await queryServiceClient.GetPatientAsync(patientId);
+
+            if(patient == null)
+            {
+                logger.LogWarning("Patient with id {PatientId} not found", patientId);
+                return Result<List<AppointmentResponseDto>>.Fail(
+                    $"Patient with id {patientId} not found", "INVALID_PATIENT_ID");
+            }
+
+            var appontiments = await appointmentRepository.GetByPatientIdAsync(patientId);
+
+            var result = mapper.Map<List<AppointmentResponseDto>>(appontiments);
+
+            foreach(var (appointment, dto) in appontiments.Zip(result))
+            {
+                var calculateDiscount = GetDiscountResult(appointment);
+                dto.TotalCost = calculateDiscount.TotalCost;
+                dto.Discount = calculateDiscount.Discount;
+            }
+
+            logger.LogInformation("Patient history retrieved for patient {PatientId}, {Count} appointments found",
+                    patientId, result.Count);
+
+            return Result<List<AppointmentResponseDto>>.Ok(result);
         }
 
         private DiscountResult GetDiscountResult(Appointment appointment)

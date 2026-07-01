@@ -47,9 +47,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<HospitalManagement.Shared.Http.AuthTokenHandler>();
 
 // HTTP client for cross-service calls to main API
-builder.Services.AddHttpClient<IHospitalManagementClient, HospitalManagementClient>(client =>
+builder.Services.AddHttpClient<IQueryServiceClient, QueryServiceClient>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["MainApi:BaseUrl"]!);
+    client.BaseAddress = new Uri(builder.Configuration["QueryService:BaseUrl"]!);
 })
     .AddHttpMessageHandler<HospitalManagement.Shared.Http.AuthTokenHandler>();
 

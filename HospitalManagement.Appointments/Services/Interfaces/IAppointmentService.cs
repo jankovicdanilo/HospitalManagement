@@ -12,5 +12,6 @@ namespace HospitalManagement.Appointments.Services.Interfaces
         Task<Result<AppointmentUpdateResponseDto>> UpdateAsync(AppointmentUpdateRequestDto request);
         Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date);
         Task<Result> UpdateStatusAsync(AppointmentStatusUpdateDto request);
+        Task<Result<List<AppointmentResponseDto>>> GetPatientHistoryAsync(int patientId);
     }
 }
