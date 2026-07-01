@@ -25,10 +25,7 @@ namespace HospitalManagement.QueryService.Migrations
             modelBuilder.Entity("HospitalManagement.QueryService.Models.ReadModels.DoctorReadModel", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -63,10 +60,7 @@ namespace HospitalManagement.QueryService.Migrations
             modelBuilder.Entity("HospitalManagement.QueryService.Models.ReadModels.DoctorScheduleReadModel", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DayOfWeek")
                         .IsRequired()
@@ -89,10 +83,7 @@ namespace HospitalManagement.QueryService.Migrations
             modelBuilder.Entity("HospitalManagement.QueryService.Models.ReadModels.PatientReadModel", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
@@ -125,10 +116,7 @@ namespace HospitalManagement.QueryService.Migrations
             modelBuilder.Entity("HospitalManagement.QueryService.Models.ReadModels.ProcedureReadModel", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()

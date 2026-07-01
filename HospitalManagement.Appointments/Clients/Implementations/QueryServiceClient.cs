@@ -4,17 +4,17 @@ using System.Text.Json;
 
 namespace HospitalManagement.Appointments.Clients.Implementations
 {
-    public class HospitalManagementClient : IHospitalManagementClient
+    public class QueryServiceClient : IQueryServiceClient
     {
         private readonly HttpClient httpClient;
-        private readonly ILogger<HospitalManagementClient> logger;
+        private readonly ILogger<QueryServiceClient> logger;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNameCaseInsensitive = true
         };
 
-        public HospitalManagementClient(HttpClient httpClient, ILogger<HospitalManagementClient> logger)
+        public QueryServiceClient(HttpClient httpClient, ILogger<QueryServiceClient> logger)
         {
             this.httpClient = httpClient;
             this.logger = logger;
@@ -83,7 +83,11 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             {
                 var response = await httpClient.GetAsync($"api/doctorschedule/doctor/{doctorId}/day/{dayOfWeek}");
                 if (!response.IsSuccessStatusCode)
-                    return null;
+                {
+                    logger.LogWarning("GetDoctorAsync returned {StatusCode} for doctor {DoctorId}",
+                            response.StatusCode, doctorId); return null;
+                }
+                    
                 var json = await response.Content.ReadAsStringAsync();
                 var result = JsonSerializer.Deserialize<ApiResponse<ExternalDoctorScheduleDto>>(json, JsonOptions);
 

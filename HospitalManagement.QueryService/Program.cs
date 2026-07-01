@@ -1,4 +1,7 @@
 using FluentValidation;
+using HospitalManagement.QueryService.Clients.Implementations;
+using HospitalManagement.QueryService.Clients.Interfaces;
+using HospitalManagement.QueryService.Consumers;
 using HospitalManagement.QueryService.Data;
 using HospitalManagement.QueryService.Repositories.Implementations;
 using HospitalManagement.QueryService.Repositories.Interfaces;
@@ -27,17 +30,36 @@ builder.Services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
 builder.Services.AddScoped<IProcedureRepository, ProcedureRepository>();
 builder.Services.AddScoped<IProcedureService, ProcedureService>();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<HospitalManagement.Shared.Http.AuthTokenHandler>();
+
+builder.Services.AddHttpClient<IAppointmentServiceClient, AppointmentServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["AppointmentService:BaseUrl"]!);
+})
+    .AddHttpMessageHandler<HospitalManagement.Shared.Http.AuthTokenHandler>();
+
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddMassTransit(x =>
 {
+    x.AddConsumer<DoctorConsumer>();
+    x.AddConsumer<PatientConsumer>();
+    x.AddConsumer<ProcedureConsumer>();
+    x.AddConsumer<DoctorScheduleConsumer>();
+
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host("localhost", "/", h =>
+        cfg.Host(builder.Configuration["RabbitMq:Host"], "/", h =>
         {
-            h.Username("guest");
-            h.Password("guest");
+            h.Username(builder.Configuration["RabbitMq:Username"]!);
+            h.Password(builder.Configuration["RabbitMq:Password"]!);
         });
+
+        cfg.UseMessageRetry(r => r.Intervals(
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(15),
+            TimeSpan.FromSeconds(30)));
 
         cfg.ConfigureEndpoints(context);
     });

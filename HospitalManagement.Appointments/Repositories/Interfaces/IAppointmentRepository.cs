@@ -21,5 +21,7 @@ namespace HospitalManagement.Appointments.Repositories.Interfaces
         Task<List<Appointment>?> GetByDoctorIdAsync(int id);
 
         Task<IEnumerable<Appointment>> GetPendingPastAppointmentsAsync();
+
+        Task<List<Appointment>> GetByPatientIdAsync(int patientId);
     }
 }

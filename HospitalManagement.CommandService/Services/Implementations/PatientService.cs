@@ -40,7 +40,7 @@ namespace HospitalManagement.CommandService.Services.Implementations
             (
                 CorrelationId: Guid.NewGuid(),
                 Id: patientDomain.Id,
-                FirstName: patientDomain.Name,
+                Name: patientDomain.Name,
                 LastName: patientDomain.LastName,
                 Email: patientDomain.Email,
                 Phone: patientDomain.Phone,
@@ -72,7 +72,7 @@ namespace HospitalManagement.CommandService.Services.Implementations
             (
                 CorrelationId: Guid.NewGuid(),
                 Id: patientDomain.Id,
-                FirstName: patientDomain.Name,
+                Name: patientDomain.Name,
                 LastName: patientDomain.LastName,
                 Email: patientDomain.Email,
                 Phone: patientDomain.Phone
