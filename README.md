@@ -1,80 +1,68 @@
-# Hospital Management System API
+# Hospital Management System
 
-A RESTful API built with ASP.NET Core 8 for managing hospital operations including patients, doctors, and appointments.
+A backend REST API for managing hospital operations, built with .NET 8 and structured
+as a set of microservices handling authentication, core domain data, and appointment
+scheduling independently.
 
-## Tech Stack
+## Tech stack
 
-- **Framework:** ASP.NET Core 8 Web API
-- **ORM:** Entity Framework Core 8
-- **Database:** SQL Server
-- **Authentication:** Custom JWT with role-based access control
-- **Logging:** Serilog (Console + File)
-- **Documentation:** Swagger / OpenAPI
-
-## Features
-
-- JWT Authentication with role-based authorization (Admin, Doctor, Receptionist)
-- Patient management (CRUD)
-- Doctor management (CRUD)
-- Appointment scheduling and management
-- Global exception handling middleware
-- Structured logging with Serilog
-- Database seeding with default Admin account
-
-## Roles
-
-| Role | Permissions |
-|---|---|
-| Admin | Full access — manage users, patients, doctors, appointments |
-| Doctor | View and manage appointments, view patients |
-| Receptionist | Manage appointments, create patients |
-
-## Getting Started
-
-### Prerequisites
-- .NET 8 SDK
-- SQL Server
-
-### Setup
-
-1. Clone the repository
-```bash
-git clone https://github.com/jankovicdanilo/HospitalManagement.git
-```
-
-2. Update connection string in `appsettings.json`
-
-3. Run the application
-```bash
-dotnet run
-```
-
-4. Navigate to Swagger UI
-https://localhost:7265/swagger
-
-### Default Admin Credentials
-- **Username:** admin
-- **Password:** Admin123!
-
-## Project Structure
-HospitalManagement/
-├── Controllers/        # API endpoints
-├── Services/           # Business logic
-│   └── Interfaces/
-├── Repositories/       # Data access
-│   └── Interfaces/
-├── Models/
-│   ├── Domain/         # Database entities
-│   └── DTOs/           # Data transfer objects
-├── Data/               # DbContext and seed data
-├── Middleware/         # Custom middleware
-├── Settings/           # Configuration classes
-└── Common/             # Shared utilities (Result<T>)
+- **Runtime**: .NET 8, ASP.NET Core Web API
+- **ORM**: Entity Framework Core 8 with SQL Server
+- **Auth**: JWT Bearer via `Microsoft.AspNetCore.Authentication.JwtBearer`
+- **Mapping**: AutoMapper
+- **Validation**: FluentValidation
+- **Logging**: NLog
+- **Containerisation**: Docker, Docker Compose
+- **Testing**: NUnit, Moq
+- **Documentation**: Swagger / Swashbuckle
 
 ## Architecture
 
-Layered architecture with clear separation of concerns:
-- **Controllers** — handle HTTP requests and responses
-- **Services** — business logic and validation
-- **Repositories** — data access and database operations
-- **Middleware** — cross cutting concerns (exception handling, logging)
+This system is built as a set of microservices, each owning its own database and
+communicating over HTTP.
+
+```mermaid
+architecture-beta
+    group system(cloud)[Hospital Management System]
+
+    service authdb(database)[AuthDB] in system
+    service appdb(database)[AppointmentsDB] in system
+    service hmsdb(database)[HospitalManagementDB] in system
+
+    service auth(server)[Auth Service] in system
+    service app(server)[AppointmentService] in system
+    service hms(server)[HospitalManagement] in system
+
+    hms:R -- L:hmsdb
+    app:R -- L:appdb
+    auth:R -- L:authdb
+
+    hms:T -- B:app
+    hms:T -- B:auth
+    app:B -- T:auth
+```
+
+### Services
+
+**Auth Service** (`HospitalManagement.Auth`) handles all authentication concerns —
+user registration, login, and JWT token issuance. It is the only service that generates
+tokens. All other services validate incoming tokens using the same shared signing key
+but never generate them.
+
+**HMS API** (`HospitalManagement`) owns the core domain entities: Doctor,
+DoctorSchedule, Patient, and Procedure catalog. It exposes standard CRUD endpoints
+for each and serves as the source of truth for all non-appointment data.
+
+**Appointment Service** (`HospitalManagement.Appointments`) owns everything
+appointment-related: Appointment, AppointmentProcedure, Treatment, and the discount
+calculator. It maintains its own database and communicates with the Main HMS API via
+live HTTP calls to validate and look up Doctor, Patient, Procedure, and DoctorSchedule
+data at request time. To avoid cross-service joins at read time, key fields (doctor name,
+patient name, procedure name and price) are snapshotted onto appointment records at
+creation time.
+
+### Shared library
+
+`HospitalManagement.Shared` is a class library referenced by all three services. It
+contains shared primitives: `Result<T>`, `PagedResult<T>`, and `BaseController`. It has
+no runtime dependency on any service and is not deployed independently.
