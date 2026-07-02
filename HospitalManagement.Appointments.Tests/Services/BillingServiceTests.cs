@@ -8,6 +8,8 @@ using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.DTOs.Patient;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;
