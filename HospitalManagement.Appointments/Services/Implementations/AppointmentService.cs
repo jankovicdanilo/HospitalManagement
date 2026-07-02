@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
@@ -21,12 +21,12 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly ILogger<AppointmentService> logger;
         private readonly AppointmentSettings appointmentSettings;
         private readonly IAppointmentDiscountCalculator appointmentDiscountCalculator;
-        private readonly IHospitalManagementClient hospitalManagementClient;
+        private readonly IQueryServiceClient hospitalManagementClient;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator,
-            IHospitalManagementClient hospitalManagementClient)
+            IQueryServiceClient hospitalManagementClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
@@ -265,6 +265,34 @@ namespace HospitalManagement.Appointments.Services.Implementations
             logger.LogInformation("Appointment with id {Id} status updated to {Status}", request.Id, request.Status);
 
             return Result.Ok("Appointment status updated");
+        }
+
+        public async Task<Result<List<AppointmentResponseDto>>> GetPatientHistoryAsync(int patientId)
+        {
+            var patient = await hospitalManagementClient.GetPatientAsync(patientId);
+
+            if(patient == null)
+            {
+                logger.LogWarning("Patient with id {PatientId} not found", patientId);
+                return Result<List<AppointmentResponseDto>>.Fail(
+                    $"Patient with id {patientId} not found", "INVALID_PATIENT_ID");
+            }
+
+            var appontiments = await appointmentRepository.GetByPatientIdAsync(patientId);
+
+            var result = mapper.Map<List<AppointmentResponseDto>>(appontiments);
+
+            foreach(var (appointment, dto) in appontiments.Zip(result))
+            {
+                var calculateDiscount = GetDiscountResult(appointment);
+                dto.TotalCost = calculateDiscount.TotalCost;
+                dto.Discount = calculateDiscount.Discount;
+            }
+
+            logger.LogInformation("Patient history retrieved for patient {PatientId}, {Count} appointments found",
+                    patientId, result.Count);
+
+            return Result<List<AppointmentResponseDto>>.Ok(result);
         }
 
         private DiscountResult GetDiscountResult(Appointment appointment)

@@ -4,7 +4,7 @@ using HospitalManagement.Auth.Repositories.Implementations;
 using HospitalManagement.Auth.Repositories.Interfaces;
 using HospitalManagement.Auth.Services.Implementations;
 using HospitalManagement.Auth.Services.Interfaces;
-using HospitalManagement.Auth.Settings;
+using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,5 @@
-﻿
-using HospitalManagement.Models.DTOs.Procedure;
+
+using HospitalManagement.Shared.Models.DTOs.Procedure;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs;
 

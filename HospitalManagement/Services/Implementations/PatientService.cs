@@ -1,6 +1,7 @@
-﻿using AutoMapper;
-using HospitalManagement.Models.Domain;
+using AutoMapper;
+using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Shared.Models.DTOs.Patient;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Shared.Common;
@@ -114,7 +115,7 @@ namespace HospitalManagement.Services.Implementations
             // Appointments now live in HospitalManagementAppointments database
             await Task.CompletedTask;
             return Result<PatientMedicalHistoryDto>.Fail(
-                "Medical history temporarily unavailable — pending cross-service implementation",
+                "Medical history temporarily unavailable � pending cross-service implementation",
                 "NOT_IMPLEMENTED");
         }
     }

@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Common;
 using HospitalManagement.Appointments.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Clients.Interfaces;
@@ -9,11 +9,11 @@ namespace HospitalManagement.Appointments.Services.Validations
     {
         private readonly IAppointmentRepository appointmentRepository;
         private readonly IAppointmentProcedureRepository appointmentProcedureRepository;
-        private readonly IHospitalManagementClient hospitalClient;
+        private readonly IQueryServiceClient hospitalClient;
 
         public AppointmentProcedureValidation(IAppointmentRepository appointmentRepository,
             IAppointmentProcedureRepository appointmentProcedureRepository,
-            IHospitalManagementClient hospitalClient)
+            IQueryServiceClient hospitalClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.appointmentProcedureRepository = appointmentProcedureRepository;

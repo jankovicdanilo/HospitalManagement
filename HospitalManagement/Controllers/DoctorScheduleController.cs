@@ -1,5 +1,5 @@
-﻿using FluentValidation;
-using HospitalManagement.Models.DTOs.DoctorSchedule;
+using FluentValidation;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
 using HospitalManagement.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using HospitalManagement.Shared.Controllers;

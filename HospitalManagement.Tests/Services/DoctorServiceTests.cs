@@ -1,12 +1,11 @@
 ﻿using AutoMapper;
 using HospitalManagement.Shared.Common;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.Domain;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
 using Microsoft.Extensions.Logging;
 using Moq;
-using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Tests.Services
 {

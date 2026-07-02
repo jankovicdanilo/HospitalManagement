@@ -4,7 +4,7 @@ using HospitalManagement.Auth.Models.DTOs;
 using HospitalManagement.Auth.Models.Enums;
 using HospitalManagement.Auth.Repositories.Interfaces;
 using HospitalManagement.Auth.Services.Implementations;
-using HospitalManagement.Auth.Settings;
+using HospitalManagement.Shared.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;

@@ -1,6 +1,6 @@
-﻿using AutoMapper;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Doctor;
+using AutoMapper;
+using HospitalManagement.Shared.Models.Domain;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Mappings
