@@ -10,6 +10,7 @@ using HospitalManagement.Appointments.Services.Calculators.Implementations;
 using HospitalManagement.Appointments.Services.Calculators.Interfaces;
 using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Interfaces;
+using HospitalManagement.Appointments.Services.Pdf;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Appointments.Settings;
 using HospitalManagement.Shared.Http;
@@ -20,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NLog;
 using NLog.Web;
+using QuestPDF.Infrastructure;
 using System.Text;
 
 var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
@@ -43,6 +45,8 @@ try
     builder.Services.AddScoped<IAppointmentService, AppointmentService>();
     builder.Services.AddScoped<IAppointmentProcedureService, AppointmentProcedureService>();
     builder.Services.AddScoped<ITreatmentService, TreatmentService>();
+    builder.Services.AddScoped<IBillingService, BillingService>();
+    builder.Services.AddScoped<IPdfGenerator, PdfGenerator>();
 
     // Validations
     builder.Services.AddScoped<IAppointmentValidation, AppointmentValidation>();
@@ -66,6 +70,8 @@ try
     builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
 
     builder.Services.AddAutoMapper(typeof(Program));
+
+    QuestPDF.Settings.License = LicenseType.Community;
 
     // JWT settings
     var jwtSettings = new JwtSettings

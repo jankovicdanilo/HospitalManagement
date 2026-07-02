@@ -12,6 +12,7 @@
 	  <PackageReference Include="FluentValidation" Version="12.1.1" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
+	  <PackageReference Include="QuestPDF" Version="2026.6.1" />
 	</ItemGroup>
 
 </Project>
