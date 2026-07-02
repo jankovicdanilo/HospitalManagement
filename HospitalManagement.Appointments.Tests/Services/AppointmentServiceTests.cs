@@ -25,7 +25,7 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IMapper> mapperMock;
         private Mock<IAppointmentValidation> appointmentValidationMock;
         private Mock<ILogger<AppointmentService>> loggerMock;
-        private Mock<IQueryServiceClient> hospitalManagementClientMock;
+        private Mock<IQueryServiceClient> queryServiceClientMock;
         private IOptions<AppointmentSettings> appointmentSettings;
         private Mock<IAppointmentDiscountCalculator> appointmentDiscountCalculatorMock;
         private AppointmentService appointmentService;
@@ -37,7 +37,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             mapperMock = new Mock<IMapper>();
             appointmentValidationMock = new Mock<IAppointmentValidation>();
             loggerMock = new Mock<ILogger<AppointmentService>>();
-            hospitalManagementClientMock = new Mock<IQueryServiceClient>();
+            queryServiceClientMock = new Mock<IQueryServiceClient>();
             appointmentDiscountCalculatorMock = new Mock<IAppointmentDiscountCalculator>();
             appointmentSettings = Options.Create(new AppointmentSettings { SlotSizeMinutes = 30 });
 
@@ -48,7 +48,7 @@ namespace HospitalManagement.Appointments.Tests.Services
                 loggerMock.Object,
                 appointmentSettings,
                 appointmentDiscountCalculatorMock.Object,
-                hospitalManagementClientMock.Object
+                queryServiceClientMock.Object
             );
         }
 
@@ -147,9 +147,9 @@ namespace HospitalManagement.Appointments.Tests.Services
             var appointmentDto = new AppointmentCreateResponseDto { Id = appointmentId };
 
             appointmentValidationMock.Setup(v => v.ValidateAll(request)).ReturnsAsync(Result.Ok("Validation ok"));
-            hospitalManagementClientMock.Setup(h => h.GetPatientAsync(patientId)).ReturnsAsync(
+            queryServiceClientMock.Setup(h => h.GetPatientAsync(patientId)).ReturnsAsync(
                 new PatientResponseDto { Id = patientId, Name = "Marko", LastName = "Petrovic", Email = "marko@test.com" });
-            hospitalManagementClientMock.Setup(x => x.GetDoctorAsync(doctorId)).ReturnsAsync(
+            queryServiceClientMock.Setup(x => x.GetDoctorAsync(doctorId)).ReturnsAsync(
                 new DoctorResponseDto { Id = doctorId, FirstName = "Ana", LastName = "Kovac" });
             mapperMock.Setup(m => m.Map<Appointment>(request)).Returns(appointment);
             appointmentRepositoryMock.Setup(r => r.CreateAsync(appointment)).ReturnsAsync(appointment);
@@ -189,9 +189,9 @@ namespace HospitalManagement.Appointments.Tests.Services
 
             appointmentValidationMock.Setup(v => v.ValidateAll(request)).ReturnsAsync(Result.Ok("Validation ok"));
             appointmentRepositoryMock.Setup(r => r.GetByIdAsync(request.Id)).ReturnsAsync(appointment);
-            hospitalManagementClientMock.Setup(h => h.GetPatientAsync(patientId)).ReturnsAsync(
+            queryServiceClientMock.Setup(h => h.GetPatientAsync(patientId)).ReturnsAsync(
                 new PatientResponseDto { Id = patientId, Name = "Marko", LastName = "Petrovic", Email = "marko@test.com" });
-            hospitalManagementClientMock.Setup(x => x.GetDoctorAsync(doctorId)).ReturnsAsync(
+            queryServiceClientMock.Setup(x => x.GetDoctorAsync(doctorId)).ReturnsAsync(
                 new DoctorResponseDto { Id = doctorId, FirstName = "Ana", LastName = "Kovac" });
             appointmentRepositoryMock.Setup(r => r.UpdateAsync(appointment)).ReturnsAsync(appointment);
             mapperMock.Setup(m => m.Map<AppointmentUpdateResponseDto>(appointment)).Returns(appointmentDto);
@@ -290,7 +290,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             var doctorId = 1;
             var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
 
-            hospitalManagementClientMock
+            queryServiceClientMock
                 .Setup(c => c.GetDoctorScheduleAsync(doctorId, date.DayOfWeek))
                 .ReturnsAsync((DoctorScheduleResponseDto?)null);
 
@@ -306,7 +306,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             var doctorId = 1;
             var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
 
-            hospitalManagementClientMock
+            queryServiceClientMock
                 .Setup(c => c.GetDoctorScheduleAsync(doctorId, date.DayOfWeek))
                 .ReturnsAsync(new DoctorScheduleResponseDto { StartHour = 8, EndHour = 10 });
 
@@ -326,7 +326,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             var doctorId = 1;
             var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
 
-            hospitalManagementClientMock
+            queryServiceClientMock
                 .Setup(c => c.GetDoctorScheduleAsync(doctorId, date.DayOfWeek))
                 .ReturnsAsync(new DoctorScheduleResponseDto { StartHour = 8, EndHour = 10 });
 

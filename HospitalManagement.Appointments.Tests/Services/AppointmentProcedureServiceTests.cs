@@ -19,7 +19,7 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IMapper> mapperMock;
         private Mock<IAppointmentProcedureValidation> appointmentProcedureValidationMock;
         private Mock<ILogger<AppointmentProcedureService>> loggerMock;
-        private Mock<IQueryServiceClient> hospitalManagementClientMock;
+        private Mock<IQueryServiceClient> queryServiceClientMock;
         private AppointmentProcedureService appointmentProcedureService;
 
         [SetUp]
@@ -29,14 +29,14 @@ namespace HospitalManagement.Appointments.Tests.Services
             mapperMock = new Mock<IMapper>();
             appointmentProcedureValidationMock = new Mock<IAppointmentProcedureValidation>();
             loggerMock = new Mock<ILogger<AppointmentProcedureService>>();
-            hospitalManagementClientMock = new Mock<IQueryServiceClient>();
+            queryServiceClientMock = new Mock<IQueryServiceClient>();
 
             appointmentProcedureService = new AppointmentProcedureService(
                 appointmentProcedureRepositoryMock.Object,
                 mapperMock.Object,
                 appointmentProcedureValidationMock.Object,
                 loggerMock.Object,
-                hospitalManagementClientMock.Object
+                queryServiceClientMock.Object
             );
         }
 
@@ -50,7 +50,7 @@ namespace HospitalManagement.Appointments.Tests.Services
             var appointmentProcedureDto = new AppointmentProcedureCreateResponseDto { AppointmentId = appointmentId, ProcedureId = procedureId };
 
             appointmentProcedureValidationMock.Setup(v => v.ValidateForCreate(request.AppointmentId, request.ProcedureId)).ReturnsAsync(Result.Ok("Validation ok"));
-            hospitalManagementClientMock.Setup(h => h.GetProcedureAsync(request.ProcedureId)).ReturnsAsync(
+            queryServiceClientMock.Setup(h => h.GetProcedureAsync(request.ProcedureId)).ReturnsAsync(
                 new ProcedureResponseDto { Name = "Test Procedure", Price = 100 });
             mapperMock.Setup(m => m.Map<AppointmentProcedure>(request)).Returns(appointmentProcedure);
             appointmentProcedureRepositoryMock.Setup(r => r.CreateAsync(appointmentProcedure)).ReturnsAsync(appointmentProcedure);
