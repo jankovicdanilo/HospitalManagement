@@ -1,5 +1,5 @@
-﻿using FluentValidation;
-using HospitalManagement.Models.DTOs.Doctor;
+using FluentValidation;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 
 namespace HospitalManagement.Validators.Doctor
 {

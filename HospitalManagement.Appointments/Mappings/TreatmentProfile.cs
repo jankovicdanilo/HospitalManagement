@@ -10,6 +10,7 @@ namespace HospitalManagement.Appointments.Mappings
         {
             CreateMap<Treatment, TreatmentCreateRequestDto>().ReverseMap();
             CreateMap<Treatment, TreatmentCreateResponseDto>().ReverseMap();
+            CreateMap<Treatment, TreatmentResponseDto>().ReverseMap();
         }
     }
 }

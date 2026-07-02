@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Common;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
 using HospitalManagement.Appointments.Models.Enums;
@@ -9,11 +9,11 @@ namespace HospitalManagement.Appointments.Services.Validations
 {
     public class AppointmentValidation : IAppointmentValidation
     {
-        private readonly IHospitalManagementClient hospitalClient;
+        private readonly IQueryServiceClient hospitalClient;
         private readonly IAppointmentRepository appointmentRepository;
 
         public AppointmentValidation(IAppointmentRepository appointmentRepository,
-            IHospitalManagementClient hospitalClient)
+            IQueryServiceClient hospitalClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.hospitalClient = hospitalClient;

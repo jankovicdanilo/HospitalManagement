@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Models.Domain;
+using HospitalManagement.Shared.Models.Domain;
 
 namespace HospitalManagement.Repositories.Interfaces
 {

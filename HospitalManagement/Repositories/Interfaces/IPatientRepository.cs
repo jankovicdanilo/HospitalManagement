@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Models.Domain;
+using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.Models.DTOs.Patient;
 using System.Collections.Generic;
 using System.Threading.Tasks;

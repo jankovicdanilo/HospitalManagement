@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Models.DTOs.DoctorSchedule;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs;
 

@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Models.DTOs.Patient;
+using HospitalManagement.Shared.Models.DTOs.Patient;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs;
 

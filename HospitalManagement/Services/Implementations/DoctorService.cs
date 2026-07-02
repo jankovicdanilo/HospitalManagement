@@ -1,7 +1,7 @@
-﻿using AutoMapper;
+using AutoMapper;
 using HospitalManagement.Shared.Common;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Doctor;
+using HospitalManagement.Shared.Models.Domain;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Interfaces;
 using HospitalManagement.Shared.Models.DTOs;

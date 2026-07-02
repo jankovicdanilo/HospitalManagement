@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.Procedure;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
-using HospitalManagement.Shared.Models.DTOs;
+using HospitalManagement.Shared.Models.Domain;
+using HospitalManagement.Shared.Models.DTOs.Procedure;
 using Microsoft.Extensions.Logging;
 using Moq;
 

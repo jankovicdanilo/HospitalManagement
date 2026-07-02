@@ -1,10 +1,8 @@
 ﻿using AutoMapper;
-using Azure.Core;
-using HospitalManagement.Models.Domain;
-using HospitalManagement.Models.DTOs.DoctorSchedule;
+using HospitalManagement.Shared.Models.Domain;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
-using HospitalManagement.Shared.Models.DTOs;
 using Microsoft.Extensions.Logging;
 using Moq;
 

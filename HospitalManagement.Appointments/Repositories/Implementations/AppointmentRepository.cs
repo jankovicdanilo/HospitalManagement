@@ -21,6 +21,7 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
         {
             return await dbContext.Appointments
                 .Include(x => x.AppointmentProcedures)
+                .Include(x => x.Treatment)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
@@ -72,6 +73,7 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
         {
             var query = dbContext.Appointments
                 .Include(x => x.AppointmentProcedures)
+                .Include(x => x.Treatment)
                 .AsQueryable();
 
             if (filter.DoctorId.HasValue)
@@ -114,6 +116,17 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
                 .ToListAsync();
 
             return appointments.Where(a => a.DateTime.Add(a.Duration).AddHours(1) < now);
+        }
+
+        public async Task<List<Appointment>> GetByPatientIdAsync(int patientId)
+        {
+            return await dbContext.Appointments
+                .Include(x => x.AppointmentProcedures)
+                .Include(x => x.Treatment)
+                .Where(x => x.PatientId == patientId)
+                .OrderByDescending(x => x.DateTime)
+                .AsNoTracking()
+                .ToListAsync();
         }
     }
 }

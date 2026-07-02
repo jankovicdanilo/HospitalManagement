@@ -1,5 +1,5 @@
-﻿using HospitalManagement.Data;
-using HospitalManagement.Models.Domain;
+using HospitalManagement.Data;
+using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

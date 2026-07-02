@@ -1,0 +1,19 @@
+using FluentValidation;
+using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
+
+namespace HospitalManagement.CommandService.Validators.DoctorSchedule
+{
+    public class DoctorScheduleCreateRequestValidator : AbstractValidator<DoctorScheduleCreateRequestDto>
+    {
+        public DoctorScheduleCreateRequestValidator()
+        {
+            RuleFor(x => x.DoctorId).GreaterThan(0).WithMessage("DoctorId must be greater than 0");
+            RuleFor(x => x.DayOfWeek).IsInEnum().WithMessage("Invalid day of week")
+                .Must(x => x != DayOfWeek.Saturday && x != DayOfWeek.Sunday)
+                .WithMessage("Doctor schedule cannot be set for weekends");
+            RuleFor(x => x.StartHour).InclusiveBetween(8, 19).WithMessage("Start hour must be between 8 and 19");
+            RuleFor(x => x.EndHour).InclusiveBetween(9, 20).WithMessage("End hour must be between 9 and 20")
+                .GreaterThan(x => x.StartHour).WithMessage("End hour must be greater than start hour");
+        }
+    }
+}
