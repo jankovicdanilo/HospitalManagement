@@ -27,13 +27,23 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-  "$schema": "http://json.schemastore.org/launchsettings.json",
+      "$schema": "http://json.schemastore.org/launchsettings.json",
+      "iisSettings": {
+        "windowsAuthentication": false,
+        "anonymousAuthentication": true,
+        "iisExpress": {
+          "applicationUrl": "http://localhost:7568",
+          "sslPort": 44319
+        }
+      }
+    }
+  },
   "iisSettings": {
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:7568",
-      "sslPort": 44319
+      "applicationUrl": "http://localhost:53538/",
+      "sslPort": 44391
     }
   }
 }
