@@ -28,6 +28,11 @@ builder.Services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
 builder.Services.AddScoped<IProcedureRepository, ProcedureRepository>();
 builder.Services.AddScoped<IProcedureService, ProcedureService>();
 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+});
+
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Logging.ClearProviders();

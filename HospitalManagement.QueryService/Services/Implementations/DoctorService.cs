@@ -3,6 +3,8 @@ using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs.Doctor;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace HospitalManagement.QueryService.Services.Implementations
 {
@@ -11,12 +13,15 @@ namespace HospitalManagement.QueryService.Services.Implementations
         private readonly IDoctorRepository doctorRepository;
         private readonly IMapper mapper;
         private readonly ILogger<DoctorService> logger;
+        private readonly IDistributedCache cache;
 
-        public DoctorService(IDoctorRepository doctorRepository, IMapper mapper, ILogger<DoctorService> logger)
+        public DoctorService(IDoctorRepository doctorRepository, IMapper mapper, ILogger<DoctorService> logger,
+            IDistributedCache cache)
         {
             this.doctorRepository = doctorRepository;
             this.mapper = mapper;
             this.logger = logger;
+            this.cache = cache;
         }
 
         public async Task<Result<List<DoctorResponseDto>>> GetAllAsync()
@@ -28,13 +33,28 @@ namespace HospitalManagement.QueryService.Services.Implementations
 
         public async Task<Result<DoctorResponseDto>> GetByIdAsync(int id)
         {
+            string cacheKey = $"doctor:{id}";
+            var cached = await cache.GetStringAsync(cacheKey);
+
+            if(cached != null)
+            {
+                logger.LogInformation("Cache hit for doctor {Id}", id);
+                var cachedDto = JsonSerializer.Deserialize<DoctorResponseDto>(cached);
+                return Result<DoctorResponseDto>.Ok(cachedDto!);
+            }
+
             var doctor = await doctorRepository.GetByIdAsync(id);
             if (doctor is null)
             {
                 logger.LogWarning("Doctor with id {Id} not found", id);
                 return Result<DoctorResponseDto>.Fail($"Doctor with the id {id} was not found", "INVALID_ID", ErrorType.NotFound);
             }
+
             var result = mapper.Map<DoctorResponseDto>(doctor);
+
+            await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(result),
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) });
+
             return Result<DoctorResponseDto>.Ok(result);
         }
     }

@@ -4,6 +4,7 @@ using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.CommandService.Repositories.Interfaces;
 using HospitalManagement.CommandService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace HospitalManagement.CommandService.Services.Implementations
 {
@@ -12,13 +13,15 @@ namespace HospitalManagement.CommandService.Services.Implementations
         private readonly IDoctorRepository doctorRepository;
         private readonly IMapper mapper;
         private readonly ILogger<DoctorService> logger;
+        private readonly IDistributedCache cache;
 
         public DoctorService(IDoctorRepository doctorRepository, IMapper mapper,
-            ILogger<DoctorService> logger)
+            ILogger<DoctorService> logger, IDistributedCache cache)
         {
             this.doctorRepository = doctorRepository;
             this.mapper = mapper;
             this.logger = logger;
+            this.cache = cache;
         }
 
         public async Task<Result<DoctorResponseDto>> CreateAsync(DoctorCreateRequestDto request)
@@ -26,7 +29,7 @@ namespace HospitalManagement.CommandService.Services.Implementations
             var doctorDomain = mapper.Map<Doctor>(request);
             doctorDomain = await doctorRepository.CreateAsync(doctorDomain);
 
-            logger.LogInformation("Doctor created with id {Id}, DoctorCreated event published", doctorDomain.Id);
+            logger.LogInformation("Doctor created with id {Id}", doctorDomain.Id);
 
             var result = mapper.Map<DoctorResponseDto>(doctorDomain);
 
@@ -44,7 +47,8 @@ namespace HospitalManagement.CommandService.Services.Implementations
             mapper.Map(request, doctorDomain);
             doctorDomain = await doctorRepository.UpdateAsync(doctorDomain);
 
-            logger.LogInformation("Doctor updated with id {Id}, DoctorUpdated event published", doctorDomain.Id);
+            await cache.RemoveAsync($"doctor:{doctorDomain!.Id}");
+            logger.LogInformation("Doctor updated with id {Id}, cache invalidated", doctorDomain.Id);
 
             var result = mapper.Map<DoctorResponseDto>(doctorDomain);
 
@@ -61,7 +65,9 @@ namespace HospitalManagement.CommandService.Services.Implementations
             }
             await doctorRepository.Delete(id);
 
-            logger.LogInformation("Doctor deleted with id {Id}, DoctorDeleted event published", id);
+            await cache.RemoveAsync($"doctor:{id}");
+            logger.LogInformation("Doctor deleted with id {Id}, cache invalidated", id);
+
             return Result.Ok("Doctor has been deleted!");
         }
     }
