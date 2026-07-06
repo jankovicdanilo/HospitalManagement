@@ -73,6 +73,7 @@ namespace HospitalManagement.QueryService.Services.Implementations
             {
                 await cachePolicy.ExecuteAsync(() => cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(result),
                 new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) }));
+                logger.LogInformation("Doctor with id {id} cached", id);
             }
             catch (BrokenCircuitException)
             {
