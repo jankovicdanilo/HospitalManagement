@@ -5,6 +5,8 @@ using HospitalManagement.CommandService.Repositories.Interfaces;
 using HospitalManagement.CommandService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
 using Microsoft.Extensions.Caching.Distributed;
+using Polly;
+using Polly.CircuitBreaker;
 
 namespace HospitalManagement.CommandService.Services.Implementations
 {
@@ -14,14 +16,17 @@ namespace HospitalManagement.CommandService.Services.Implementations
         private readonly IMapper mapper;
         private readonly ILogger<DoctorService> logger;
         private readonly IDistributedCache cache;
+        private readonly IAsyncPolicy cachePolicy;
 
         public DoctorService(IDoctorRepository doctorRepository, IMapper mapper,
-            ILogger<DoctorService> logger, IDistributedCache cache)
+            ILogger<DoctorService> logger, IDistributedCache cache,
+            IAsyncPolicy cachePolicy)
         {
             this.doctorRepository = doctorRepository;
             this.mapper = mapper;
             this.logger = logger;
             this.cache = cache;
+            this.cachePolicy = cachePolicy;
         }
 
         public async Task<Result<DoctorResponseDto>> CreateAsync(DoctorCreateRequestDto request)
@@ -47,7 +52,7 @@ namespace HospitalManagement.CommandService.Services.Implementations
             mapper.Map(request, doctorDomain);
             doctorDomain = await doctorRepository.UpdateAsync(doctorDomain);
 
-            await cache.RemoveAsync($"doctor:{doctorDomain!.Id}");
+            await InvalidateCacheAsync(doctorDomain!.Id);
             logger.LogInformation("Doctor updated with id {Id}, cache invalidated", doctorDomain.Id);
 
             var result = mapper.Map<DoctorResponseDto>(doctorDomain);
@@ -65,10 +70,28 @@ namespace HospitalManagement.CommandService.Services.Implementations
             }
             await doctorRepository.Delete(id);
 
-            await cache.RemoveAsync($"doctor:{id}");
+            await InvalidateCacheAsync(id);
             logger.LogInformation("Doctor deleted with id {Id}, cache invalidated", id);
 
             return Result.Ok("Doctor has been deleted!");
+        }
+
+        private async Task InvalidateCacheAsync(int id)
+        {
+            string cacheKey = $"doctor:{id}";
+            try
+            {
+                await cachePolicy.ExecuteAsync(() => cache.RemoveAsync(cacheKey));
+                logger.LogInformation("Cache invalidated for key {Key}", cacheKey);
+            }
+            catch (BrokenCircuitException)
+            {
+                logger.LogDebug("Redit circuit open, skipping cache invalidation for {Key}", cacheKey);
+            }
+            catch(Exception ex)
+            {
+                logger.LogWarning("Failed to invalidate cache for key {Key}: {Message}", cacheKey, ex.Message);
+            }
         }
     }
 }

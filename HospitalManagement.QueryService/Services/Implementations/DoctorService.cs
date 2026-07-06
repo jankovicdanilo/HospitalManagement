@@ -4,6 +4,9 @@ using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs.Doctor;
 using Microsoft.Extensions.Caching.Distributed;
+using Polly;
+using Polly.Caching;
+using Polly.CircuitBreaker;
 using System.Text.Json;
 
 namespace HospitalManagement.QueryService.Services.Implementations
@@ -14,14 +17,16 @@ namespace HospitalManagement.QueryService.Services.Implementations
         private readonly IMapper mapper;
         private readonly ILogger<DoctorService> logger;
         private readonly IDistributedCache cache;
+        private readonly IAsyncPolicy cachePolicy;
 
         public DoctorService(IDoctorRepository doctorRepository, IMapper mapper, ILogger<DoctorService> logger,
-            IDistributedCache cache)
+            IDistributedCache cache, IAsyncPolicy cachePolicy)
         {
             this.doctorRepository = doctorRepository;
             this.mapper = mapper;
             this.logger = logger;
             this.cache = cache;
+            this.cachePolicy = cachePolicy;
         }
 
         public async Task<Result<List<DoctorResponseDto>>> GetAllAsync()
@@ -34,7 +39,19 @@ namespace HospitalManagement.QueryService.Services.Implementations
         public async Task<Result<DoctorResponseDto>> GetByIdAsync(int id)
         {
             string cacheKey = $"doctor:{id}";
-            var cached = await cache.GetStringAsync(cacheKey);
+            string? cached = null;
+            try
+            {
+                cached = await cachePolicy.ExecuteAsync(() => cache.GetStringAsync(cacheKey));
+            }
+            catch (BrokenCircuitException)
+            {
+                logger.LogDebug("Redus circuit open, skipping cache read for {Key}", cacheKey);
+            }
+            catch(Exception ex)
+            {
+                logger.LogWarning("Cache unavailable for key {Key}, falling back to DB: {Message}", cacheKey, ex.Message);
+            }
 
             if(cached != null)
             {
@@ -52,8 +69,19 @@ namespace HospitalManagement.QueryService.Services.Implementations
 
             var result = mapper.Map<DoctorResponseDto>(doctor);
 
-            await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(result),
-                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) });
+            try
+            {
+                await cachePolicy.ExecuteAsync(() => cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(result),
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) }));
+            }
+            catch (BrokenCircuitException)
+            {
+                logger.LogDebug("Redis circuit open, skipping cache write for {Key}", cacheKey);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning("Failed to write cache for key {Key}: {Message}", cacheKey, ex.Message);
+            }
 
             return Result<DoctorResponseDto>.Ok(result);
         }

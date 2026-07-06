@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NLog.Web;
+using Polly;
+using StackExchange.Redis;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +29,21 @@ builder.Services.AddScoped<IDoctorScheduleRepository, DoctorScheduleRepository>(
 builder.Services.AddScoped<IDoctorScheduleService, DoctorScheduleService>();
 builder.Services.AddScoped<IProcedureRepository, ProcedureRepository>();
 builder.Services.AddScoped<IProcedureService, ProcedureService>();
+
+builder.Services.AddSingleton<IAsyncPolicy>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<Program>>();
+    return Policy
+            .Handle<RedisConnectionException>()
+            .Or<RedisTimeoutException>()
+            .CircuitBreakerAsync(
+                exceptionsAllowedBeforeBreaking: 3,
+                durationOfBreak: TimeSpan.FromSeconds(30),
+                onBreak: (ex, breakDelay) => logger.LogWarning("Redis circuit opened for {Delay}s: {Message}", breakDelay.TotalSeconds, ex.Message),
+                onReset: () => logger.LogInformation("Redis circuit closed, resuming normal calls"),
+                onHalfOpen: () => logger.LogInformation("Redis circuit half-open, testing connection")
+            );
+});
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
