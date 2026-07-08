@@ -1,11 +1,10 @@
-﻿using HospitalManagement.Appointments.Services.Implementations;
-using HospitalManagement.Appointments.Services.Interfaces;
+﻿using HospitalManagement.InvoiceService.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HospitalManagement.Appointments.Controllers
+namespace HospitalManagement.InvoiceService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

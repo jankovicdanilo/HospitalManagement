@@ -1,8 +1,8 @@
-﻿using HospitalManagement.Appointments.Models.DTOs.Invoice;
-using HospitalManagement.Appointments.Services.Interfaces;
+﻿using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
+using HospitalManagement.InvoiceService.Services.Interfaces;
 using QuestPDF.Fluent;
 
-namespace HospitalManagement.Appointments.Services.Pdf
+namespace HospitalManagement.InvoiceService.Services.Pdf
 {
     public class PdfGenerator : IPdfGenerator
     {

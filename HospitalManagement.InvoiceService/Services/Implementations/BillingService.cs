@@ -1,22 +1,22 @@
 ﻿using AutoMapper;
-using HospitalManagement.Appointments.Models.DTOs.Appointment;
-using HospitalManagement.Appointments.Models.DTOs.Invoice;
-using HospitalManagement.Appointments.Services.Interfaces;
+using HospitalManagement.InvoiceService.Clients.Interfaces;
+using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
+using HospitalManagement.InvoiceService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
 
-namespace HospitalManagement.Appointments.Services.Implementations
+namespace HospitalManagement.InvoiceService.Services.Implementations
 {
     public class BillingService : IBillingService
     {
-        private readonly IAppointmentService appointmentsService;
+        private readonly IAppointmentServiceClient appointmentService;
         private readonly IPdfGenerator pdfGenerator;
         private readonly ILogger<BillingService> logger;
         private readonly IMapper mapper;
 
-        public BillingService(IAppointmentService appointmentsService, 
+        public BillingService(IAppointmentServiceClient appointmentService, 
             IPdfGenerator pdfGenerator, ILogger<BillingService> logger, IMapper mapper)
         {
-            this.appointmentsService = appointmentsService;
+            this.appointmentService = appointmentService;
             this.pdfGenerator = pdfGenerator;
             this.logger = logger;
             this.mapper = mapper;
@@ -25,21 +25,21 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
         public async Task<Result<InvoiceResult>> GenerateInvoiceAsync(int appointmentId)
         {
-            var appointment = await appointmentsService.GetByIdAsync(appointmentId);
+            var appointment = await appointmentService.GetAppointmentAsync(appointmentId);
 
-            if (!appointment.Success)
+            if (appointment == null)
             {
                 logger.LogWarning("Invoice generation failed - appointment with id {Id} not found", appointmentId);
-                return Result<InvoiceResult>.Fail(appointment.Message, appointment.ErrorCode);
+                return Result<InvoiceResult>.Fail($"Appointment with the id {appointmentId} not found", "INVALID_ID");
             }
 
-            if (appointment.Data.Patient == null || appointment.Data.Doctor == null)
+            if (appointment.Patient == null || appointment.Doctor == null)
             {
                 logger.LogWarning("Invoice generation failed - appointment with id {Id} has incomplete data", appointmentId);
                 return Result<InvoiceResult>.Fail("Appointment data is incomplete", "INVALID_DATA");
             }
 
-            var invoiceData = mapper.Map<InvoiceData>(appointment.Data);
+            var invoiceData = mapper.Map<InvoiceData>(appointment);
             var pdfBytes = pdfGenerator.Generate(invoiceData);
             var invoiceResult = new InvoiceResult
             {

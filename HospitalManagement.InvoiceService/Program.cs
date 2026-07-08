@@ -1,22 +1,13 @@
-using FluentValidation;
-using HospitalManagement.Appointments.Clients.Implementations;
-using HospitalManagement.Appointments.Clients.Interfaces;
-using HospitalManagement.Appointments.Data;
-using HospitalManagement.Appointments.Models.DTOs.Appointment;
-using HospitalManagement.Appointments.Repositories.Implementations;
-using HospitalManagement.Appointments.Repositories.Interfaces;
-using HospitalManagement.Appointments.Services.Background;
-using HospitalManagement.Appointments.Services.Calculators.Implementations;
-using HospitalManagement.Appointments.Services.Calculators.Interfaces;
-using HospitalManagement.Appointments.Services.Implementations;
-using HospitalManagement.Appointments.Services.Interfaces;
-using HospitalManagement.Appointments.Services.Validations;
-using HospitalManagement.Appointments.Settings;
+using AutoMapper;
+using HospitalManagement.InvoiceService.Clients.Implementations;
+using HospitalManagement.InvoiceService.Clients.Interfaces;
+using HospitalManagement.InvoiceService.Services.Implementations;
+using HospitalManagement.InvoiceService.Services.Interfaces;
+using HospitalManagement.InvoiceService.Services.Pdf;
 using HospitalManagement.Shared.Http;
 using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NLog;
 using NLog.Web;
@@ -32,45 +23,24 @@ try
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();
 
-    builder.Services.AddDbContext<AppointmentDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("AppointmentDb")));
-
-    // Repositories
-    builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
-    builder.Services.AddScoped<IAppointmentProcedureRepository, AppointmentProcedureRepository>();
-    builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
-
     // Services
-    builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-    builder.Services.AddScoped<IAppointmentProcedureService, AppointmentProcedureService>();
-    builder.Services.AddScoped<ITreatmentService, TreatmentService>();
-
-    // Validations
-    builder.Services.AddScoped<IAppointmentValidation, AppointmentValidation>();
-    builder.Services.AddScoped<IAppointmentProcedureValidation, AppointmentProcedureValidation>();
-    builder.Services.AddScoped<ITreatmentValidation, TreatmentValidation>();
-
-    // Calculators
-    builder.Services.AddScoped<IAppointmentDiscountCalculator, AppointmentDiscountCalculator>();
+    builder.Services.AddScoped<IBillingService, BillingService>();
+    builder.Services.AddScoped<IPdfGenerator, PdfGenerator>();
 
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddTransient<AuthTokenHandler>();
 
-    // HTTP client for cross-service calls to QueryService
-    builder.Services.AddHttpClient<IQueryServiceClient, QueryServiceClient>(client =>
+    // HTTP client for cross-service calls to Appointments
+    builder.Services.AddHttpClient<IAppointmentServiceClient, AppointmentServiceClient>(client =>
     {
-        client.BaseAddress = new Uri(builder.Configuration["QueryService:BaseUrl"]!);
+        client.BaseAddress = new Uri(builder.Configuration["AppointmentService:BaseUrl"]!);
     })
         .AddHttpMessageHandler<AuthTokenHandler>();
-
-    // Background services
-    builder.Services.AddHostedService<MissedAppointmentBackgroundService>();
 
     builder.Services.AddAutoMapper(typeof(Program));
 
     QuestPDF.Settings.License = LicenseType.Community;
 
-    // JWT settings
     var jwtSettings = new JwtSettings
     {
         Key = builder.Configuration["Jwt:Key"]!,
@@ -80,10 +50,7 @@ try
     };
 
     builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
-    builder.Services.Configure<DiscountSettings>(builder.Configuration.GetSection("DiscountSettings"));
-    builder.Services.Configure<AppointmentSettings>(builder.Configuration.GetSection("AppointmentSettings"));
 
-    // Configure JWT authentication
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -132,8 +99,6 @@ try
                 .Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         });
 
-    builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
@@ -163,14 +128,12 @@ try
         });
     });
 
+
+
+
     var app = builder.Build();
 
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AppointmentDbContext>();
-        db.Database.Migrate();
-    }
-
+    // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();

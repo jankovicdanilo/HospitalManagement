@@ -1,7 +1,7 @@
-﻿using HospitalManagement.Appointments.Models.DTOs.Invoice;
+﻿using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
 using HospitalManagement.Shared.Common;
 
-namespace HospitalManagement.Appointments.Services.Interfaces
+namespace HospitalManagement.InvoiceService.Services.Interfaces
 {
     public interface IBillingService
     {

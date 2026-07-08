@@ -1,9 +1,9 @@
-﻿using HospitalManagement.Appointments.Models.DTOs.Invoice;
+﻿using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-namespace HospitalManagement.Appointments.Services.Pdf
+namespace HospitalManagement.InvoiceService.Services.Pdf
 {
     public class InvoiceDocument : IDocument
     {
