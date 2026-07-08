@@ -2,6 +2,7 @@
 using HospitalManagement.InvoiceService.Clients.Interfaces;
 using HospitalManagement.InvoiceService.Mappings;
 using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
+using HospitalManagement.InvoiceService.Models.Enums;
 using HospitalManagement.InvoiceService.Services.Implementations;
 using HospitalManagement.InvoiceService.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,8 @@ namespace HospitalManagement.InvoiceService.Tests.Services
     internal class BillingServiceTests
     {
         private Mock<IAppointmentServiceClient> appointmentServiceClientMock;
-        private Mock<IPdfGenerator> pdfGeneratorMock;
+        private Mock<IInvoiceDocumentGeneratorFactory> generatorFactoryMock;
+        private Mock<IInvoiceDocumentGenerator> generatorMock;
         private Mock<ILogger<BillingService>> loggerMock;
         private IMapper mapper;
         private BillingService billingService;
@@ -22,21 +24,32 @@ namespace HospitalManagement.InvoiceService.Tests.Services
         public void SetUp()
         {
             appointmentServiceClientMock = new Mock<IAppointmentServiceClient>();
-            pdfGeneratorMock = new Mock<IPdfGenerator>();
+            generatorFactoryMock = new Mock<IInvoiceDocumentGeneratorFactory>();
+            generatorMock = new Mock<IInvoiceDocumentGenerator>();
             loggerMock = new Mock<ILogger<BillingService>>();
+
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<InvoiceProfile>();
             });
             mapper = config.CreateMapper();
+
             billingService = new BillingService
             (
                 appointmentServiceClientMock.Object,
-                pdfGeneratorMock.Object,
+                generatorFactoryMock.Object,
                 loggerMock.Object,
                 mapper
             );
         }
+
+        private static AppointmentInvoiceDto CreateValidAppointment(int appointmentId) => new()
+        {
+            Id = appointmentId,
+            Patient = new InvoicePatientDto { Name = "John", LastName = "Doe" },
+            Doctor = new InvoiceDoctorDto { FirstName = "Jane", LastName = "Smith" },
+            Procedures = []
+        };
 
         [Test]
         public async Task GenerateInvoiceDataAsync_AppointmentNotFound_ReturnFailure()
@@ -47,7 +60,7 @@ namespace HospitalManagement.InvoiceService.Tests.Services
                 (a => a.GetAppointmentAsync(appointmentId))
                     .ReturnsAsync((AppointmentInvoiceDto?)null);
 
-            var result = await billingService.GenerateInvoiceAsync(appointmentId);
+            var result = await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Pdf);
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("INVALID_ID"));

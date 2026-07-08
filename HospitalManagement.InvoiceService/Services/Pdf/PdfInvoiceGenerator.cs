@@ -4,13 +4,16 @@ using QuestPDF.Fluent;
 
 namespace HospitalManagement.InvoiceService.Services.Pdf
 {
-    public class PdfGenerator : IPdfGenerator
+    public class PdfInvoiceGenerator : IInvoiceDocumentGenerator
     {
+        public string ContentType => "application/pdf";
+        public string FileExtension => "pdf";
+
         public byte[] Generate(InvoiceData data)
         {
             return Document.Create(container =>
             {
-                new InvoiceDocument(data).Compose(container);
+                new PdfInvoiceDocument(data).Compose(container);
             }).GeneratePdf();
         }
     }

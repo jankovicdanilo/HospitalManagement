@@ -2,8 +2,10 @@
 
 namespace HospitalManagement.InvoiceService.Services.Interfaces
 {
-    public interface IPdfGenerator
+    public interface IInvoiceDocumentGenerator
     {
         byte[] Generate(InvoiceData data);
+        string ContentType { get; }
+        string FileExtension { get; }
     }
 }

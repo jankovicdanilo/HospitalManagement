@@ -1,6 +1,7 @@
 using AutoMapper;
 using HospitalManagement.InvoiceService.Clients.Implementations;
 using HospitalManagement.InvoiceService.Clients.Interfaces;
+using HospitalManagement.InvoiceService.Services.Docx;
 using HospitalManagement.InvoiceService.Services.Implementations;
 using HospitalManagement.InvoiceService.Services.Interfaces;
 using HospitalManagement.InvoiceService.Services.Pdf;
@@ -25,7 +26,9 @@ try
 
     // Services
     builder.Services.AddScoped<IBillingService, BillingService>();
-    builder.Services.AddScoped<IPdfGenerator, PdfGenerator>();
+    builder.Services.AddScoped<IInvoiceDocumentGenerator, PdfInvoiceGenerator>();
+    builder.Services.AddScoped<IInvoiceDocumentGenerator, DocxInvoiceGenerator>();
+    builder.Services.AddScoped<IInvoiceDocumentGeneratorFactory, InvoiceDocumentGeneratorFactory>();
 
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddTransient<AuthTokenHandler>();
