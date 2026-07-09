@@ -112,6 +112,7 @@ services:
       RabbitMq__Host: "rabbitmq"
       RabbitMq__Username: ${RABBITMQ_USER}
       RabbitMq__Password: ${RABBITMQ_PASS}
+      Redis__ConnectionString: "redis:6379"
     volumes:
       - ./logs/command:/app/logs
     depends_on:
@@ -137,6 +138,7 @@ services:
       RabbitMq__Username: ${RABBITMQ_USER}
       RabbitMq__Password: ${RABBITMQ_PASS}
       AppointmentService__BaseUrl: ${APPOINTMENT_SERVICE_URL}
+      Redis__ConnectionString: "redis:6379"
     volumes:
       - ./logs/query:/app/logs
     depends_on:
