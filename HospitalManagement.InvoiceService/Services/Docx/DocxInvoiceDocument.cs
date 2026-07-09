@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
+using System.Globalization;
 
 namespace HospitalManagement.InvoiceService.Services.Docx
 {

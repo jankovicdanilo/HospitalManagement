@@ -76,6 +76,26 @@ services:
       queryservice:
         condition: service_started
 
+  invoiceservice:
+    container_name: hospitalmanagement-invoice
+    build:
+      context: .
+      dockerfile: HospitalManagement.InvoiceService/Dockerfile
+    ports:
+      - "8085:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__ExpiryMinutes: "60"
+      AppointmentService__BaseUrl: ${APPOINTMENT_SERVICE_URL}
+    volumes:
+      - ./logs/invoice:/app/logs
+    depends_on:
+      appointments:
+        condition: service_started
+
   command:
     container_name: hospitalmanagement-command
     build:
@@ -85,7 +105,7 @@ services:
       - "8083:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__CommandDb: "Server=db;Database=HospitalManagementCommand;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
+      ConnectionStrings__HospitalManagementCQRS: "Server=db;Database=HospitalManagementCQRS;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
@@ -109,7 +129,7 @@ services:
       - "8084:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__QueryDb: "Server=db;Database=HospitalManagementQuery;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
+      ConnectionStrings__HospitalManagementCQRS: "Server=db;Database=HospitalManagementCQRS;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
