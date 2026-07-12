@@ -1,4 +1,4 @@
-﻿namespace HospitalManagement.Appointments.Models.DTOs.Invoice
+﻿namespace HospitalManagement.InvoiceService.Models.DTOs.Invoice
 {
     public class InvoiceLineItem
     {

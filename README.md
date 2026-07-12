@@ -25,21 +25,33 @@ communicating over HTTP.
 architecture-beta
     group system(cloud)[Hospital Management System]
 
+    %% Databases
+    service cqrsdb(database)[CQRS DB] in system
     service authdb(database)[AuthDB] in system
     service appdb(database)[AppointmentsDB] in system
-    service hmsdb(database)[HospitalManagementDB] in system
 
-    service auth(server)[Auth Service] in system
+    %% Services
+    service command(server)[CommandService] in system
+    service auth(server)[AuthService] in system
     service app(server)[AppointmentService] in system
-    service hms(server)[HospitalManagement] in system
+    service query(server)[QueryService] in system
+    service invoice(server)[InvoiceService] in system
 
-    hms:R -- L:hmsdb
+    %% Database ownership
+    command:R -- L:cqrsdb
+    query:L -- R:cqrsdb
+    auth:T -- B:authdb
     app:R -- L:appdb
-    auth:R -- L:authdb
 
-    hms:T -- B:app
-    hms:T -- B:auth
-    app:B -- T:auth
+    %% Authentication (JWT)
+    auth:L -- R:command
+    auth:R -- L:app
+    auth:T -- B:query
+    auth:B -- T:invoice
+
+    %% Business communication
+    app:L -- R:query
+    invoice:T -- B:app
 ```
 
 ### Services
