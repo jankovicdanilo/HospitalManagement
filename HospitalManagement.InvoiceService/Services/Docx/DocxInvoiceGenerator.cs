@@ -12,7 +12,7 @@ namespace HospitalManagement.InvoiceService.Services.Docx
 
         public string FileExtension => "docx";
 
-        public byte[] Generate(InvoiceData data)
+        public byte[] CreateDocument(InvoiceData data)
         {
             using var memoryStream = new MemoryStream();
 

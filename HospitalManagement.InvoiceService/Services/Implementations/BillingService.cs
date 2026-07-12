@@ -10,15 +10,15 @@ namespace HospitalManagement.InvoiceService.Services.Implementations
     public class BillingService : IBillingService
     {
         private readonly IAppointmentServiceClient appointmentService;
-        private readonly IInvoiceDocumentGeneratorFactory documentGeneratorFactory;
+        private readonly IInvoiceDocumentGeneratorFactory invoiceDocumentGeneratorFactory;
         private readonly ILogger<BillingService> logger;
         private readonly IMapper mapper;
 
         public BillingService(IAppointmentServiceClient appointmentService,
-            IInvoiceDocumentGeneratorFactory documentGeneratorFactory, ILogger<BillingService> logger, IMapper mapper)
+            IInvoiceDocumentGeneratorFactory invoiceDocumentGeneratorFactory, ILogger<BillingService> logger, IMapper mapper)
         {
             this.appointmentService = appointmentService;
-            this.documentGeneratorFactory = documentGeneratorFactory;
+            this.invoiceDocumentGeneratorFactory = invoiceDocumentGeneratorFactory;
             this.logger = logger;
             this.mapper = mapper;
 
@@ -41,16 +41,16 @@ namespace HospitalManagement.InvoiceService.Services.Implementations
             }
 
             var invoiceData = mapper.Map<InvoiceData>(appointment);
-            var generator = documentGeneratorFactory.GetGenerator(format);
-            var fileBytes = generator.Generate(invoiceData);
+            var invoiceDocumentGenerator = invoiceDocumentGeneratorFactory.CreateGenerator(format);
+            var fileBytes = invoiceDocumentGenerator.CreateDocument(invoiceData);
 
             var invoiceResult = new InvoiceResult
             {
                 FileBytes = fileBytes,
                 PatientName = invoiceData.PatientName,
                 InvoiceNumber = invoiceData.InvoiceNumber,
-                ContentType = generator.ContentType,
-                FileExtension = generator.FileExtension
+                ContentType = invoiceDocumentGenerator.ContentType,
+                FileExtension = invoiceDocumentGenerator.FileExtension
             };
 
             logger.LogInformation("Invoice {InvoiceNumber} generated successfully for appointment {Id} in {Format} format",

@@ -14,7 +14,7 @@ namespace HospitalManagement.InvoiceService.Services.Implementations
             this.generators = generators;
         }
 
-        public IInvoiceDocumentGenerator GetGenerator(InvoiceFormat format)
+        public IInvoiceDocumentGenerator CreateGenerator(InvoiceFormat format)
         {
             return format switch
             {

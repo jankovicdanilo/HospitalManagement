@@ -77,7 +77,7 @@ namespace HospitalManagement.InvoiceService.Tests.Services
 
             await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Pdf);
 
-            generatorFactoryMock.Verify(f => f.GetGenerator(It.IsAny<InvoiceFormat>()), Times.Never);
+            generatorFactoryMock.Verify(f => f.CreateGenerator(It.IsAny<InvoiceFormat>()), Times.Never);
         }
 
         [Test]
@@ -87,14 +87,14 @@ namespace HospitalManagement.InvoiceService.Tests.Services
             var appointment = CreateValidAppointment(appointmentId);
 
             appointmentServiceClientMock.Setup(a => a.GetAppointmentAsync(appointmentId)).ReturnsAsync(appointment);
-            generatorFactoryMock.Setup(f => f.GetGenerator(InvoiceFormat.Pdf)).Returns(generatorMock.Object);
-            generatorMock.Setup(g => g.Generate(It.IsAny<InvoiceData>())).Returns(new byte[5]);
+            generatorFactoryMock.Setup(f => f.CreateGenerator(InvoiceFormat.Pdf)).Returns(generatorMock.Object);
+            generatorMock.Setup(g => g.CreateDocument(It.IsAny<InvoiceData>())).Returns(new byte[5]);
             generatorMock.Setup(g => g.ContentType).Returns("application/pdf");
             generatorMock.Setup(g => g.FileExtension).Returns("pdf");
 
             await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Pdf);
 
-            generatorFactoryMock.Verify(f => f.GetGenerator(InvoiceFormat.Pdf), Times.Once);
+            generatorFactoryMock.Verify(f => f.CreateGenerator(InvoiceFormat.Pdf), Times.Once);
         }
 
         [Test]
@@ -104,14 +104,14 @@ namespace HospitalManagement.InvoiceService.Tests.Services
             var appointment = CreateValidAppointment(appointmentId);
 
             appointmentServiceClientMock.Setup(a => a.GetAppointmentAsync(appointmentId)).ReturnsAsync(appointment);
-            generatorFactoryMock.Setup(f => f.GetGenerator(InvoiceFormat.Docx)).Returns(generatorMock.Object);
-            generatorMock.Setup(g => g.Generate(It.IsAny<InvoiceData>())).Returns(new byte[7]);
+            generatorFactoryMock.Setup(f => f.CreateGenerator(InvoiceFormat.Docx)).Returns(generatorMock.Object);
+            generatorMock.Setup(g => g.CreateDocument(It.IsAny<InvoiceData>())).Returns(new byte[7]);
             generatorMock.Setup(g => g.ContentType).Returns("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
             generatorMock.Setup(g => g.FileExtension).Returns("docx");
 
             await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Docx);
 
-            generatorFactoryMock.Verify(f => f.GetGenerator(InvoiceFormat.Docx), Times.Once);
+            generatorFactoryMock.Verify(f => f.CreateGenerator(InvoiceFormat.Docx), Times.Once);
         }
 
         [Test]
@@ -121,8 +121,8 @@ namespace HospitalManagement.InvoiceService.Tests.Services
             var appointment = CreateValidAppointment(appointmentId);
 
             appointmentServiceClientMock.Setup(a => a.GetAppointmentAsync(appointmentId)).ReturnsAsync(appointment);
-            generatorFactoryMock.Setup(f => f.GetGenerator(InvoiceFormat.Docx)).Returns(generatorMock.Object);
-            generatorMock.Setup(g => g.Generate(It.IsAny<InvoiceData>())).Returns(new byte[5]);
+            generatorFactoryMock.Setup(f => f.CreateGenerator(InvoiceFormat.Docx)).Returns(generatorMock.Object);
+            generatorMock.Setup(g => g.CreateDocument(It.IsAny<InvoiceData>())).Returns(new byte[5]);
             generatorMock.Setup(g => g.ContentType).Returns("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
             generatorMock.Setup(g => g.FileExtension).Returns("docx");
 
@@ -156,11 +156,11 @@ namespace HospitalManagement.InvoiceService.Tests.Services
             };
 
             appointmentServiceClientMock.Setup(a => a.GetAppointmentAsync(appointmentId)).ReturnsAsync(appointment);
-            generatorFactoryMock.Setup(f => f.GetGenerator(It.IsAny<InvoiceFormat>())).Returns(generatorMock.Object);
+            generatorFactoryMock.Setup(f => f.CreateGenerator(It.IsAny<InvoiceFormat>())).Returns(generatorMock.Object);
 
             InvoiceData? capturedData = null;
             generatorMock
-                .Setup(g => g.Generate(It.IsAny<InvoiceData>()))
+                .Setup(g => g.CreateDocument(It.IsAny<InvoiceData>()))
                 .Callback<InvoiceData>(data => capturedData = data)
                 .Returns(new byte[5]);
             generatorMock.Setup(g => g.ContentType).Returns("application/pdf");
