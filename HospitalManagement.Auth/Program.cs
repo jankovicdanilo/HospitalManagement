@@ -128,7 +128,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddFrontendCors();
+builder.Services.AddFrontendCors(builder.Configuration);
 
 var app = builder.Build();
 
