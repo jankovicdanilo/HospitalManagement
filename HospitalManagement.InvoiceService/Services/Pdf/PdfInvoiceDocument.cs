@@ -1,15 +1,15 @@
-﻿using HospitalManagement.Appointments.Models.DTOs.Invoice;
+﻿using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
-namespace HospitalManagement.Appointments.Services.Pdf
+namespace HospitalManagement.InvoiceService.Services.Pdf
 {
-    public class InvoiceDocument : IDocument
+    public class PdfInvoiceDocument : IDocument
     {
         private readonly InvoiceData data;
 
-        public InvoiceDocument(InvoiceData data)
+        public PdfInvoiceDocument(InvoiceData data)
         {
             this.data = data;
         }
