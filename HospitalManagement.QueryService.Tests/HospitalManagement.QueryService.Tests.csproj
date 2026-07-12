@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper" Version="16.2.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HospitalManagement.InvoiceService\HospitalManagement.InvoiceService.csproj" />
+    <ProjectReference Include="..\HospitalManagement.QueryService\HospitalManagement.QueryService.csproj" />
   </ItemGroup>
 
 </Project>
