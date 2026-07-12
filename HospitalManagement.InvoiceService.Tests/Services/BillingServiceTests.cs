@@ -2,6 +2,7 @@
 using HospitalManagement.InvoiceService.Clients.Interfaces;
 using HospitalManagement.InvoiceService.Mappings;
 using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
+using HospitalManagement.InvoiceService.Models.Enums;
 using HospitalManagement.InvoiceService.Services.Implementations;
 using HospitalManagement.InvoiceService.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,8 @@ namespace HospitalManagement.InvoiceService.Tests.Services
     internal class BillingServiceTests
     {
         private Mock<IAppointmentServiceClient> appointmentServiceClientMock;
-        private Mock<IPdfGenerator> pdfGeneratorMock;
+        private Mock<IInvoiceDocumentGeneratorFactory> generatorFactoryMock;
+        private Mock<IInvoiceDocumentGenerator> generatorMock;
         private Mock<ILogger<BillingService>> loggerMock;
         private IMapper mapper;
         private BillingService billingService;
@@ -22,97 +24,114 @@ namespace HospitalManagement.InvoiceService.Tests.Services
         public void SetUp()
         {
             appointmentServiceClientMock = new Mock<IAppointmentServiceClient>();
-            pdfGeneratorMock = new Mock<IPdfGenerator>();
+            generatorFactoryMock = new Mock<IInvoiceDocumentGeneratorFactory>();
+            generatorMock = new Mock<IInvoiceDocumentGenerator>();
             loggerMock = new Mock<ILogger<BillingService>>();
+
             var config = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<InvoiceProfile>();
             });
             mapper = config.CreateMapper();
+
             billingService = new BillingService
             (
                 appointmentServiceClientMock.Object,
-                pdfGeneratorMock.Object,
+                generatorFactoryMock.Object,
                 loggerMock.Object,
                 mapper
             );
         }
+
+        private static AppointmentInvoiceDto CreateValidAppointment(int appointmentId) => new()
+        {
+            Id = appointmentId,
+            Patient = new InvoicePatientDto { Name = "John", LastName = "Doe" },
+            Doctor = new InvoiceDoctorDto { FirstName = "Jane", LastName = "Smith" },
+            Procedures = []
+        };
 
         [Test]
         public async Task GenerateInvoiceDataAsync_AppointmentNotFound_ReturnFailure()
         {
             int appointmentId = 1;
 
-            appointmentServiceClientMock.Setup
-                (a => a.GetAppointmentAsync(appointmentId))
-                    .ReturnsAsync((AppointmentInvoiceDto?)null);
+            appointmentServiceClientMock
+                .Setup(a => a.GetAppointmentAsync(appointmentId))
+                .ReturnsAsync((AppointmentInvoiceDto?)null);
 
-            var result = await billingService.GenerateInvoiceAsync(appointmentId);
+            var result = await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Pdf);
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("INVALID_ID"));
         }
 
         [Test]
-        public async Task GenerateInvoiceAsync_AppointmentNotFound_DoesNotCallPdfGenerator()
+        public async Task GenerateInvoiceAsync_AppointmentNotFound_DoesNotCallFactory()
         {
             int appointmentId = 1;
-            var appointment = new AppointmentInvoiceDto { Id = appointmentId };
 
-            appointmentServiceClientMock.Setup(
-                a => a.GetAppointmentAsync(appointmentId))
+            appointmentServiceClientMock
+                .Setup(a => a.GetAppointmentAsync(appointmentId))
                 .ReturnsAsync((AppointmentInvoiceDto?)null);
 
-            await billingService.GenerateInvoiceAsync(appointmentId);
+            await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Pdf);
 
-            pdfGeneratorMock.Verify(p => p.Generate
-            (It.IsAny<InvoiceData>()), Times.Never);
+            generatorFactoryMock.Verify(f => f.CreateGenerator(It.IsAny<InvoiceFormat>()), Times.Never);
         }
 
         [Test]
-        public async Task GenerateInvoiceAsync_AppointmentFound_CallsPdfGenerator()
+        public async Task GenerateInvoiceAsync_PdfFormat_RequestsPdfGeneratorFromFactory()
         {
             int appointmentId = 1;
-            var appointment = new AppointmentInvoiceDto
-            {
-                Id = appointmentId,
-                Patient = new InvoicePatientDto { Name = "John", LastName = "Doe" },
-                Doctor = new InvoiceDoctorDto { FirstName = "Jane", LastName = "Smith" },
-                Procedures = []
-            };
+            var appointment = CreateValidAppointment(appointmentId);
 
-            appointmentServiceClientMock.Setup(
-                a => a.GetAppointmentAsync(appointmentId))
-                .ReturnsAsync(appointment);
-            pdfGeneratorMock.Setup(
-                p => p.Generate(It.IsAny<InvoiceData>()))
-                .Returns(new byte[5]);
+            appointmentServiceClientMock.Setup(a => a.GetAppointmentAsync(appointmentId)).ReturnsAsync(appointment);
+            generatorFactoryMock.Setup(f => f.CreateGenerator(InvoiceFormat.Pdf)).Returns(generatorMock.Object);
+            generatorMock.Setup(g => g.CreateDocument(It.IsAny<InvoiceData>())).Returns(new byte[5]);
+            generatorMock.Setup(g => g.ContentType).Returns("application/pdf");
+            generatorMock.Setup(g => g.FileExtension).Returns("pdf");
 
-            var result = await billingService.GenerateInvoiceAsync(appointmentId);
+            await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Pdf);
 
-            pdfGeneratorMock.Verify(p => p.Generate(It.IsAny<InvoiceData>()), Times.Once);
+            generatorFactoryMock.Verify(f => f.CreateGenerator(InvoiceFormat.Pdf), Times.Once);
         }
 
         [Test]
-        public async Task GenerateInvoiceAsync_AppointmentFound_ReturnPdfBytes()
+        public async Task GenerateInvoiceAsync_DocxFormat_RequestsDocxGeneratorFromFactory()
         {
             int appointmentId = 1;
-            var appointment = new AppointmentInvoiceDto
-            {
-                Id = appointmentId,
-                Patient = new InvoicePatientDto { Name = "John", LastName = "Doe" },
-                Doctor = new InvoiceDoctorDto { FirstName = "Jane", LastName = "Smith" },
-                Procedures = []
-            };
+            var appointment = CreateValidAppointment(appointmentId);
 
-            appointmentServiceClientMock.Setup(
-                a => a.GetAppointmentAsync(appointmentId)).ReturnsAsync(appointment);
-            pdfGeneratorMock.Setup(p => p.Generate(It.IsAny<InvoiceData>())).Returns(new byte[5]);
+            appointmentServiceClientMock.Setup(a => a.GetAppointmentAsync(appointmentId)).ReturnsAsync(appointment);
+            generatorFactoryMock.Setup(f => f.CreateGenerator(InvoiceFormat.Docx)).Returns(generatorMock.Object);
+            generatorMock.Setup(g => g.CreateDocument(It.IsAny<InvoiceData>())).Returns(new byte[7]);
+            generatorMock.Setup(g => g.ContentType).Returns("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+            generatorMock.Setup(g => g.FileExtension).Returns("docx");
 
-            var result = await billingService.GenerateInvoiceAsync(appointmentId);
+            await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Docx);
+
+            generatorFactoryMock.Verify(f => f.CreateGenerator(InvoiceFormat.Docx), Times.Once);
+        }
+
+        [Test]
+        public async Task GenerateInvoiceAsync_AppointmentFound_ReturnsResultWithGeneratorBytesAndMetadata()
+        {
+            int appointmentId = 1;
+            var appointment = CreateValidAppointment(appointmentId);
+
+            appointmentServiceClientMock.Setup(a => a.GetAppointmentAsync(appointmentId)).ReturnsAsync(appointment);
+            generatorFactoryMock.Setup(f => f.CreateGenerator(InvoiceFormat.Docx)).Returns(generatorMock.Object);
+            generatorMock.Setup(g => g.CreateDocument(It.IsAny<InvoiceData>())).Returns(new byte[5]);
+            generatorMock.Setup(g => g.ContentType).Returns("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+            generatorMock.Setup(g => g.FileExtension).Returns("docx");
+
+            var result = await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Docx);
 
             Assert.That(result.Success, Is.True);
-            Assert.That(result.Data!.PdfBytes, Has.Length.EqualTo(5));
+            Assert.That(result.Data!.FileBytes, Has.Length.EqualTo(5));
+            Assert.That(result.Data.ContentType, Is.EqualTo("application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+            Assert.That(result.Data.FileExtension, Is.EqualTo("docx"));
         }
 
         [Test]
@@ -129,24 +148,25 @@ namespace HospitalManagement.InvoiceService.Tests.Services
                 Doctor = new InvoiceDoctorDto { FirstName = "Jane", LastName = "Smith" },
                 Procedures =
                 [
-                    new InvoiceProcedureDto  { ProcedureName = "Blood Test", ProcedurePrice = 50 },
-                    new InvoiceProcedureDto  { ProcedureName = "X-Ray", ProcedurePrice = 80 }
+                    new InvoiceProcedureDto { ProcedureName = "Blood Test", ProcedurePrice = 50 },
+                    new InvoiceProcedureDto { ProcedureName = "X-Ray", ProcedurePrice = 80 }
                 ],
                 Discount = 10,
                 TotalCost = 120
             };
 
-            appointmentServiceClientMock
-                .Setup(a => a.GetAppointmentAsync(appointmentId))
-                .ReturnsAsync(appointment);
+            appointmentServiceClientMock.Setup(a => a.GetAppointmentAsync(appointmentId)).ReturnsAsync(appointment);
+            generatorFactoryMock.Setup(f => f.CreateGenerator(It.IsAny<InvoiceFormat>())).Returns(generatorMock.Object);
 
             InvoiceData? capturedData = null;
-            pdfGeneratorMock
-                .Setup(p => p.Generate(It.IsAny<InvoiceData>()))
+            generatorMock
+                .Setup(g => g.CreateDocument(It.IsAny<InvoiceData>()))
                 .Callback<InvoiceData>(data => capturedData = data)
                 .Returns(new byte[5]);
+            generatorMock.Setup(g => g.ContentType).Returns("application/pdf");
+            generatorMock.Setup(g => g.FileExtension).Returns("pdf");
 
-            await billingService.GenerateInvoiceAsync(appointmentId);
+            await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Pdf);
 
             Assert.That(capturedData!.PatientName, Is.EqualTo("John Doe"));
             Assert.That(capturedData.DoctorName, Is.EqualTo("Jane Smith"));
@@ -176,7 +196,7 @@ namespace HospitalManagement.InvoiceService.Tests.Services
                 .Setup(a => a.GetAppointmentAsync(appointmentId))
                 .ReturnsAsync(appointment);
 
-            var result = await billingService.GenerateInvoiceAsync(appointmentId);
+            var result = await billingService.GenerateInvoiceAsync(appointmentId, InvoiceFormat.Pdf);
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("INVALID_DATA"));

@@ -1,4 +1,5 @@
-﻿using HospitalManagement.InvoiceService.Services.Interfaces;
+﻿using HospitalManagement.InvoiceService.Models.Enums;
+using HospitalManagement.InvoiceService.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,19 +18,24 @@ namespace HospitalManagement.InvoiceService.Controllers
             this.billingService = billingService;
         }
 
-        [HttpGet("{appointmentId:int}/pdf")]
+        [HttpGet("{appointmentId:int}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GenerateInvoiceAsync(int appointmentId)
+        public async Task<IActionResult> GenerateInvoiceAsync(int appointmentId, [FromQuery] string format = "pdf")
         {
-            var result = await billingService.GenerateInvoiceAsync(appointmentId);
+            if(!Enum.TryParse<InvoiceFormat>(format, ignoreCase: true, out var invoiceFormat))
+            {
+                return BadRequest(new { Message = $"Unsupported format '{format}'. Supported formats: pdf, docx.", ErrorCode = "INVALID_FORMAT" });
+            }
+
+            var result = await billingService.GenerateInvoiceAsync(appointmentId, invoiceFormat);
 
             if (!result.Success)
             {
                 return NotFound(new { result.Message, result.ErrorCode });
             }
 
-            return File(result.Data.PdfBytes, "application/pdf",
-                    $"{result.Data.PatientName}_{result.Data.InvoiceNumber}.pdf");
+            return File(result.Data!.FileBytes!, result.Data.ContentType!,
+                    $"{result.Data.PatientName}_{result.Data.InvoiceNumber}.{result.Data.FileExtension}");
         }
     }
 }
