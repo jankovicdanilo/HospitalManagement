@@ -31,13 +31,14 @@ namespace HospitalManagement.InvoiceService.Services.Implementations
             if (appointment == null)
             {
                 logger.LogWarning("Invoice generation failed - appointment with id {Id} not found", appointmentId);
-                return Result<InvoiceResult>.Fail($"Appointment with the id {appointmentId} not found", "INVALID_ID");
+                return Result<InvoiceResult>.Fail($"Appointment with the id {appointmentId} not found", "INVALID_ID",
+                    ErrorType.NotFound);
             }
 
             if (appointment.Patient == null || appointment.Doctor == null)
             {
                 logger.LogWarning("Invoice generation failed - appointment with id {Id} has incomplete data", appointmentId);
-                return Result<InvoiceResult>.Fail("Appointment data is incomplete", "INVALID_DATA");
+                return Result<InvoiceResult>.Fail("Appointment data is incomplete", "INVALID_DATA", ErrorType.Validation);
             }
 
             var invoiceData = mapper.Map<InvoiceData>(appointment);

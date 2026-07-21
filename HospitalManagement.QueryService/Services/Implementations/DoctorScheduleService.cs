@@ -26,7 +26,8 @@ namespace HospitalManagement.QueryService.Services.Implementations
             if (schedule == null)
             {
                 logger.LogWarning("Doctor schedule for id {Id} not found", id);
-                return Result<DoctorScheduleResponseDto>.Fail($"Doctor schedule with id {id} not found", "INVALID_ID");
+                return Result<DoctorScheduleResponseDto>.Fail($"Doctor schedule with id {id} not found", "INVALID_ID",
+                    ErrorType.NotFound);
             }
             var result = mapper.Map<DoctorScheduleResponseDto>(schedule);
             return Result<DoctorScheduleResponseDto>.Ok(result);
@@ -38,7 +39,8 @@ namespace HospitalManagement.QueryService.Services.Implementations
             if (!exists)
             {
                 logger.LogWarning("Doctor with id {DoctorId} not found", doctorId);
-                return Result<List<DoctorScheduleResponseDto>>.Fail($"Doctor with id {doctorId} not found", "INVALID_DOCTOR_ID");
+                return Result<List<DoctorScheduleResponseDto>>.Fail($"Doctor with id {doctorId} not found", 
+                    "INVALID_DOCTOR_ID", ErrorType.NotFound);
             }
             var schedules = await doctorScheduleRepository.GetAllByDoctorIdAsync(doctorId);
             var result = mapper.Map<List<DoctorScheduleResponseDto>>(schedules);
@@ -51,13 +53,15 @@ namespace HospitalManagement.QueryService.Services.Implementations
             if (!exists)
             {
                 logger.LogWarning("Doctor with id {DoctorId} not found", doctorId);
-                return Result<DoctorScheduleResponseDto>.Fail($"Doctor with id {doctorId} not found", "INVALID_DOCTOR_ID");
+                return Result<DoctorScheduleResponseDto>.Fail($"Doctor with id {doctorId} not found", "INVALID_DOCTOR_ID", 
+                    ErrorType.NotFound);
             }
             var schedule = await doctorScheduleRepository.GetByDoctorIdAndDayAsync(doctorId, dayOfWeek);
             if (schedule == null)
             {
                 logger.LogWarning("Doctor with id {Id} doesn't work on {Day}", doctorId, dayOfWeek);
-                return Result<DoctorScheduleResponseDto>.Fail($"Doctor does not work on {dayOfWeek}", "DOCTOR_NOT_AVAILABLE");
+                return Result<DoctorScheduleResponseDto>.Fail($"Doctor does not work on {dayOfWeek}", "DOCTOR_NOT_AVAILABLE",
+                    ErrorType.Conflict);
             }
             var result = mapper.Map<DoctorScheduleResponseDto>(schedule);
             return Result<DoctorScheduleResponseDto>.Ok(result);

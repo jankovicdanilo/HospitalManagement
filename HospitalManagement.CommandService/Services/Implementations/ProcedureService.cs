@@ -38,7 +38,8 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (procedureDomain == null)
             {
                 logger.LogWarning("Procedure with id {id} not found", id);
-                return Result<ProcedureUpdateResponseDto>.Fail($"Procedure with id {id} not found", "INVALID_ID");
+                return Result<ProcedureUpdateResponseDto>.Fail($"Procedure with id {id} not found", "INVALID_ID", 
+                    ErrorType.NotFound);
             }
 
             logger.LogInformation("Procedure with id {id} updated, ProcedureUpdated event published", procedureDomain.Id);
@@ -52,7 +53,7 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (procedureDomain == null)
             {
                 logger.LogWarning("Procedure with id {id} not found", id);
-                return Result.Fail($"Procedure with id {id} not found", "INVALID_ID");
+                return Result.Fail($"Procedure with id {id} not found", "INVALID_ID", ErrorType.NotFound);
             }
 
             logger.LogInformation("Procedure with id {id} deleted, ProcedureDeleted event published", id);

@@ -27,7 +27,8 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (patientExists != null)
             {
                 logger.LogWarning("Patient creation failed, email {Email} already exists", request.Email);
-                return Result<PatientCreateResponseDto?>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL");
+                return Result<PatientCreateResponseDto?>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL",
+                    ErrorType.Conflict);
             }
             var patientDomain = mapper.Map<Patient>(request);
             patientDomain = await patientRepository.CreateAsync(patientDomain);
@@ -43,12 +44,14 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (patientDomain == null)
             {
                 logger.LogWarning("Patient with id {Id} not found for update", request.Id);
-                return Result<PatientUpdateResponseDto>.Fail($"Patient with the id {request.Id} not found", "INVALID_ID");
+                return Result<PatientUpdateResponseDto>.Fail($"Patient with the id {request.Id} not found", "INVALID_ID",
+                    ErrorType.NotFound);
             }
             if (await patientRepository.EmailExists(request.Email) && request.Email != patientDomain.Email)
             {
                 logger.LogWarning("Patient update failed, email {Email} already exists", request.Email);
-                return Result<PatientUpdateResponseDto>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL");
+                return Result<PatientUpdateResponseDto>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL",
+                    ErrorType.Conflict);
             }
             mapper.Map(request, patientDomain);
             await patientRepository.UpdateAsync(patientDomain);
@@ -64,7 +67,7 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (patientDomain == null)
             {
                 logger.LogWarning("Patient with id {Id} not found for deletion", id);
-                return Result.Fail($"Patient with the id {id} not found", "INVALID_ID");
+                return Result.Fail($"Patient with the id {id} not found", "INVALID_ID", ErrorType.NotFound);
             }
 
             logger.LogInformation("Patient with id {Id} deleted, PatientDeleted event published", id);

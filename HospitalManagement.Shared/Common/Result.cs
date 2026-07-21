@@ -10,7 +10,9 @@ namespace HospitalManagement.Shared.Common
     {
         NotFound,
         Validation,
-        Conflict
+        Conflict,
+        Unauthorized,
+        UpstreamFailure
     }
 
     public class Result<T>

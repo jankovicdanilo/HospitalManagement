@@ -47,7 +47,8 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (doctorDomain is null)
             {
                 logger.LogWarning("Doctor with id {Id} not found for update", request.Id);
-                return Result<DoctorResponseDto>.Fail($"Doctor with the id {request.Id} doesn't exist!", "INVALID_ID", ErrorType.NotFound);
+                return Result<DoctorResponseDto>.Fail($"Doctor with the id {request.Id} doesn't exist!", "INVALID_ID", 
+                    ErrorType.NotFound);
             }
             mapper.Map(request, doctorDomain);
             doctorDomain = await doctorRepository.UpdateAsync(doctorDomain);

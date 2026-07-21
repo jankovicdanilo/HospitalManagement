@@ -34,21 +34,21 @@ namespace HospitalManagement.Appointments.Services.Validations
             {
                 return Result.Fail(
                     $"Appointment with id {request.AppointmentId} not found",
-                    "APPOINTMENT_NOT_FOUND");
+                    "APPOINTMENT_NOT_FOUND", ErrorType.NotFound);
             }
 
             if (await CheckTreatmentAlreadyExist(request.AppointmentId))
             {
                 return Result.Fail($"Treatment for appointment " +
                     $"with the id {request.AppointmentId}" +
-                    $" already exists", "TREATMENT_EXISTS");
+                    $" already exists", "TREATMENT_EXISTS", ErrorType.Conflict);
             }
 
             if (!await IsAppointmentCompleted(appointment.Status))
             {
                 return Result.Fail(
                     "Treatment can only be added to a completed appointment",
-                    "APPOINTMENT_NOT_COMPLETED");
+                    "APPOINTMENT_NOT_COMPLETED", ErrorType.Conflict);
             }
 
             return Result.Ok("Validation ok");

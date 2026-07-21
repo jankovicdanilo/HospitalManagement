@@ -31,7 +31,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (!validate.Success)
             {
                 logger.LogWarning("Treatment creation failed {Message}", validate.Message);
-                return Result<TreatmentCreateResponseDto>.Fail(validate.Message, validate.ErrorCode);
+                return Result<TreatmentCreateResponseDto>.Fail(validate.Message, validate.ErrorCode, validate.ErrorType);
             }
 
             var treatmentDomain = mapper.Map<Treatment>(request);

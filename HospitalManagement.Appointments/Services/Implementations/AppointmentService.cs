@@ -67,7 +67,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (appointmentDomain == null)
             {
                 logger.LogWarning("Appointment with id {id} not found", id);
-                return Result<AppointmentResponseDto>.Fail($"Appointment with the id {id} not found", "INVALID_ID");
+                return Result<AppointmentResponseDto>.Fail($"Appointment with the id {id} not found", "INVALID_ID",
+                    ErrorType.NotFound);
             }
 
             var doctor = await queryServiceClient.GetDoctorAsync(appointmentDomain.DoctorId);
@@ -90,7 +91,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (!validatedAppointment.Success)
             {
                 logger.LogWarning("Appointment creation failed: {Message}", validatedAppointment.Message);
-                return Result<AppointmentCreateResponseDto>.Fail(validatedAppointment.Message, validatedAppointment.ErrorCode);
+                return Result<AppointmentCreateResponseDto>.Fail(validatedAppointment.Message, validatedAppointment.ErrorCode,
+                    validatedAppointment.ErrorType);
             }
 
             var patient = await queryServiceClient.GetPatientAsync(request.PatientId);
@@ -100,13 +102,14 @@ namespace HospitalManagement.Appointments.Services.Implementations
             {
                 logger.LogWarning("Patient with id {PatientId} not found", request.PatientId);
                 return Result<AppointmentCreateResponseDto>.Fail($"Patient with id {request.PatientId} not found", 
-                    "INVALID_PATIENT_ID");
+                    "INVALID_PATIENT_ID", ErrorType.NotFound);
             }
 
             if (doctor == null)
             {
                 logger.LogWarning("Doctor with id {DoctorId} not found", request.DoctorId);
-                return Result<AppointmentCreateResponseDto>.Fail($"Doctor with id {request.DoctorId} not found", "INVALID_DOCTOR_ID");
+                return Result<AppointmentCreateResponseDto>.Fail($"Doctor with id {request.DoctorId} not found",
+                    "INVALID_DOCTOR_ID", ErrorType.NotFound);
             }
 
             var appointmentDomain = mapper.Map<Appointment>(request);
@@ -132,7 +135,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             {
                 logger.LogWarning("Appointment update failed : {Message}", validatedAppointment.Message);
                 return Result<AppointmentUpdateResponseDto>.Fail(validatedAppointment.Message,
-                    validatedAppointment.ErrorCode);
+                    validatedAppointment.ErrorCode, validatedAppointment.ErrorType);
             }
 
             var appointmentDomain = await appointmentRepository.GetByIdAsync(request.Id);
@@ -141,7 +144,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             {
                 logger.LogWarning("Appointment with id {Id} not found", request.Id);
                 return Result<AppointmentUpdateResponseDto>.Fail($"Appointment with the id {request.Id} not found",
-                    "INVALID_ID");
+                    "INVALID_ID", ErrorType.NotFound);
             }
 
             if (appointmentDomain.Status != AppointmentStatus.Pending)
@@ -149,7 +152,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
                 logger.LogWarning("Appointment with id {Id} cannot be updated, status is {Status}", request.Id, appointmentDomain.Status);
                 return Result<AppointmentUpdateResponseDto>.Fail(
                     $"Only pending appointments can be updated",
-                    "INVALID_STATUS");
+                    "INVALID_STATUS", ErrorType.Conflict);
             }
 
             var patient = await queryServiceClient.GetPatientAsync(request.PatientId);
@@ -158,13 +161,15 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (patient == null)
             {
                 logger.LogWarning("Patient with id {PatientId} not found", request.PatientId);
-                return Result<AppointmentUpdateResponseDto>.Fail($"Patient with id {request.PatientId} not found", "INVALID_PATIENT_ID");
+                return Result<AppointmentUpdateResponseDto>.Fail($"Patient with id {request.PatientId} not found", 
+                    "INVALID_PATIENT_ID", ErrorType.NotFound);
             }
 
             if (doctor == null)
             {
                 logger.LogWarning("Doctor with id {DoctorId} not found", request.DoctorId);
-                return Result<AppointmentUpdateResponseDto>.Fail($"Doctor with id {request.DoctorId} not found", "INVALID_DOCTOR_ID");
+                return Result<AppointmentUpdateResponseDto>.Fail($"Doctor with id {request.DoctorId} not found", 
+                    "INVALID_DOCTOR_ID", ErrorType.NotFound);
             }
 
             mapper.Map(request, appointmentDomain);
@@ -187,7 +192,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (appointmentDomain == null)
             {
                 logger.LogWarning("Appointment with id {Id} not found for deletion", id);
-                return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID");
+                return Result.Fail($"Appointment with the id {id} not found", "INVALID_ID", ErrorType.NotFound);
             }
 
             logger.LogInformation("Appointment with id {Id} deleted", id);
@@ -199,14 +204,16 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (date < DateOnly.FromDateTime(DateTime.UtcNow))
             {
                 logger.LogWarning("Free slots requested for past date {Date}", date);
-                return Result<List<TimeSlotDto>>.Fail("Cannot get free slots for a past date", "INVALID_DATE");
+                return Result<List<TimeSlotDto>>.Fail("Cannot get free slots for a past date", "INVALID_DATE",
+                    ErrorType.Validation);
             }
 
             var doctorSchedule = await queryServiceClient.GetDoctorScheduleAsync(doctorId, date.DayOfWeek);
             if (doctorSchedule == null)
             {
                 logger.LogWarning("Doctor {DoctorId} does not work on {DayOfWeek}", doctorId, date.DayOfWeek.ToString());
-                return Result<List<TimeSlotDto>>.Fail($"Doctor does not work on {date.DayOfWeek}", "DOCTOR_NOT_AVAILABLE");
+                return Result<List<TimeSlotDto>>.Fail($"Doctor does not work on {date.DayOfWeek}", "DOCTOR_NOT_AVAILABLE",
+                    ErrorType.Conflict);
             }
 
             var workStart = new TimeSpan(doctorSchedule.StartHour, 0, 0);
@@ -249,13 +256,14 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (appointmentDomain == null)
             {
                 logger.LogWarning("Appointment with id {Id} not found", request.Id);
-                return Result.Fail($"Appointment with the id {request.Id} not found", "INVALID_ID");
+                return Result.Fail($"Appointment with the id {request.Id} not found", "INVALID_ID", ErrorType.NotFound);
             }
 
             if (appointmentDomain.Status != AppointmentStatus.Pending)
             {
                 logger.LogWarning("Appointment with id {Id} cannot be updated, status is {Status}", request.Id, appointmentDomain.Status);
-                return Result.Fail("Only pending appointments can have their status changed", "INVALID_STATUS");
+                return Result.Fail("Only pending appointments can have their status changed", "INVALID_STATUS",
+                    ErrorType.Conflict);
             }
 
             appointmentDomain.Status = request.Status;
@@ -275,7 +283,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             {
                 logger.LogWarning("Patient with id {PatientId} not found", patientId);
                 return Result<List<AppointmentResponseDto>>.Fail(
-                    $"Patient with id {patientId} not found", "INVALID_PATIENT_ID");
+                    $"Patient with id {patientId} not found", "INVALID_PATIENT_ID", ErrorType.NotFound);
             }
 
             var appontiments = await appointmentRepository.GetByPatientIdAsync(patientId);

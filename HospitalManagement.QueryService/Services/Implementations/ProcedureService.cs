@@ -32,7 +32,8 @@ namespace HospitalManagement.QueryService.Services.Implementations
             if (procedure == null)
             {
                 logger.LogWarning("Procedure with id {id} not found", id);
-                return Result<ProcedureResponseDto>.Fail($"Procedure with id {id} not found", "INVALID_ID");
+                return Result<ProcedureResponseDto>.Fail($"Procedure with id {id} not found", "INVALID_ID",
+                    ErrorType.NotFound);
             }
             var result = mapper.Map<ProcedureResponseDto>(procedure);
             return Result<ProcedureResponseDto>.Ok(result);

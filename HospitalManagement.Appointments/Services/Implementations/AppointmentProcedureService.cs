@@ -37,7 +37,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (!validatedAppointmentProcedure.Success)
             {
                 logger.LogWarning("{Message}", validatedAppointmentProcedure.Message);
-                return Result<AppointmentProcedureCreateResponseDto>.Fail(validatedAppointmentProcedure.Message, validatedAppointmentProcedure.ErrorCode);
+                return Result<AppointmentProcedureCreateResponseDto>.Fail(validatedAppointmentProcedure.Message, 
+                    validatedAppointmentProcedure.ErrorCode, validatedAppointmentProcedure.ErrorType);
             }
 
             var procedure = await hospitalManagementClient.GetProcedureAsync(request.ProcedureId);
@@ -45,7 +46,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             {
                 logger.LogWarning("Procedure with id {ProcedureId} not found", request.ProcedureId);
                 return Result<AppointmentProcedureCreateResponseDto>.Fail($"Procedure with id {request.ProcedureId} not found",
-                    "INVALID_PROCEDURE_ID");
+                    "INVALID_PROCEDURE_ID", ErrorType.NotFound);
             }
 
             var appointmentProcedureDomain = mapper.Map<AppointmentProcedure>(request);
@@ -70,7 +71,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (!validatedAppointmentProcedure.Success)
             {
                 logger.LogWarning("{Message}", validatedAppointmentProcedure.Message);
-                return Result<AppointmentProcedureResponseDto>.Fail(validatedAppointmentProcedure.Message, validatedAppointmentProcedure.ErrorCode);
+                return Result<AppointmentProcedureResponseDto>.Fail(validatedAppointmentProcedure.Message, 
+                    validatedAppointmentProcedure.ErrorCode, validatedAppointmentProcedure.ErrorType);
             }
 
             var appointmentProcedureDomain = await appointmentProcedureRepository.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId);
@@ -78,7 +80,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (appointmentProcedureDomain == null)
             {
                 logger.LogWarning("Appointment {appointmentId} is not linked to Procedure {procedureId}", appointmentId, procedureId);
-                return Result<AppointmentProcedureResponseDto>.Fail($"Appointment {appointmentId} is not linked to Procedure {procedureId}", "INVALID_ID");
+                return Result<AppointmentProcedureResponseDto>.Fail($"Appointment {appointmentId} is not linked to Procedure " +
+                    $"{procedureId}", "INVALID_ID", ErrorType.NotFound);
             }
 
             var result = mapper.Map<AppointmentProcedureResponseDto>(appointmentProcedureDomain);
@@ -93,7 +96,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (!validatedAppointmentProcedure.Success)
             {
                 logger.LogWarning("{Message}", validatedAppointmentProcedure.Message);
-                return Result<AppointmentProcedureResponseDto>.Fail(validatedAppointmentProcedure.Message, validatedAppointmentProcedure.ErrorCode);
+                return Result<AppointmentProcedureResponseDto>.Fail(validatedAppointmentProcedure.Message, 
+                    validatedAppointmentProcedure.ErrorCode, validatedAppointmentProcedure.ErrorType);
             }
 
             var appointmentProcedureDomain = await appointmentProcedureRepository.DeleteAsync(appointmentId, procedureId);
@@ -101,7 +105,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             if (appointmentProcedureDomain == null)
             {
                 logger.LogWarning("Appointment {appointmentId} is not linked to Procedure {procedureId}", appointmentId, procedureId);
-                return Result<AppointmentProcedureResponseDto>.Fail($"Appointment {appointmentId} is not linked to Procedure {procedureId}", "INVALID_ID");
+                return Result<AppointmentProcedureResponseDto>.Fail($"Appointment {appointmentId} is not linked to Procedure " +
+                    $"{procedureId}", "INVALID_ID", ErrorType.NotFound);
             }
 
             logger.LogInformation("Procedure {ProcedureId} removed from Appointment {AppointmentId}", procedureId, appointmentId);
