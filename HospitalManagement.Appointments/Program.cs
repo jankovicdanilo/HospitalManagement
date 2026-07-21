@@ -12,6 +12,7 @@ using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Appointments.Settings;
+using HospitalManagement.Shared.Extensions;
 using HospitalManagement.Shared.Http;
 using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -163,6 +164,8 @@ try
         });
     });
 
+    builder.Services.AddFrontendCors(builder.Configuration);
+
     var app = builder.Build();
 
     using (var scope = app.Services.CreateScope())
@@ -170,6 +173,8 @@ try
         var db = scope.ServiceProvider.GetRequiredService<AppointmentDbContext>();
         db.Database.Migrate();
     }
+
+    app.UseCors("AllowFrontend");
 
     if (app.Environment.IsDevelopment())
     {
