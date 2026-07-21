@@ -5,6 +5,7 @@ using HospitalManagement.InvoiceService.Services.Docx;
 using HospitalManagement.InvoiceService.Services.Implementations;
 using HospitalManagement.InvoiceService.Services.Interfaces;
 using HospitalManagement.InvoiceService.Services.Pdf;
+using HospitalManagement.Shared.Extensions;
 using HospitalManagement.Shared.Http;
 using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -131,8 +132,7 @@ try
         });
     });
 
-
-
+    builder.Services.AddFrontendCors(builder.Configuration);
 
     var app = builder.Build();
 
@@ -142,6 +142,8 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    app.UseCors("AllowFrontend");
 
     app.UseHttpsRedirection();
     app.UseAuthentication();

@@ -4,6 +4,7 @@ using HospitalManagement.Auth.Repositories.Implementations;
 using HospitalManagement.Auth.Repositories.Interfaces;
 using HospitalManagement.Auth.Services.Implementations;
 using HospitalManagement.Auth.Services.Interfaces;
+using HospitalManagement.Shared.Extensions;
 using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -127,6 +128,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddFrontendCors(builder.Configuration);
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -135,6 +138,8 @@ using (var scope = app.Services.CreateScope())
     context.Database.Migrate();
     await SeedData.SeedAdminAsync(context);
 }
+
+app.UseCors("AllowFrontend");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

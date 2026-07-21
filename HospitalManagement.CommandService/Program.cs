@@ -5,7 +5,7 @@ using HospitalManagement.CommandService.Services.Implementations;
 using HospitalManagement.CommandService.Services.Interfaces;
 using HospitalManagement.Shared.Data;
 using HospitalManagement.Shared.Settings;
-using MassTransit;
+using HospitalManagement.Shared.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -144,6 +144,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddFrontendCors(builder.Configuration);
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -151,6 +153,8 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<HospitalManagementDbContext>();
     context.Database.Migrate();
 }
+
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {

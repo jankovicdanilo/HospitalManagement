@@ -7,6 +7,7 @@ using HospitalManagement.QueryService.Services.Implementations;
 using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Data;
 using HospitalManagement.Shared.Settings;
+using HospitalManagement.Shared.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -151,7 +152,11 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddFrontendCors(builder.Configuration);
+
 var app = builder.Build();
+
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {

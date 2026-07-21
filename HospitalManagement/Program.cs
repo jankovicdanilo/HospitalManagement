@@ -4,6 +4,7 @@ using HospitalManagement.Repositories.Implementations;
 using HospitalManagement.Repositories.Interfaces;
 using HospitalManagement.Services.Implementations;
 using HospitalManagement.Services.Interfaces;
+using HospitalManagement.Shared.Extensions;
 using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -134,6 +135,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddFrontendCors(builder.Configuration);
+
 var app = builder.Build();
 
 using(var scope = app.Services.CreateScope())
@@ -141,6 +144,8 @@ using(var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<HospitalDbContext>();
     context.Database.Migrate();
 }
+
+app.UseCors("AllowFrontend");
 
 // Enable Swagger only in development environment
 if (app.Environment.IsDevelopment())

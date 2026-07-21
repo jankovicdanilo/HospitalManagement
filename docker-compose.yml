@@ -28,6 +28,8 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Cors__AllowedOrigins__1: http://localhost:5174
     volumes:
       - ./logs/api:/app/logs
     depends_on:
@@ -47,6 +49,8 @@ services:
       Jwt__Key: ${JWT_KEY}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Cors__AllowedOrigins__1: http://localhost:5174
     volumes:
       - ./logs/auth:/app/logs
     depends_on:
@@ -68,6 +72,8 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__ExpiryMinutes: "60"
       QueryService__BaseUrl: ${QUERY_SERVICE_URL}
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Cors__AllowedOrigins__1: http://localhost:5174
     volumes:
       - ./logs/appointments:/app/logs
     depends_on:
@@ -90,6 +96,8 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__ExpiryMinutes: "60"
       AppointmentService__BaseUrl: ${APPOINTMENT_SERVICE_URL}
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Cors__AllowedOrigins__1: http://localhost:5174
     volumes:
       - ./logs/invoice:/app/logs
     depends_on:
@@ -113,6 +121,8 @@ services:
       RabbitMq__Username: ${RABBITMQ_USER}
       RabbitMq__Password: ${RABBITMQ_PASS}
       Redis__ConnectionString: "redis:6379"
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Cors__AllowedOrigins__1: http://localhost:5174
     volumes:
       - ./logs/command:/app/logs
     depends_on:
@@ -139,6 +149,8 @@ services:
       RabbitMq__Password: ${RABBITMQ_PASS}
       AppointmentService__BaseUrl: ${APPOINTMENT_SERVICE_URL}
       Redis__ConnectionString: "redis:6379"
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Cors__AllowedOrigins__1: http://localhost:5174
     volumes:
       - ./logs/query:/app/logs
     depends_on:
