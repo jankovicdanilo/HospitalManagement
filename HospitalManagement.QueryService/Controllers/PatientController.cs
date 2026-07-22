@@ -30,7 +30,7 @@ namespace HospitalManagement.QueryService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
             return Ok(result);
@@ -43,7 +43,7 @@ namespace HospitalManagement.QueryService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
             return Ok(result);

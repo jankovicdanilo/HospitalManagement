@@ -30,7 +30,7 @@ namespace HospitalManagement.QueryService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(result);
+                return HandleFailure(result);
             }
 
             return Ok(result);

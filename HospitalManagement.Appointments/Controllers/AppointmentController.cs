@@ -25,7 +25,7 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
             return Ok(result);
@@ -47,7 +47,7 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
             return Ok(result);
@@ -68,7 +68,7 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
 
@@ -91,7 +91,7 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
             return Ok(result);
@@ -112,7 +112,7 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return BadRequest(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
             return Ok(result);
@@ -133,7 +133,7 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return BadRequest(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
             return Ok(result);
@@ -146,7 +146,7 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
             return Ok(result);

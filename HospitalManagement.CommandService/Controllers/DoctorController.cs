@@ -51,7 +51,7 @@ namespace HospitalManagement.CommandService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(result);
+                return HandleFailure(result);
             }
 
             return Ok(result);
@@ -64,7 +64,7 @@ namespace HospitalManagement.CommandService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(result);
+                return HandleFailure(result);
             }
 
             return Ok(result);

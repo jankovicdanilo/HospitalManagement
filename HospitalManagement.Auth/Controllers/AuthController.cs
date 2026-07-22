@@ -38,7 +38,7 @@ namespace HospitalManagement.Auth.Controllers
 
             if (!result.Success)
             {
-                return BadRequest(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
             return Ok(result.Data);
@@ -61,7 +61,7 @@ namespace HospitalManagement.Auth.Controllers
 
             if (!result.Success)
             {
-                return Unauthorized(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
             return Ok(result.Data);
@@ -75,7 +75,7 @@ namespace HospitalManagement.Auth.Controllers
 
             if (!result.Success)
             {
-                return BadRequest(new { result.Message, result.ErrorType });
+                return HandleFailure(result);
             }
 
             return Ok(result.Data);
@@ -90,7 +90,7 @@ namespace HospitalManagement.Auth.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
             return Ok(result.Data);
@@ -104,7 +104,7 @@ namespace HospitalManagement.Auth.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
             return Ok(result);
@@ -127,7 +127,7 @@ namespace HospitalManagement.Auth.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
             return Ok(result.Data);
