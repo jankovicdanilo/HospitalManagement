@@ -31,6 +31,10 @@ namespace HospitalManagement.CommandService.Controllers
             }
 
             var result = await doctorService.CreateAsync(request);
+            if (!result.Success)
+            {
+                return HandleFailure(result);
+            }
 
             return Ok(result);
         }
