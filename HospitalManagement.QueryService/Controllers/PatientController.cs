@@ -20,7 +20,12 @@ namespace HospitalManagement.QueryService.Controllers
         {
             var result = await patientService.GetAllAsync();
 
-            return Ok(result);
+            if (!result.Success)
+            {
+                return HandleFailure(result);
+            }
+
+            return Ok(result.Data);
         }
 
         [HttpGet("{id:int}")]
@@ -33,7 +38,7 @@ namespace HospitalManagement.QueryService.Controllers
                 return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpGet("{patientId:int}/history")]
@@ -46,7 +51,7 @@ namespace HospitalManagement.QueryService.Controllers
                 return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }

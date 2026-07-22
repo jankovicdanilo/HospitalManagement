@@ -35,7 +35,7 @@ namespace HospitalManagement.CommandService.Controllers
                 return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpPut]
@@ -55,7 +55,7 @@ namespace HospitalManagement.CommandService.Controllers
                 return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpDelete("{id:int}")]
@@ -68,7 +68,7 @@ namespace HospitalManagement.CommandService.Controllers
                 return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(new {result.Message} );
         }
     }
 }

@@ -107,7 +107,7 @@ namespace HospitalManagement.Auth.Controllers
                 return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(new {result.Message});
         }
 
         [HttpPut]

@@ -35,7 +35,7 @@ namespace HospitalManagement.Appointments.Controllers
                 return HandleFailure(result);
             }
                 
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }

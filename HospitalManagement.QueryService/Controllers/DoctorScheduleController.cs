@@ -25,7 +25,7 @@ namespace HospitalManagement.QueryService.Controllers
                 return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpGet("doctor/{doctorId:int}")]
@@ -38,7 +38,7 @@ namespace HospitalManagement.QueryService.Controllers
                 return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpGet("doctor/{doctorId:int}/day/{dayOfWeek}")]
@@ -51,7 +51,7 @@ namespace HospitalManagement.QueryService.Controllers
                 return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }
