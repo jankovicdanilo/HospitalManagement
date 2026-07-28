@@ -39,13 +39,16 @@ namespace HospitalManagement.QueryService.Tests.Services
             var patients = new List<Patient> { new Patient { Id = 1, Name = "John" } };
             var patientDtos = new List<PatientListDto> { new PatientListDto { Id = 1, Name = "John", LastName = "Doe", Email = "j@d.com" } };
 
-            patientRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(patients);
+            patientRepositoryMock.Setup(r => r.GetAllAsync(1, 20)).ReturnsAsync((patients, patients.Count));
             mapperMock.Setup(m => m.Map<List<PatientListDto>>(patients)).Returns(patientDtos);
 
-            var result = await patientService.GetAllAsync();
+            var result = await patientService.GetAllAsync(1, 20);
 
             Assert.That(result.Success, Is.True);
-            Assert.That(result.Data, Is.EqualTo(patientDtos));
+            Assert.That(result.Data!.Items, Is.EqualTo(patientDtos));
+            Assert.That(result.Data.TotalCount, Is.EqualTo(patients.Count));
+            Assert.That(result.Data.PageNumber, Is.EqualTo(1));
+            Assert.That(result.Data.PageSize, Is.EqualTo(20));
         }
 
         [Test]
@@ -54,13 +57,30 @@ namespace HospitalManagement.QueryService.Tests.Services
             var patients = new List<Patient>();
             var patientDtos = new List<PatientListDto>();
 
-            patientRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(patients);
+            patientRepositoryMock.Setup(r => r.GetAllAsync(1, 20)).ReturnsAsync((patients, 0));
             mapperMock.Setup(m => m.Map<List<PatientListDto>>(patients)).Returns(patientDtos);
 
-            var result = await patientService.GetAllAsync();
+            var result = await patientService.GetAllAsync(1, 20);
 
             Assert.That(result.Success, Is.True);
-            Assert.That(result.Data, Is.Empty);
+            Assert.That(result.Data!.Items, Is.Empty);
+            Assert.That(result.Data.TotalCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public async Task GetAllAsync_SecondPage_PassesCorrectPageNumberToRepository()
+        {
+            var patients = new List<Patient> { new Patient { Id = 21, Name = "Jane" } };
+            var patientDtos = new List<PatientListDto> { new PatientListDto { Id = 21, Name = "Jane", LastName = "Doe", Email = "jane@d.com" } };
+
+            patientRepositoryMock.Setup(r => r.GetAllAsync(2, 20)).ReturnsAsync((patients, 21));
+            mapperMock.Setup(m => m.Map<List<PatientListDto>>(patients)).Returns(patientDtos);
+
+            var result = await patientService.GetAllAsync(2, 20);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data!.PageNumber, Is.EqualTo(2));
+            patientRepositoryMock.Verify(r => r.GetAllAsync(2, 20), Times.Once);
         }
 
         [Test]

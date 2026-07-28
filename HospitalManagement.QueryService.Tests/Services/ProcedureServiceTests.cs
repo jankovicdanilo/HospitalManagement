@@ -61,13 +61,14 @@ namespace HospitalManagement.QueryService.Tests.Services
             var procedures = new List<Procedure> { new Procedure { Id = 1, Name = "Test" } };
             var procedureDtos = new List<ProcedureListDto> { new ProcedureListDto { Id = 1, Name = "Test" } };
 
-            procedureRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(procedures);
+            procedureRepositoryMock.Setup(r => r.GetAllAsync(1, 20)).ReturnsAsync((procedures, procedures.Count));
             mapperMock.Setup(m => m.Map<List<ProcedureListDto>>(procedures)).Returns(procedureDtos);
 
-            var result = await procedureService.GetAllAsync();
+            var result = await procedureService.GetAllAsync(1, 20);
 
             Assert.That(result.Success, Is.True);
-            Assert.That(result.Data, Is.EqualTo(procedureDtos));
+            Assert.That(result.Data!.Items, Is.EqualTo(procedureDtos));
+            Assert.That(result.Data.TotalCount, Is.EqualTo(procedures.Count));
         }
 
         [Test]
@@ -76,13 +77,13 @@ namespace HospitalManagement.QueryService.Tests.Services
             var procedures = new List<Procedure>();
             var procedureDtos = new List<ProcedureListDto>();
 
-            procedureRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(procedures);
+            procedureRepositoryMock.Setup(r => r.GetAllAsync(1, 20)).ReturnsAsync((procedures, 0));
             mapperMock.Setup(m => m.Map<List<ProcedureListDto>>(procedures)).Returns(procedureDtos);
 
-            var result = await procedureService.GetAllAsync();
+            var result = await procedureService.GetAllAsync(1, 20);
 
             Assert.That(result.Success, Is.True);
-            Assert.That(result.Data, Is.Empty);
+            Assert.That(result.Data!.Items, Is.Empty);
         }
     }
 }
