@@ -5,7 +5,7 @@ namespace HospitalManagement.QueryService.Services.Interfaces
 {
     public interface IProcedureService
     {
-        Task<Result<List<ProcedureListDto>>> GetAllAsync();
+        Task<Result<PagedResult<ProcedureListDto>>> GetAllAsync(int pageNumber, int pageSize);
         Task<Result<ProcedureResponseDto>> GetByIdAsync(int id);
     }
 }

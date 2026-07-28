@@ -1,5 +1,7 @@
+using FluentValidation;
 using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
+using HospitalManagement.Shared.Models.DTOs.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalManagement.QueryService.Controllers
@@ -16,9 +18,15 @@ namespace HospitalManagement.QueryService.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync([FromQuery] PageQueryDto query, [FromServices] IValidator<PageQueryDto> validator)
         {
-            var result = await procedureService.GetAllAsync();
+            var validation = await validator.ValidateAsync(query);
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
+            var result = await procedureService.GetAllAsync(query.PageNumber, query.PageSize);
 
             if (!result.Success)
             {

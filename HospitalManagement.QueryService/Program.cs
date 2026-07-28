@@ -6,8 +6,9 @@ using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Implementations;
 using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Data;
-using HospitalManagement.Shared.Settings;
 using HospitalManagement.Shared.Extensions;
+using HospitalManagement.Shared.Settings;
+using HospitalManagement.Shared.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,8 @@ builder.Services.AddSingleton<IAsyncPolicy>(sp =>
                 onHalfOpen: () => logger.LogInformation("Redis circuit half-open, testing connection")
             );
 });
+
+builder.Services.AddValidatorsFromAssemblyContaining<PageQueryValidator>();
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {

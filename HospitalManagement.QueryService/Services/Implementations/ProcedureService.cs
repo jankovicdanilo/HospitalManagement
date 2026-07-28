@@ -19,11 +19,20 @@ namespace HospitalManagement.QueryService.Services.Implementations
             this.logger = logger;
         }
 
-        public async Task<Result<List<ProcedureListDto>>> GetAllAsync()
+        public async Task<Result<PagedResult<ProcedureListDto>>> GetAllAsync(int pageNumber, int pageSize)
         {
-            var procedures = await procedureRepository.GetAllAsync();
-            var result = mapper.Map<List<ProcedureListDto>>(procedures);
-            return Result<List<ProcedureListDto>>.Ok(result);
+            var (procedures, totalCount) = await procedureRepository.GetAllAsync(pageNumber, pageSize);
+            var mapped = mapper.Map<List<ProcedureListDto>>(procedures);
+
+            var pagedResult = new PagedResult<ProcedureListDto>
+            {
+                Items = mapped,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            return Result<PagedResult<ProcedureListDto>>.Ok(pagedResult);
         }
 
         public async Task<Result<ProcedureResponseDto>> GetByIdAsync(int id)

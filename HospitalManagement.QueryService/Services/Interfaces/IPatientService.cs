@@ -5,7 +5,7 @@ namespace HospitalManagement.QueryService.Services.Interfaces
 {
     public interface IPatientService
     {
-        Task<Result<List<PatientListDto>>> GetAllAsync();
+        Task<Result<PagedResult<PatientListDto>>> GetAllAsync(int pageNumber, int pageSize);
         Task<Result<PatientGetByIdDto?>> GetByIdAsync(int id);
         Task<Result<PatientMedicalHistoryDto>> GetMedicalHistoryAsync(int patientId);
     }

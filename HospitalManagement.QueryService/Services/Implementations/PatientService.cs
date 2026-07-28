@@ -23,11 +23,20 @@ namespace HospitalManagement.QueryService.Services.Implementations
             this.appointmentServiceClient = appointmentServiceClient;
         }
 
-        public async Task<Result<List<PatientListDto>>> GetAllAsync()
+        public async Task<Result<PagedResult<PatientListDto>>> GetAllAsync(int pageNumber, int pageSize)
         {
-            var patients = await patientRepository.GetAllAsync();
-            var result = mapper.Map<List<PatientListDto>>(patients);
-            return Result<List<PatientListDto>>.Ok(result);
+            var (patients, totalCount) = await patientRepository.GetAllAsync(pageNumber, pageSize);
+            var mapped = mapper.Map<List<PatientListDto>>(patients);
+
+            var pagedResult = new PagedResult<PatientListDto>
+            {
+                Items = mapped,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            return Result<PagedResult<PatientListDto>>.Ok(pagedResult);
         }
 
         public async Task<Result<PatientGetByIdDto?>> GetByIdAsync(int id)

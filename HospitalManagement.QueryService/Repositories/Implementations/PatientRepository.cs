@@ -14,9 +14,16 @@ namespace HospitalManagement.QueryService.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public async Task<List<Patient>> GetAllAsync()
+        public async Task<(List<Patient> items, int totalCount)> GetAllAsync(int pageNumber, int pageSize)
         {
-            return await dbContext.Patients.AsNoTracking().ToListAsync();
+            var query = dbContext.Patients.AsNoTracking().OrderBy(x => x.Id);
+
+            var totalCount = await query.CountAsync();
+            var offset = (pageNumber -1) * pageSize;
+
+            var items = await query.Skip(offset).Take(pageSize).ToListAsync();
+
+            return (items, totalCount);
         }
 
         public async Task<Patient?> GetByIdAsync(int id)
