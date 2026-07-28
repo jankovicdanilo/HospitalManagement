@@ -37,7 +37,7 @@ namespace HospitalManagement.Auth.Services.Implementations
             {
                 logger.LogWarning("Registration failed, username {Username} already exists", request.Username);
                 return Result<AuthResponseDto>.Fail
-                    ($"Username {request.Username} already exists", "USERNAME_TAKEN");
+                    ($"Username {request.Username} already exists", "USERNAME_TAKEN", ErrorType.Conflict);
             }
 
             var existingEmail = await authRepository.GetByEmailAsync(request.Email);
@@ -45,7 +45,7 @@ namespace HospitalManagement.Auth.Services.Implementations
             if (existingEmail != null)
             {
                 logger.LogWarning("Registration failed, email {Email} already exists", request.Email);
-                return Result<AuthResponseDto>.Fail($"Email {request.Email} already exists", "EMAIL_TAKEN");
+                return Result<AuthResponseDto>.Fail($"Email {request.Email} already exists", "EMAIL_TAKEN", ErrorType.Conflict);
             }
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -74,7 +74,7 @@ namespace HospitalManagement.Auth.Services.Implementations
             if (user == null)
             {
                 logger.LogWarning("Login failed, username {Username} not found", request.Username);
-                return Result<AuthResponseDto>.Fail("Invalid credentials", "INVALID_CREDENTIALS");
+                return Result<AuthResponseDto>.Fail("Invalid credentials", "INVALID_CREDENTIALS", ErrorType.Unauthorized);
             }
 
             var isValidPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
@@ -82,7 +82,7 @@ namespace HospitalManagement.Auth.Services.Implementations
             if (!isValidPassword)
             {
                 logger.LogWarning("Login failed, invalid password for username {Username}", request.Username);
-                return Result<AuthResponseDto>.Fail("Invalid credentials", "INVALID_CREDENTIALS");
+                return Result<AuthResponseDto>.Fail("Invalid credentials", "INVALID_CREDENTIALS", ErrorType.Unauthorized);
             }
 
             logger.LogInformation("User {Username} logged in", user.Username);
@@ -136,7 +136,7 @@ namespace HospitalManagement.Auth.Services.Implementations
             if (user == null)
             {
                 logger.LogWarning("User with id {Id} not found", id);
-                return Result<CurrentUserDto>.Fail($"User with the id {id} not found", "USER_NOT_FOUND");
+                return Result<CurrentUserDto>.Fail($"User with the id {id} not found", "USER_NOT_FOUND", ErrorType.NotFound);
             }
 
             var result = mapper.Map<CurrentUserDto>(user);
@@ -149,7 +149,7 @@ namespace HospitalManagement.Auth.Services.Implementations
             if (await authRepository.GetByIdAsync(id) == null)
             {
                 logger.LogWarning("User with id {Id} not found for deletion", id);
-                return Result.Fail($"User with the {id} not found", "USER_NOT_FOUND");
+                return Result.Fail($"User with the {id} not found", "USER_NOT_FOUND", ErrorType.NotFound);
             }
 
             await authRepository.Delete(id);
@@ -167,7 +167,7 @@ namespace HospitalManagement.Auth.Services.Implementations
             {
                 logger.LogWarning("User with id {Id} not found for update", request.Id);
                 return Result<AuthResponseUpdateDto>.Fail
-                    ($"User with the {request.Id} not found", "USER_NOT_FOUND");
+                    ($"User with the {request.Id} not found", "USER_NOT_FOUND", ErrorType.NotFound);
             }
 
             mapper.Map(request, user);

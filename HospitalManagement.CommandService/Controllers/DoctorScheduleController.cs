@@ -32,10 +32,10 @@ namespace HospitalManagement.CommandService.Controllers
 
             if (!result.Success)
             {
-                return BadRequest(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpPut]
@@ -52,10 +52,10 @@ namespace HospitalManagement.CommandService.Controllers
 
             if (!result.Success)
             {
-                return BadRequest(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpDelete("{id:int}")]
@@ -65,10 +65,10 @@ namespace HospitalManagement.CommandService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(new {result.Message} );
         }
     }
 }

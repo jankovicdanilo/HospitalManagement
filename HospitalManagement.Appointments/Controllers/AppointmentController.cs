@@ -25,10 +25,10 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
-            return Ok(result);
+            return Ok(new { result.Message });
         }
 
         [HttpPut]
@@ -47,10 +47,10 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpGet]
@@ -58,7 +58,12 @@ namespace HospitalManagement.Appointments.Controllers
         {
             var result = await appointmentService.GetAllAsync(filter);
 
-            return Ok(result);
+            if (!result.Success)
+            {
+                return HandleFailure(result);
+            }
+
+            return Ok(result.Data);
         }
 
         [HttpGet("{id:int}")]
@@ -68,11 +73,11 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpPost]
@@ -91,10 +96,10 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpGet("free-slots")]
@@ -112,10 +117,10 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return BadRequest(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpPatch("status")]
@@ -133,10 +138,10 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return BadRequest(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
-            return Ok(result);
+            return Ok(new { result.Message });
         }
 
         [HttpGet("patient/{patientId:int}/history")]
@@ -146,10 +151,10 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }

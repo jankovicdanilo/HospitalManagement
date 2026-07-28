@@ -20,7 +20,12 @@ namespace HospitalManagement.QueryService.Controllers
         {
             var result = await procedureService.GetAllAsync();
 
-            return Ok(result);
+            if (!result.Success)
+            {
+                return HandleFailure(result);
+            }
+
+            return Ok(result.Data);
         }
 
         [HttpGet("{id:int}")]
@@ -30,10 +35,10 @@ namespace HospitalManagement.QueryService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }

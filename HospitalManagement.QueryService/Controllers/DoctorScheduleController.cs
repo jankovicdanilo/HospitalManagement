@@ -22,10 +22,10 @@ namespace HospitalManagement.QueryService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpGet("doctor/{doctorId:int}")]
@@ -35,10 +35,10 @@ namespace HospitalManagement.QueryService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpGet("doctor/{doctorId:int}/day/{dayOfWeek}")]
@@ -48,10 +48,10 @@ namespace HospitalManagement.QueryService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }

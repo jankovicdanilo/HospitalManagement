@@ -27,13 +27,15 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (!doctorExists)
             {
                 logger.LogWarning("Doctor with id {DoctorId} not found", request.DoctorId);
-                return Result<DoctorScheduleCreateResponseDto>.Fail($"Doctor with id {request.DoctorId} not found", "INVALID_DOCTOR_ID");
+                return Result<DoctorScheduleCreateResponseDto>.Fail($"Doctor with id {request.DoctorId} not found", 
+                    "INVALID_DOCTOR_ID", ErrorType.NotFound);
             }
             var existing = await doctorScheduleRepository.GetByDoctorIdAndDayAsync(request.DoctorId, request.DayOfWeek);
             if (existing != null)
             {
                 logger.LogWarning("Doctor {DoctorId} already has a schedule for {DayOfWeek}", request.DoctorId, request.DayOfWeek);
-                return Result<DoctorScheduleCreateResponseDto>.Fail($"Doctor already has a schedule for {request.DayOfWeek}", "DUPLICATE_SCHEDULE");
+                return Result<DoctorScheduleCreateResponseDto>.Fail($"Doctor already has a schedule for {request.DayOfWeek}", 
+                    "DUPLICATE_SCHEDULE", ErrorType.Conflict);
             }
             var doctorScheduleDomain = mapper.Map<DoctorSchedule>(request);
 
@@ -52,13 +54,15 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (existing == null)
             {
                 logger.LogWarning("Doctor schedule with id {Id} not found", request.Id);
-                return Result<DoctorScheduleUpdateResponseDto>.Fail($"Doctor schedule with id {request.Id} not found", "INVALID_ID");
+                return Result<DoctorScheduleUpdateResponseDto>.Fail($"Doctor schedule with id {request.Id} not found", 
+                    "INVALID_ID", ErrorType.NotFound);
             }
             var duplicate = await doctorScheduleRepository.GetByDoctorIdAndDayAsync(existing.DoctorId, request.DayOfWeek);
             if (duplicate != null && duplicate.Id != request.Id)
             {
                 logger.LogWarning("Doctor {DoctorId} already has a schedule for {DayOfWeek}", existing.DoctorId, request.DayOfWeek);
-                return Result<DoctorScheduleUpdateResponseDto>.Fail($"Doctor already has a schedule for {request.DayOfWeek}", "DUPLICATE_SCHEDULE");
+                return Result<DoctorScheduleUpdateResponseDto>.Fail($"Doctor already has a schedule for {request.DayOfWeek}", 
+                    "DUPLICATE_SCHEDULE", ErrorType.Conflict);
             }
             existing.DayOfWeek = request.DayOfWeek;
             existing.StartHour = request.StartHour;
@@ -76,7 +80,7 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (doctorScheduleDomain == null)
             {
                 logger.LogWarning("Doctor schedule for id {Id} not found for deletion", id);
-                return Result.Fail($"Doctor schedule id {id} not found", "INVALID_ID");
+                return Result.Fail($"Doctor schedule id {id} not found", "INVALID_ID", ErrorType.NotFound);
             }
 
             logger.LogInformation("Doctor schedule with id {Id} deleted, DoctorScheduleDeleted event published", id);

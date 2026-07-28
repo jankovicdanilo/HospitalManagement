@@ -8,5 +8,6 @@ namespace HospitalManagement.CommandService.Repositories.Interfaces
         Task<Doctor?> UpdateAsync(Doctor request);
         Task Delete(int id);
         Task<Doctor?> GetByIdAsync(int id);
+        Task<Doctor?> GetByEmailAsync(string email);
     }
 }

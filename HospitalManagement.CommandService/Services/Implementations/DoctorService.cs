@@ -31,6 +31,14 @@ namespace HospitalManagement.CommandService.Services.Implementations
 
         public async Task<Result<DoctorResponseDto>> CreateAsync(DoctorCreateRequestDto request)
         {
+            var doctorExists = await doctorRepository.GetByEmailAsync(request.Email);
+            if (doctorExists != null)
+            {
+                logger.LogWarning("Doctor creation failed, email {Email} already exists", request.Email);
+                return Result<DoctorResponseDto>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL",
+                    ErrorType.Conflict);
+            }
+
             var doctorDomain = mapper.Map<Doctor>(request);
             doctorDomain = await doctorRepository.CreateAsync(doctorDomain);
 
@@ -47,8 +55,18 @@ namespace HospitalManagement.CommandService.Services.Implementations
             if (doctorDomain is null)
             {
                 logger.LogWarning("Doctor with id {Id} not found for update", request.Id);
-                return Result<DoctorResponseDto>.Fail($"Doctor with the id {request.Id} doesn't exist!", "INVALID_ID", ErrorType.NotFound);
+                return Result<DoctorResponseDto>.Fail($"Doctor with the id {request.Id} doesn't exist!", "INVALID_ID", 
+                    ErrorType.NotFound);
             }
+
+            var emailOwner = await doctorRepository.GetByEmailAsync(request.Email);
+            if (emailOwner != null && emailOwner.Id != request.Id)
+            {
+                logger.LogWarning("Doctor update failed, email {Email} already exists", request.Email);
+                return Result<DoctorResponseDto>.Fail($"Email {request.Email} already exists", "INVALID_EMAIL",
+                    ErrorType.Conflict);
+            }
+
             mapper.Map(request, doctorDomain);
             doctorDomain = await doctorRepository.UpdateAsync(doctorDomain);
 

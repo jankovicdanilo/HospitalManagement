@@ -1,7 +1,8 @@
+using HospitalManagement.CommandService.Repositories.Interfaces;
 using HospitalManagement.Shared.Data;
 using HospitalManagement.Shared.Models.Domain;
-using HospitalManagement.CommandService.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Polly;
 
 namespace HospitalManagement.CommandService.Repositories.Implementations
 {
@@ -38,6 +39,12 @@ namespace HospitalManagement.CommandService.Repositories.Implementations
         public async Task<Doctor?> GetByIdAsync(int id)
         {
             return await dbContext.Doctors.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<Doctor?> GetByEmailAsync(string email)
+        {
+            return await dbContext.Doctors
+                .FirstOrDefaultAsync(x => x.Email == email);
         }
     }
 }

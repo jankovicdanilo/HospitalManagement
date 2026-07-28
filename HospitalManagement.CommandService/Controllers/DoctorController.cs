@@ -31,8 +31,12 @@ namespace HospitalManagement.CommandService.Controllers
             }
 
             var result = await doctorService.CreateAsync(request);
+            if (!result.Success)
+            {
+                return HandleFailure(result);
+            }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpPut]
@@ -51,10 +55,10 @@ namespace HospitalManagement.CommandService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(result);
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpDelete("{id:int}")]
@@ -64,10 +68,10 @@ namespace HospitalManagement.CommandService.Controllers
 
             if (!result.Success)
             {
-                return NotFound(result);
+                return HandleFailure(result);
             }
 
-            return Ok(result);
+            return Ok(new { result.Message });
         }
     }
 }

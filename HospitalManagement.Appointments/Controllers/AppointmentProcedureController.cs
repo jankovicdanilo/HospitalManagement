@@ -23,10 +23,10 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpGet]
@@ -36,10 +36,10 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
-            return Ok(result);
+            return Ok(result.Data);
         }
 
         [HttpDelete]
@@ -49,10 +49,10 @@ namespace HospitalManagement.Appointments.Controllers
 
             if (!result.Success)
             {
-                return NotFound(new { result.Message, result.ErrorCode });
+                return HandleFailure(result);
             }
                 
-            return Ok(result);
+            return Ok(result.Data);
         }
     }
 }
