@@ -2,6 +2,7 @@ using HospitalManagement.Shared.Data;
 using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using HospitalManagement.Shared.Extensions;
 
 namespace HospitalManagement.QueryService.Repositories.Implementations
 {
@@ -16,14 +17,7 @@ namespace HospitalManagement.QueryService.Repositories.Implementations
 
         public async Task<(List<Doctor> items, int totalCount)> GetAllAsync(int pageNumber, int pageSize)
         {
-            var query = dbContext.Doctors.AsNoTracking().OrderBy(x => x.Id);
-
-            var totalCount = await query.CountAsync();
-            var offset = (pageNumber - 1) * pageSize;
-
-            var items = await query.Skip(offset).Take(pageSize).ToListAsync();
-
-            return (items, totalCount);
+            return await dbContext.Doctors.AsNoTracking().ToPagedResultAsync(x => x.Id, pageNumber, pageSize);
         }
 
         public async Task<Doctor?> GetByIdAsync(int id)
