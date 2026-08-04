@@ -29,11 +29,20 @@ namespace HospitalManagement.QueryService.Services.Implementations
             this.cachePolicy = cachePolicy;
         }
 
-        public async Task<Result<List<DoctorResponseDto>>> GetAllAsync()
+        public async Task<Result<PagedResult<DoctorResponseDto>>> GetAllAsync(int pageNumber, int pageSize)
         {
-            var doctors = await doctorRepository.GetAllAsync();
-            var result = mapper.Map<List<DoctorResponseDto>>(doctors);
-            return Result<List<DoctorResponseDto>>.Ok(result);
+            var (doctors, totalCount) = await doctorRepository.GetAllAsync(pageNumber, pageSize);
+            var mapped = mapper.Map<List<DoctorResponseDto>>(doctors);
+
+            var pagedResult = new PagedResult<DoctorResponseDto>
+            {
+                Items = mapped,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            return Result<PagedResult<DoctorResponseDto>>.Ok(pagedResult);
         }
 
         public async Task<Result<DoctorResponseDto>> GetByIdAsync(int id)

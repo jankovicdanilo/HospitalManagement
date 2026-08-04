@@ -2,6 +2,7 @@ using HospitalManagement.Shared.Data;
 using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using HospitalManagement.Shared.Extensions;
 
 namespace HospitalManagement.QueryService.Repositories.Implementations
 {
@@ -14,9 +15,9 @@ namespace HospitalManagement.QueryService.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public async Task<List<Patient>> GetAllAsync()
+        public async Task<(List<Patient> items, int totalCount)> GetAllAsync(int pageNumber, int pageSize)
         {
-            return await dbContext.Patients.AsNoTracking().ToListAsync();
+            return await dbContext.Patients.AsNoTracking().ToPagedResultAsync(x => x.Id, pageNumber, pageSize);
         }
 
         public async Task<Patient?> GetByIdAsync(int id)
