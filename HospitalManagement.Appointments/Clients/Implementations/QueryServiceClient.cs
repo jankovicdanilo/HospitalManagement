@@ -31,12 +31,13 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             {
                 var response = await httpClient.GetAsync($"api/doctor/{doctorId}");
                 if (!response.IsSuccessStatusCode)
+                {
                     return null;
+                }
+                    
                 var json = await response.Content.ReadAsStringAsync();
                 logger.LogInformation("Response body: {Json}", json);
-                var result = JsonSerializer.Deserialize<ApiResponse<DoctorResponseDto>>(json, JsonOptions);
-
-                return result?.Data;
+                return JsonSerializer.Deserialize<DoctorResponseDto>(json, JsonOptions);
             }
             catch (Exception ex)
             {
@@ -51,12 +52,13 @@ namespace HospitalManagement.Appointments.Clients.Implementations
             {
                 var response = await httpClient.GetAsync($"api/patient/{patientId}");
                 if (!response.IsSuccessStatusCode)
+                {
                     return null;
+                }
+
                 var json = await response.Content.ReadAsStringAsync();
                 logger.LogInformation("Response body: {Json}", json);
-                var result = JsonSerializer.Deserialize<ApiResponse<PatientResponseDto>>(json, JsonOptions);
-
-                return result?.Data;
+                return JsonSerializer.Deserialize<PatientResponseDto>(json, JsonOptions);
             }
             catch (Exception ex)
             {
@@ -79,9 +81,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
                 logger.LogInformation("Response body: {Json}", json);
 
                 if (!response.IsSuccessStatusCode) return null;
-                var result = JsonSerializer.Deserialize<ApiResponse<ProcedureResponseDto>>(json, JsonOptions);
-                logger.LogInformation("Deserialized data: {Data}", result?.Data?.Name);
-                return result?.Data;
+                return JsonSerializer.Deserialize<ProcedureResponseDto>(json, JsonOptions);
             }
             catch (Exception ex)
             {
@@ -102,9 +102,7 @@ namespace HospitalManagement.Appointments.Clients.Implementations
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ApiResponse<DoctorScheduleResponseDto>>(json, JsonOptions);
-
-                return result?.Data;
+                return JsonSerializer.Deserialize<DoctorScheduleResponseDto>(json, JsonOptions);
             }
             catch (Exception ex)
             {
