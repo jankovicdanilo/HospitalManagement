@@ -54,7 +54,6 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentFilterDto filter)
         {
             var result = await appointmentService.GetAllAsync(filter);
