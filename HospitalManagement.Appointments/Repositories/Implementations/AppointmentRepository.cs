@@ -86,7 +86,12 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
                 query = query.Where(x => x.PatientId == filter.PatientId.Value);
             }
 
-            if (filter.Date.HasValue)
+            if (filter.StartDate.HasValue && filter.EndDate.HasValue)
+            {
+                query = query.Where(x => DateOnly.FromDateTime(x.DateTime) >= filter.StartDate.Value
+                    && DateOnly.FromDateTime(x.DateTime) <= filter.EndDate.Value);
+            }
+            else if (filter.Date.HasValue)
             {
                 query = query.Where(x => DateOnly.FromDateTime(x.DateTime) == filter.Date.Value);
             }

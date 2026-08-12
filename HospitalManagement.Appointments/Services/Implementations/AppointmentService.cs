@@ -43,6 +43,22 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             var mapped = mapper.Map<List<AppointmentListResponseDto>>(items);
 
+            var doctorsById = await BuildLookupAsync(items.Select(x => x.DoctorId), queryServiceClient.GetDoctorAsync);
+            var patientsById = await BuildLookupAsync(items.Select(x => x.PatientId), queryServiceClient.GetPatientAsync);
+
+            foreach(var (item, dto) in items.Zip(mapped))
+            {
+                var doctor = doctorsById.GetValueOrDefault(item.DoctorId);
+                var patient = patientsById.GetValueOrDefault(item.PatientId);
+
+                dto.DoctorName = doctor != null ? $"{doctor.FirstName} {doctor.LastName}" : null;
+                dto.PatientName = patient != null ? $"{patient.Name} {patient.LastName}" : null;
+
+                var calculateDiscount = GetDiscountResult(item);
+                dto.TotalCost = calculateDiscount.TotalCost;
+                dto.Discount = calculateDiscount.Discount;
+            }
+
             var pagedResult = new PagedResult<AppointmentListResponseDto>
             {
                 Items = mapped,
@@ -50,13 +66,6 @@ namespace HospitalManagement.Appointments.Services.Implementations
                 PageNumber = filter.PageNumber,
                 PageSize = filter.PageSize
             };
-
-            foreach (var (item, dto) in items.Zip(mapped))
-            {
-                var calculateDiscount = GetDiscountResult(item);
-                dto.TotalCost = calculateDiscount.TotalCost;
-                dto.Discount = calculateDiscount.Discount;
-            }
 
             return Result<PagedResult<AppointmentListResponseDto>>.Ok(pagedResult);
         }
@@ -313,6 +322,15 @@ namespace HospitalManagement.Appointments.Services.Implementations
             var discountResult = appointmentDiscountCalculator.Calculate(appointment.AppointmentProcedures);
 
             return discountResult;
+        }
+
+        private static async Task<Dictionary<TKey, TEntity?>> BuildLookupAsync<TKey, TEntity>(
+            IEnumerable<TKey> keys, Func<TKey, Task<TEntity?>> fetch) where TKey : notnull
+        {
+            var uniqueKeys = keys.Distinct().ToList();
+            var entities = await Task.WhenAll(uniqueKeys.Select(fetch));
+
+            return uniqueKeys.Zip(entities).ToDictionary(x => x.First, x => x.Second);
         }
     }
 }

@@ -53,6 +53,81 @@ namespace HospitalManagement.Appointments.Tests.Services
         }
 
         [Test]
+        public async Task GetAllAsync_ReturnsSuccessWithEnrichedNames()
+        {
+            var filter = new AppointmentFilterDto { PageNumber = 1, PageSize = 20 };
+            var appointments = new List<Appointment>
+            {
+                new Appointment { Id = 1, DoctorId = 5, PatientId = 10, AppointmentProcedures = new List<AppointmentProcedure>() }
+            };
+            var dtos = new List<AppointmentListResponseDto> { new AppointmentListResponseDto { Id = 1, DoctorId = 5, PatientId = 10 } };
+
+            appointmentRepositoryMock.Setup(r => r.GetAllAsync(filter)).ReturnsAsync((appointments, 1));
+            mapperMock.Setup(m => m.Map<List<AppointmentListResponseDto>>(appointments)).Returns(dtos);
+            queryServiceClientMock.Setup(c => c.GetDoctorAsync(5))
+                .ReturnsAsync(new DoctorResponseDto { Id = 5, FirstName = "Ana", LastName = "Kovac" });
+            queryServiceClientMock.Setup(c => c.GetPatientAsync(10))
+                .ReturnsAsync(new PatientResponseDto { Id = 10, Name = "Marko", LastName = "Petrovic" });
+
+            var result = await appointmentService.GetAllAsync(filter);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data!.Items[0].DoctorName, Is.EqualTo("Ana Kovac"));
+            Assert.That(result.Data.Items[0].PatientName, Is.EqualTo("Marko Petrovic"));
+        }
+
+        [Test]
+        public async Task GetAllAsync_SameDoctorOnMultipleAppointments_CallsDoctorLookupOnlyOnce()
+        {
+            var filter = new AppointmentFilterDto { PageNumber = 1, PageSize = 20 };
+            var appointments = new List<Appointment>
+            {
+                new Appointment { Id = 1, DoctorId = 5, PatientId = 10, AppointmentProcedures = new List<AppointmentProcedure>() },
+                new Appointment { Id = 2, DoctorId = 5, PatientId = 11, AppointmentProcedures = new List<AppointmentProcedure>() }
+            };
+            var dtos = new List<AppointmentListResponseDto>
+            {
+                new AppointmentListResponseDto { Id = 1, DoctorId = 5, PatientId = 10 },
+                new AppointmentListResponseDto { Id = 2, DoctorId = 5, PatientId = 11 }
+            };
+
+            appointmentRepositoryMock.Setup(r => r.GetAllAsync(filter)).ReturnsAsync((appointments, 2));
+            mapperMock.Setup(m => m.Map<List<AppointmentListResponseDto>>(appointments)).Returns(dtos);
+            queryServiceClientMock.Setup(c => c.GetDoctorAsync(5))
+                .ReturnsAsync(new DoctorResponseDto { Id = 5, FirstName = "Ana", LastName = "Kovac" });
+            queryServiceClientMock.Setup(c => c.GetPatientAsync(It.IsAny<int>()))
+                .ReturnsAsync(new PatientResponseDto { Name = "Test", LastName = "Patient" });
+
+            var result = await appointmentService.GetAllAsync(filter);
+
+            Assert.That(result.Data!.Items[0].DoctorName, Is.EqualTo("Ana Kovac"));
+            Assert.That(result.Data.Items[1].DoctorName, Is.EqualTo("Ana Kovac"));
+            queryServiceClientMock.Verify(c => c.GetDoctorAsync(5), Times.Once);
+        }
+
+        [Test]
+        public async Task GetAllAsync_DoctorLookupFails_NamesAreNullButDoesNotThrow()
+        {
+            var filter = new AppointmentFilterDto { PageNumber = 1, PageSize = 20 };
+            var appointments = new List<Appointment>
+            {
+                new Appointment { Id = 1, DoctorId = 5, PatientId = 10, AppointmentProcedures = new List<AppointmentProcedure>() }
+            };
+            var dtos = new List<AppointmentListResponseDto> { new AppointmentListResponseDto { Id = 1, DoctorId = 5, PatientId = 10 } };
+
+            appointmentRepositoryMock.Setup(r => r.GetAllAsync(filter)).ReturnsAsync((appointments, 1));
+            mapperMock.Setup(m => m.Map<List<AppointmentListResponseDto>>(appointments)).Returns(dtos);
+            queryServiceClientMock.Setup(c => c.GetDoctorAsync(5)).ReturnsAsync((DoctorResponseDto?)null);
+            queryServiceClientMock.Setup(c => c.GetPatientAsync(10)).ReturnsAsync((PatientResponseDto?)null);
+
+            var result = await appointmentService.GetAllAsync(filter);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data!.Items[0].DoctorName, Is.Null);
+            Assert.That(result.Data.Items[0].PatientName, Is.Null);
+        }
+
+        [Test]
         public async Task GetByIdAsync_AppointmentExists_ReturnsSuccess()
         {
             int appointmentId = 1;

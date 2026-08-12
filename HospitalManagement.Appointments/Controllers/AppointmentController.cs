@@ -54,8 +54,15 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentFilterDto filter)
+        public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentFilterDto filter,
+            [FromServices] IValidator<AppointmentFilterDto> validator)
         {
+            var validation = await validator.ValidateAsync(filter);
+            if (!validation.IsValid)
+            {
+                return ValidationFailed(validation);
+            }
+
             var result = await appointmentService.GetAllAsync(filter);
 
             if (!result.Success)
