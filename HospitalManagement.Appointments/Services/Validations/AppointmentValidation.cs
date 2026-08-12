@@ -4,6 +4,8 @@ using HospitalManagement.Appointments.Models.DTOs.Appointment;
 using HospitalManagement.Appointments.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Clients.Interfaces;
+using HospitalManagement.Appointments.Services.Implementations;
+using HospitalManagement.Appointments.Services.Interfaces;
 
 namespace HospitalManagement.Appointments.Services.Validations
 {
@@ -11,12 +13,14 @@ namespace HospitalManagement.Appointments.Services.Validations
     {
         private readonly IQueryServiceClient hospitalClient;
         private readonly IAppointmentRepository appointmentRepository;
+        private readonly IClinicTimeZoneProvider clinicTimeZoneProvider;
 
         public AppointmentValidation(IAppointmentRepository appointmentRepository,
-            IQueryServiceClient hospitalClient)
+            IQueryServiceClient hospitalClient, IClinicTimeZoneProvider clinicTimeZoneProvider)
         {
             this.appointmentRepository = appointmentRepository;
             this.hospitalClient = hospitalClient;
+            this.clinicTimeZoneProvider = clinicTimeZoneProvider;
         }
 
         public async Task<Result> ValidateAll(AppointmentCreateRequestDto request)
@@ -34,17 +38,20 @@ namespace HospitalManagement.Appointments.Services.Validations
                 return Result.Fail($"Patient with the id {request.PatientId} not found", "INVALID_PATIENT_ID",
                     ErrorType.NotFound);
             }
-               
-            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, request.DateTime.DayOfWeek);
+
+            var localDateTime = clinicTimeZoneProvider.ToLocal(request.DateTime);
+
+
+            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, localDateTime.DayOfWeek);
             if (schedule == null)
             {
                 return Result.Fail($"Doctor does not work on " +
-                    $"{request.DateTime.ToString("dddd, dd MMM yyyy", 
+                    $"{localDateTime.ToString("dddd, dd MMM yyyy", 
                     System.Globalization.CultureInfo.InvariantCulture)}", "DOCTOR_NOT_AVAILABLE",
                     ErrorType.Conflict);
             }
                 
-            if (request.DateTime.Hour < schedule.StartHour || request.DateTime.Hour * 60 + request.DateTime.Minute +
+            if (localDateTime.Hour < schedule.StartHour || localDateTime.Hour * 60 + localDateTime.Minute +
                 (int)request.Duration.TotalMinutes > schedule.EndHour * 60)
             {
                 return Result.Fail($"Doctor works {schedule.StartHour}:00 - {schedule.EndHour}:00", "OUTSIDE_WORKING_HOURS",
@@ -74,20 +81,22 @@ namespace HospitalManagement.Appointments.Services.Validations
                 return Result.Fail($"Patient with the id {request.PatientId} not found", "INVALID_PATIENT_ID",
                     ErrorType.NotFound);
             }
-                
-            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, request.DateTime.DayOfWeek);
+
+            var localDateTime = clinicTimeZoneProvider.ToLocal(request.DateTime);
+
+            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, localDateTime.DayOfWeek);
             if (schedule == null)
             {
                 return Result.Fail($"Doctor does not work on " +
-                    $"{request.DateTime.ToString("dddd, dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)}",
+                    $"{localDateTime.ToString("dddd, dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)}",
                      "DOCTOR_NOT_AVAILABLE", ErrorType.Conflict);
             }
                 
-            if (request.DateTime.Hour < schedule.StartHour || request.DateTime.Hour * 60 + request.DateTime.Minute
+            if (localDateTime.Hour < schedule.StartHour || localDateTime.Hour * 60 + localDateTime.Minute
                 + (int)request.Duration.TotalMinutes > schedule.EndHour * 60)
             {
                 return Result.Fail($"Doctor works {schedule.StartHour}:00 - {schedule.EndHour}:00", 
-                    "OUTSIDE_WORKING_HOURS", ErrorType.Validation);
+                    "OUTSIDE_WORKING_HOURS", ErrorType.Conflict);
             }
                 
 
@@ -106,6 +115,8 @@ namespace HospitalManagement.Appointments.Services.Validations
             var appointments = await appointmentRepository.GetByDoctorIdAsync(doctorId);
 
             return !appointments.Any(a => a.Id != excludeAppointmentId &&
+                                    a.Status != AppointmentStatus.Cancelled &&
+                                    a.Status != AppointmentStatus.Missed &&
                                     dateTime < a.DateTime.Add(a.Duration) &&
                                     dateTime.Add(duration) > a.DateTime);
         }

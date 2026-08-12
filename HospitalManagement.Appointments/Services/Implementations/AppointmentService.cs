@@ -22,11 +22,12 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly AppointmentSettings appointmentSettings;
         private readonly IAppointmentDiscountCalculator appointmentDiscountCalculator;
         private readonly IQueryServiceClient queryServiceClient;
+        private readonly IClinicTimeZoneProvider clinicTimeZoneProvider;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator,
-            IQueryServiceClient queryServiceClient)
+            IQueryServiceClient queryServiceClient, IClinicTimeZoneProvider clinicTimeZoneProvider)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
@@ -35,6 +36,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             this.appointmentSettings = appointmentSettings.Value;
             this.appointmentDiscountCalculator = appointmentDiscountCalculator;
             this.queryServiceClient = queryServiceClient;
+            this.clinicTimeZoneProvider = clinicTimeZoneProvider;
         }
 
         public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
@@ -194,7 +196,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             return Result<AppointmentUpdateResponseDto>.Ok(result);
         }
 
-        public async Task<Result> Delete(int id)
+        public async Task<Result> Delete(int id)    
         {
             var appointmentDomain = await appointmentRepository.Delete(id);
 
@@ -210,7 +212,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
         public async Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date)
         {
-            if (date < DateOnly.FromDateTime(DateTime.UtcNow))
+            var nowLocal = clinicTimeZoneProvider.ToLocal(DateTime.UtcNow);
+            if (date < DateOnly.FromDateTime(nowLocal))
             {
                 logger.LogWarning("Free slots requested for past date {Date}", date);
                 return Result<List<TimeSlotDto>>.Fail("Cannot get free slots for a past date", "INVALID_DATE",
@@ -236,19 +239,23 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             while (current + slotSize <= workEnd)
             {
-                var slotStart = date.ToDateTime(TimeOnly.FromTimeSpan(current));
-                var slotEnd = slotStart.Add(slotSize);
+                var slotStartLocal = date.ToDateTime(TimeOnly.FromTimeSpan(current));
+                var slotEndLocal = slotStartLocal.Add(slotSize);
+                var slotStartUtc = clinicTimeZoneProvider.ToUtc(slotStartLocal);
+                var slotEndUtc = clinicTimeZoneProvider.ToUtc(slotEndLocal);
 
                 var isBooked = appointments.Any(a =>
-                    slotStart < a.DateTime.Add(a.Duration) &&
-                    slotEnd > a.DateTime);
+                    a.Status != AppointmentStatus.Cancelled &&
+                    a.Status != AppointmentStatus.Missed &&
+                    slotStartUtc < a.DateTime.Add(a.Duration) &&
+                    slotEndUtc > a.DateTime);
 
                 if (!isBooked)
                 {
                     freeSlots.Add(new TimeSlotDto
                     {
-                        Start = TimeOnly.FromDateTime(slotStart),
-                        End = TimeOnly.FromDateTime(slotEnd)
+                        Start = TimeOnly.FromDateTime(slotStartLocal),
+                        End = TimeOnly.FromDateTime(slotEndLocal)
                     });
                 }
 
