@@ -50,7 +50,7 @@ namespace HospitalManagement.Appointments.Services.Validations
                     System.Globalization.CultureInfo.InvariantCulture)}", "DOCTOR_NOT_AVAILABLE",
                     ErrorType.Conflict);
             }
-                
+
             if (localDateTime.Hour < schedule.StartHour || localDateTime.Hour * 60 + localDateTime.Minute +
                 (int)request.Duration.TotalMinutes > schedule.EndHour * 60)
             {
