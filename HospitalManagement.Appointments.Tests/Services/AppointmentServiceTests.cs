@@ -7,6 +7,7 @@ using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Services.Calculators.Interfaces;
 using HospitalManagement.Appointments.Services.Calculators.Results;
 using HospitalManagement.Appointments.Services.Implementations;
+using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs.Doctor;
@@ -28,6 +29,7 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IQueryServiceClient> queryServiceClientMock;
         private IOptions<AppointmentSettings> appointmentSettings;
         private Mock<IAppointmentDiscountCalculator> appointmentDiscountCalculatorMock;
+        private Mock<IClinicTimeZoneProvider> clinicTimeZoneProviderMock;
         private AppointmentService appointmentService;
 
         [SetUp]
@@ -40,6 +42,10 @@ namespace HospitalManagement.Appointments.Tests.Services
             queryServiceClientMock = new Mock<IQueryServiceClient>();
             appointmentDiscountCalculatorMock = new Mock<IAppointmentDiscountCalculator>();
             appointmentSettings = Options.Create(new AppointmentSettings { SlotSizeMinutes = 30 });
+            clinicTimeZoneProviderMock = new Mock<IClinicTimeZoneProvider>();
+
+            clinicTimeZoneProviderMock.Setup(c => c.ToLocal(It.IsAny<DateTime>())).Returns((DateTime dt) => dt);
+            clinicTimeZoneProviderMock.Setup(c => c.ToUtc(It.IsAny<DateTime>())).Returns((DateTime dt) => dt);
 
             appointmentService = new AppointmentService(
                 appointmentRepositoryMock.Object,
@@ -48,7 +54,8 @@ namespace HospitalManagement.Appointments.Tests.Services
                 loggerMock.Object,
                 appointmentSettings,
                 appointmentDiscountCalculatorMock.Object,
-                queryServiceClientMock.Object
+                queryServiceClientMock.Object,
+                clinicTimeZoneProviderMock.Object
             );
         }
 
