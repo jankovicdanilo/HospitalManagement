@@ -27,14 +27,8 @@ namespace HospitalManagement.InvoiceService.Clients.Implementations
                     logger.LogWarning("Failed to fetch appointment {Id}, status {Status}", appointmentId, response.StatusCode);
                     return null;
                 }
-                var result = await response.Content.ReadFromJsonAsync<ApiResponse<AppointmentInvoiceDto>>();
-                if(result == null || !result.Success)
-                {
-                    logger.LogWarning("Appointment {Id} fetch returned unsuccessful result: {Message}", appointmentId, result?.Message);
-                    return null;
-                }
 
-                return result?.Data;
+                return await response.Content.ReadFromJsonAsync<AppointmentInvoiceDto>();
             }
             catch (Exception ex)
             {
