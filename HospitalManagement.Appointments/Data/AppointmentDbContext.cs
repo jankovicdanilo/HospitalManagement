@@ -55,6 +55,9 @@ public partial class AppointmentDbContext : DbContext
         {
             entity.ToTable("Treatment");
 
+            entity.Property(e => e.CreatedAt)
+                .HasConversion(utcConverter);
+
             entity.Property(e => e.Description).HasMaxLength(1000);
             entity.Property(e => e.Medication).HasMaxLength(500);
 
