@@ -90,11 +90,13 @@ namespace HospitalManagement.QueryService.Tests.Services
         {
             var doctors = new List<Doctor> { new Doctor { Id = 1 }, new Doctor { Id = 2 } };
             var doctorDtos = new List<DoctorResponseDto> { new DoctorResponseDto { Id = 1 }, new DoctorResponseDto { Id = 2 } };
+            var filter = new DoctorFilterDto { PageNumber = 1, PageSize = 20 };
 
-            doctorRepositoryMock.Setup(r => r.GetAllAsync(1, 20)).ReturnsAsync((doctors, doctors.Count));
+            doctorRepositoryMock.Setup(r => r.GetAllAsync(It.Is<DoctorFilterDto>(f => f.PageNumber == 1 && f.PageSize == 20)))
+                .ReturnsAsync((doctors, doctors.Count));
             mapperMock.Setup(m => m.Map<List<DoctorResponseDto>>(doctors)).Returns(doctorDtos);
 
-            var result = await doctorService.GetAllAsync(1, 20);
+            var result = await doctorService.GetAllAsync(filter);
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.Data!.Items, Is.EqualTo(doctorDtos));
@@ -106,14 +108,53 @@ namespace HospitalManagement.QueryService.Tests.Services
         {
             var doctors = new List<Doctor>();
             var doctorDtos = new List<DoctorResponseDto>();
+            var filter = new DoctorFilterDto { PageNumber = 1, PageSize = 20 };
 
-            doctorRepositoryMock.Setup(r => r.GetAllAsync(1, 20)).ReturnsAsync((doctors, 0));
+            doctorRepositoryMock.Setup(r => r.GetAllAsync(It.Is<DoctorFilterDto>(f => f.PageNumber == 1 && f.PageSize == 20)))
+                .ReturnsAsync((doctors, 0));
             mapperMock.Setup(m => m.Map<List<DoctorResponseDto>>(doctors)).Returns(doctorDtos);
 
-            var result = await doctorService.GetAllAsync(1, 20);
+            var result = await doctorService.GetAllAsync(filter);
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.Data!.Items, Is.Empty);
+        }
+
+        [Test]
+        public async Task GetAllAsync_WithSearchTerm_PassesSearchToRepository()
+        {
+            var doctors = new List<Doctor> { new Doctor { Id = 1, FirstName = "Marija" } };
+            var doctorDtos = new List<DoctorResponseDto> { new DoctorResponseDto { Id = 1, FirstName = "Marija" } };
+            var filter = new DoctorFilterDto { Search = "Mar", PageNumber = 1, PageSize = 20 };
+
+            doctorRepositoryMock
+                .Setup(r => r.GetAllAsync(It.Is<DoctorFilterDto>(f => f.Search == "Mar")))
+                .ReturnsAsync((doctors, doctors.Count));
+            mapperMock.Setup(m => m.Map<List<DoctorResponseDto>>(doctors)).Returns(doctorDtos);
+
+            var result = await doctorService.GetAllAsync(filter);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data!.Items, Is.EqualTo(doctorDtos));
+            doctorRepositoryMock.Verify(r => r.GetAllAsync(It.Is<DoctorFilterDto>(f => f.Search == "Mar")), Times.Once);
+        }
+
+        [Test]
+        public async Task GetAllAsync_NoSearchTerm_PassesNullOrEmptySearchToRepository()
+        {
+            var doctors = new List<Doctor> { new Doctor { Id = 1 } };
+            var doctorDtos = new List<DoctorResponseDto> { new DoctorResponseDto { Id = 1 } };
+            var filter = new DoctorFilterDto { PageNumber = 1, PageSize = 20 };
+
+            doctorRepositoryMock
+                .Setup(r => r.GetAllAsync(It.Is<DoctorFilterDto>(f => string.IsNullOrEmpty(f.Search))))
+                .ReturnsAsync((doctors, doctors.Count));
+            mapperMock.Setup(m => m.Map<List<DoctorResponseDto>>(doctors)).Returns(doctorDtos);
+
+            var result = await doctorService.GetAllAsync(filter);
+
+            Assert.That(result.Success, Is.True);
+            doctorRepositoryMock.Verify(r => r.GetAllAsync(It.Is<DoctorFilterDto>(f => string.IsNullOrEmpty(f.Search))), Times.Once);
         }
     }
 }

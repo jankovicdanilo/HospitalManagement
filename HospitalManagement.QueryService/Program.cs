@@ -48,6 +48,7 @@ builder.Services.AddSingleton<IAsyncPolicy>(sp =>
 });
 
 builder.Services.AddValidatorsFromAssemblyContaining<PageQueryValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {

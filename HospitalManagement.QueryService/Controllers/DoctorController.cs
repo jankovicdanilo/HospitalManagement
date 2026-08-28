@@ -3,6 +3,7 @@ using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using HospitalManagement.Shared.Models.DTOs.Common;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 
 namespace HospitalManagement.QueryService.Controllers
 {
@@ -18,15 +19,15 @@ namespace HospitalManagement.QueryService.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync([FromQuery] PageQueryDto query, [FromServices] IValidator<PageQueryDto> validator)
+        public async Task<IActionResult> GetAllAsync([FromQuery] DoctorFilterDto filter, [FromServices] IValidator<DoctorFilterDto> validator)
         {
-            var validation = await validator.ValidateAsync(query);
+            var validation = await validator.ValidateAsync(filter);
             if (!validation.IsValid)
             {
                 return ValidationFailed(validation);
             }
 
-            var result = await doctorService.GetAllAsync(query.PageNumber, query.PageSize);
+            var result = await doctorService.GetAllAsync(filter);
 
             if (!result.Success)
             {

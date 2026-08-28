@@ -4,6 +4,7 @@ using HospitalManagement.QueryService.Models.DTOs.Patient;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs.Patient;
 
 namespace HospitalManagement.QueryService.Services.Implementations
 {
@@ -23,17 +24,17 @@ namespace HospitalManagement.QueryService.Services.Implementations
             this.appointmentServiceClient = appointmentServiceClient;
         }
 
-        public async Task<Result<PagedResult<PatientListDto>>> GetAllAsync(int pageNumber, int pageSize)
+        public async Task<Result<PagedResult<PatientListDto>>> GetAllAsync(PatientFilterDto filter)
         {
-            var (patients, totalCount) = await patientRepository.GetAllAsync(pageNumber, pageSize);
+            var (patients, totalCount) = await patientRepository.GetAllAsync(filter);
             var mapped = mapper.Map<List<PatientListDto>>(patients);
 
             var pagedResult = new PagedResult<PatientListDto>
             {
                 Items = mapped,
                 TotalCount = totalCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize
             };
 
             return Result<PagedResult<PatientListDto>>.Ok(pagedResult);

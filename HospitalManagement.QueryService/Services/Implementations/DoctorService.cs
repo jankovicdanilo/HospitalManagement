@@ -29,17 +29,17 @@ namespace HospitalManagement.QueryService.Services.Implementations
             this.cachePolicy = cachePolicy;
         }
 
-        public async Task<Result<PagedResult<DoctorResponseDto>>> GetAllAsync(int pageNumber, int pageSize)
+        public async Task<Result<PagedResult<DoctorResponseDto>>> GetAllAsync(DoctorFilterDto filter)
         {
-            var (doctors, totalCount) = await doctorRepository.GetAllAsync(pageNumber, pageSize);
+            var (doctors, totalCount) = await doctorRepository.GetAllAsync(filter);
             var mapped = mapper.Map<List<DoctorResponseDto>>(doctors);
 
             var pagedResult = new PagedResult<DoctorResponseDto>
             {
                 Items = mapped,
                 TotalCount = totalCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize
+                PageNumber = filter.PageNumber,
+                PageSize = filter.PageSize
             };
 
             return Result<PagedResult<DoctorResponseDto>>.Ok(pagedResult);
