@@ -18,7 +18,7 @@ namespace HospitalManagement.Appointments.Controllers
             this.appointmentService = appointmentService;
         }
 
-        [HttpDelete]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await appointmentService.Delete(id);

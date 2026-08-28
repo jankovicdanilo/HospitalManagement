@@ -19,7 +19,6 @@ namespace HospitalManagement.InvoiceService.Controllers
         }
 
         [HttpGet("{appointmentId:int}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GenerateInvoiceAsync(int appointmentId, [FromQuery] string format = "pdf")
         {
             if(!Enum.TryParse<InvoiceFormat>(format, ignoreCase: true, out var invoiceFormat))

@@ -57,6 +57,9 @@ try
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddTransient<AuthTokenHandler>();
 
+    builder.Services.Configure<ClinicSettings>(builder.Configuration.GetSection("ClinicSettings"));
+    builder.Services.AddSingleton<IClinicTimeZoneProvider, ClinicTimeZoneProvider>();
+
     // HTTP client for cross-service calls to QueryService
     builder.Services.AddHttpClient<IQueryServiceClient, QueryServiceClient>(client =>
     {

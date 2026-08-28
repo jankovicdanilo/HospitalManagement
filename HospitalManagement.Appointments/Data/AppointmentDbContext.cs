@@ -1,5 +1,6 @@
 ﻿using HospitalManagement.Appointments.Models.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HospitalManagement.Appointments.Data;
 
@@ -22,15 +23,20 @@ public partial class AppointmentDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var utcConverter = new ValueConverter<DateTime, DateTime>(
+            v => v.Kind == DateTimeKind.Utc ? v : v.ToUniversalTime(),
+            v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
         modelBuilder.Entity<Appointment>(entity =>
         {
             entity.ToTable("Appointment");
 
-            entity.Property(e => e.DateTime).HasColumnType("datetime");
+            entity.Property(e => e.DateTime)
+                .HasColumnType("datetime")
+                .HasConversion(utcConverter);
+
             entity.Property(e => e.Notes).HasMaxLength(500);
             entity.Property(e => e.Status).HasMaxLength(50).HasConversion<string>();
-
-            
         });
 
         modelBuilder.Entity<AppointmentProcedure>(entity =>
@@ -41,8 +47,6 @@ public partial class AppointmentDbContext : DbContext
                   .WithMany(a => a.AppointmentProcedures)
                   .HasForeignKey(ap => ap.AppointmentId);
 
-            // ProcedureId is a plain reference id now — Procedure lives in the main API.
-
             entity.Property(e => e.ProcedureName).HasMaxLength(200);
             entity.Property(e => e.ProcedurePrice).HasPrecision(18, 2);
         });
@@ -50,6 +54,9 @@ public partial class AppointmentDbContext : DbContext
         modelBuilder.Entity<Treatment>(entity =>
         {
             entity.ToTable("Treatment");
+
+            entity.Property(e => e.CreatedAt)
+                .HasConversion(utcConverter);
 
             entity.Property(e => e.Description).HasMaxLength(1000);
             entity.Property(e => e.Medication).HasMaxLength(500);
