@@ -1,8 +1,9 @@
-using HospitalManagement.Shared.Data;
-using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.QueryService.Repositories.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using HospitalManagement.Shared.Data;
 using HospitalManagement.Shared.Extensions;
+using HospitalManagement.Shared.Models.Domain;
+using HospitalManagement.Shared.Models.DTOs.Patient;
+using Microsoft.EntityFrameworkCore;
 
 namespace HospitalManagement.QueryService.Repositories.Implementations
 {
@@ -15,9 +16,16 @@ namespace HospitalManagement.QueryService.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public async Task<(List<Patient> items, int totalCount)> GetAllAsync(int pageNumber, int pageSize)
+        public async Task<(List<Patient> items, int totalCount)> GetAllAsync(PatientFilterDto filter)
         {
-            return await dbContext.Patients.AsNoTracking().ToPagedResultAsync(x => x.Id, pageNumber, pageSize);
+            var query = dbContext.Patients.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(filter.Search))
+            {
+                query = query.Where(x => x.Name.Contains(filter.Search) || x.LastName.Contains(filter.Search));
+            }
+
+            return await query.ToPagedResultAsync(x => x.Id, filter.PageNumber, filter.PageSize);
         }
 
         public async Task<Patient?> GetByIdAsync(int id)
