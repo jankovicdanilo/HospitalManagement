@@ -64,6 +64,49 @@ namespace HospitalManagement.QueryService.Clients.Implementations
             }
         }
 
+        public async Task<List<int>?> GetPopularDoctorIdsAsync(int count)
+        {
+            try
+            {
+                var response = await httpClient.GetAsync($"api/appointment/doctors/popular-ids?count={count}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    logger.LogWarning("Failed to fetch popular doctor ids, status {Status}", response.StatusCode);
+                    return null;
+                }
+
+                var ids = await response.Content.ReadFromJsonAsync<List<int>>();
+                logger.LogInformation("Deserialized {Count} doctor ids: {Ids}", ids?.Count, string.Join(",", ids ?? new List<int>()));
+                return ids;
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Failed to get popular doctor ids");
+                return null;
+            }
+            
+        }
+
+        public async Task<List<int>?> GetPopularPatientIdsAsync(int count)
+        {
+            try
+            {
+                var response = await httpClient.GetAsync($"api/appointment/patients/popular-ids?count={count}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    logger.LogWarning("Failed to fetch popular patient ids, status {Status}", response.StatusCode);
+                    return null;
+                }
+
+                return await response.Content.ReadFromJsonAsync<List<int>>();
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Failed to get popular patient ids");
+                return null;
+            }
+        }
+
         internal class ApiResponse<T>
         {
             public T? Data { get; set; }

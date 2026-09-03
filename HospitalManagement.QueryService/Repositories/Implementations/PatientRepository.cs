@@ -37,5 +37,10 @@ namespace HospitalManagement.QueryService.Repositories.Implementations
         {
             return await dbContext.Patients.AsNoTracking().FirstOrDefaultAsync(x => x.Email == email);
         }
+
+        public async Task<List<Patient>> GetByIdsAsync(List<int> ids)
+        {
+            return await dbContext.Patients.Where(x => ids.Contains(x.Id)).ToListAsync();
+        }
     }
 }

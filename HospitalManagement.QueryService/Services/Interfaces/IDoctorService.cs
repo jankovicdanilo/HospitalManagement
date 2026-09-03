@@ -7,5 +7,6 @@ namespace HospitalManagement.QueryService.Services.Interfaces
     {
         Task<Result<PagedResult<DoctorResponseDto>>> GetAllAsync(DoctorFilterDto filter);
         Task<Result<DoctorResponseDto>> GetByIdAsync(int id);
+        Task<Result<List<DoctorResponseDto>>> GetPopularDoctorsAsync(int count);
     }
 }

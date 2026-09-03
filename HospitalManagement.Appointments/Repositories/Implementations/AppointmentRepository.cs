@@ -133,5 +133,25 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
                 .AsNoTracking()
                 .ToListAsync();
         }
+
+        public async Task<List<int>> GetTopDoctorIdsByAppointmentCountAsync(int count)
+        {
+            return await dbContext.Appointments
+                .GroupBy(g => g.DoctorId)
+                .OrderByDescending(g => g.Count())
+                .Take(count)
+                .Select(g => g.Key)
+                .ToListAsync();
+        }
+
+        public async Task<List<int>> GetTopPatientIdsByAppointmentCountAsync(int count)
+        {
+            return await dbContext.Appointments
+                .GroupBy(g => g.PatientId)
+                .OrderByDescending(g => g.Count())
+                .Take(count)
+                .Select(g => g.Key)
+                .ToListAsync();
+        }
     }
 }

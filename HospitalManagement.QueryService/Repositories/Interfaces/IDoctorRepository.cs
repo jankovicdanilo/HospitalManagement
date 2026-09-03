@@ -7,5 +7,6 @@ namespace HospitalManagement.QueryService.Repositories.Interfaces
     {
         Task<(List<Doctor> items, int totalCount)> GetAllAsync(DoctorFilterDto filter);
         Task<Doctor?> GetByIdAsync(int id);
+        Task<List<Doctor>> GetByIdsAsync(List<int> ids);
     }
 }

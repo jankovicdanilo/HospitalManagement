@@ -163,5 +163,22 @@ namespace HospitalManagement.Appointments.Controllers
 
             return Ok(result.Data);
         }
+
+        [HttpGet("doctors/popular-ids")]
+        public async Task<IActionResult> GetPopularDoctorIdsAsync([FromQuery] int count = 5)
+        {
+            var result = await appointmentService.GetPopularDoctorIdsAsync(count);
+
+            return result.Success ? Ok(result.Data) : HandleFailure(result);
+        }
+
+        [HttpGet("patients/popular-ids")]
+        public async Task<IActionResult> GetPopularPatientIdsAsync([FromQuery] int count = 5)
+        {
+            var result = await appointmentService.GetPopularPatientIdsAsync(count);
+
+            return result.Success ? Ok(result.Data) : HandleFailure(result);
+        }
+        
     }
 }

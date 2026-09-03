@@ -62,5 +62,13 @@ namespace HospitalManagement.QueryService.Controllers
 
             return Ok(result.Data);
         }
+
+        [HttpGet("popular")]
+        public async Task<IActionResult> GetPopularAsync([FromQuery] int count = 5)
+        {
+            var result = await patientService.GetPopularPatientsAsync(count);
+
+            return result.Success ? Ok(result.Data) : HandleFailure(result);
+        }
     }
 }

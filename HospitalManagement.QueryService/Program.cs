@@ -21,7 +21,8 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<HospitalManagementDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalManagementCQRS")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalManagementCQRS"))
+    .LogTo(Console.WriteLine, LogLevel.Information));
 
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();

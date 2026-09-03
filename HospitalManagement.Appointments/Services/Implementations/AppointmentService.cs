@@ -339,5 +339,29 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             return uniqueKeys.Zip(entities).ToDictionary(x => x.First, x => x.Second);
         }
+
+        public async Task<Result<List<int>>> GetPopularDoctorIdsAsync(int count)
+        {
+            if(count <= 0)
+            {
+                return Result<List<int>>.Fail("Count must be greater than 0", "INVALID_COUNT", ErrorType.Validation);
+            }
+
+            var ids = await appointmentRepository.GetTopDoctorIdsByAppointmentCountAsync(count);
+
+            return Result<List<int>>.Ok(ids);
+        }
+
+        public async Task<Result<List<int>>> GetPopularPatientIdsAsync(int count)
+        {
+            if(count <= 0)
+            {
+                return Result<List<int>>.Fail("Count must be greater than 0", "INVALID_COUNT", ErrorType.Validation);
+            }
+
+            var ids = await appointmentRepository.GetTopPatientIdsByAppointmentCountAsync(count);
+
+            return Result<List<int>>.Ok(ids);
+        }
     }
 }

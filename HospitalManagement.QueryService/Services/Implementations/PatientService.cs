@@ -78,5 +78,26 @@ namespace HospitalManagement.QueryService.Services.Implementations
 
             return Result<PatientMedicalHistoryDto>.Ok(patientMedicalHistory);
         }
+
+        public async Task<Result<List<PatientListDto>>> GetPopularPatientsAsync(int count)
+        {
+            var patientIds = await appointmentServiceClient.GetPopularPatientIdsAsync(count);
+            if(patientIds == null)
+            {
+                logger.LogWarning("Could not retrieve popular patient ids");
+                return Result<List<PatientListDto>>.Fail("Could not retrieve popular patients", "HISTORY_UNAVAILABLE", ErrorType.UpstreamFailure);
+            }
+
+            if(patientIds.Count == 0)
+            {
+                return Result<List<PatientListDto>>.Ok(new List<PatientListDto>());
+            }
+
+            var patients = await patientRepository.GetByIdsAsync(patientIds);
+            var ordered = patientIds.Select(id => patients.FirstOrDefault(p => p.Id == id)).Where(p => p != null).ToList();
+            var mapped = mapper.Map<List<PatientListDto>>(ordered);
+
+            return Result<List<PatientListDto>>.Ok(mapped);
+        }
     }
 }

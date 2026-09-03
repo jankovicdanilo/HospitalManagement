@@ -1,4 +1,6 @@
 using AutoMapper;
+using HospitalManagement.QueryService.Clients.Implementations;
+using HospitalManagement.QueryService.Clients.Interfaces;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Common;
@@ -14,15 +16,18 @@ namespace HospitalManagement.QueryService.Services.Implementations
     public class DoctorService : IDoctorService
     {
         private readonly IDoctorRepository doctorRepository;
+        private readonly IAppointmentServiceClient appointmentServiceClient;
         private readonly IMapper mapper;
         private readonly ILogger<DoctorService> logger;
         private readonly IDistributedCache cache;
         private readonly IAsyncPolicy cachePolicy;
 
-        public DoctorService(IDoctorRepository doctorRepository, IMapper mapper, ILogger<DoctorService> logger,
+        public DoctorService(IDoctorRepository doctorRepository, IAppointmentServiceClient appointmentServiceClient,
+            IMapper mapper, ILogger<DoctorService> logger,
             IDistributedCache cache, IAsyncPolicy cachePolicy)
         {
             this.doctorRepository = doctorRepository;
+            this.appointmentServiceClient = appointmentServiceClient;
             this.mapper = mapper;
             this.logger = logger;
             this.cache = cache;
@@ -94,6 +99,34 @@ namespace HospitalManagement.QueryService.Services.Implementations
             }
 
             return Result<DoctorResponseDto>.Ok(result);
+        }
+
+        public async Task<Result<List<DoctorResponseDto>>> GetPopularDoctorsAsync(int count)
+        {
+            var doctorIds = await appointmentServiceClient.GetPopularDoctorIdsAsync(count);
+            logger.LogInformation("GetPopularDoctorsAsync received {Count} ids: {Ids}", doctorIds?.Count, string.Join(",", doctorIds ?? new List<int>()));
+            if (doctorIds == null)
+            {
+                logger.LogWarning("Could not retrieve popular doctor ids");
+                return Result<List<DoctorResponseDto>>.Fail("Could not retrieve popular doctors", "HISTORY_UNAVAILABLE",
+                    ErrorType.UpstreamFailure);
+            }
+
+            if(doctorIds.Count == 0)
+            {
+                return Result<List<DoctorResponseDto>>.Ok(new List<DoctorResponseDto>());
+            }
+
+            var doctors  = await doctorRepository.GetByIdsAsync(doctorIds);
+            logger.LogInformation("GetByIdsAsync returned {Count} doctors", doctors.Count);
+
+            var ordered = doctorIds
+                .Select(id => doctors.FirstOrDefault(d => d.Id == id))
+                .Where(d => d != null)
+                .ToList();
+            var mapped = mapper.Map<List<DoctorResponseDto>>(ordered);
+
+            return Result<List<DoctorResponseDto>>.Ok(mapped);
         }
     }
 }
