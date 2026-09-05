@@ -9,7 +9,9 @@ using HospitalManagement.Appointments.Services.Calculators.Results;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs.Patient;
 using Microsoft.Extensions.Options;
+using System.Text;
 
 namespace HospitalManagement.Appointments.Services.Implementations
 {
@@ -23,11 +25,14 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly IAppointmentDiscountCalculator appointmentDiscountCalculator;
         private readonly IQueryServiceClient queryServiceClient;
         private readonly IClinicTimeZoneProvider clinicTimeZoneProvider;
+        private readonly ITreatmentRepository treatmentRepository;
+        private readonly IClaudeSummaryService claudeSummaryService;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator,
-            IQueryServiceClient queryServiceClient, IClinicTimeZoneProvider clinicTimeZoneProvider)
+            IQueryServiceClient queryServiceClient, IClinicTimeZoneProvider clinicTimeZoneProvider,
+            ITreatmentRepository treatmentRepository, IClaudeSummaryService claudeSummaryService)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
@@ -37,6 +42,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             this.appointmentDiscountCalculator = appointmentDiscountCalculator;
             this.queryServiceClient = queryServiceClient;
             this.clinicTimeZoneProvider = clinicTimeZoneProvider;
+            this.treatmentRepository = treatmentRepository;
+            this.claudeSummaryService = claudeSummaryService;
         }
 
         public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
@@ -362,6 +369,83 @@ namespace HospitalManagement.Appointments.Services.Implementations
             var ids = await appointmentRepository.GetTopPatientIdsByAppointmentCountAsync(count);
 
             return Result<List<int>>.Ok(ids);
+        }
+
+        public async Task<Result<PatientSummaryResponseDto>> GetPatientSummaryAsync(int patientId)
+        {
+            var patient = await queryServiceClient.GetPatientAsync(patientId);
+            if(patient == null)
+            {
+                logger.LogWarning("Patient with id {PatientId} not found", patientId);
+                return Result<PatientSummaryResponseDto>.Fail($"Patient with id {patientId} not found", "INVALID_PATIENT_ID", ErrorType.NotFound);
+            }
+
+            var appointments = await appointmentRepository.GetByPatientIdAsync(patientId);
+            if(appointments.Count == 0)
+            {
+                return Result<PatientSummaryResponseDto>.Ok(new PatientSummaryResponseDto
+                {
+                    PatientId = patientId,
+                    PatientName = $"{patient.Name} {patient.LastName}",
+                    Summary = "No appointments history available for this patient"
+                });
+            }
+
+            var treatments = await treatmentRepository.GetByAppointmentIdsAsync(appointments.Select(a => a.Id));
+            var prompt = BuildSummaryPrompt(patient, appointments, treatments);
+
+            string summaryText;
+            try
+            {
+                summaryText = await claudeSummaryService.GenerateSummaryAsync(prompt);
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, "Failed to generate summary for patient {PatientId}", patientId);
+                return Result<PatientSummaryResponseDto>.Fail(
+                    "Failed to generate patient summary", "SUMMARY_GENERATION_FAILED", ErrorType.UpstreamFailure);
+            }
+
+            logger.LogInformation("Summary generated for patient {PatientId}", patientId);
+
+            var result = new PatientSummaryResponseDto
+            {
+                PatientId = patientId,
+                PatientName = $"{patient.Name} {patient.LastName}",
+                Summary = summaryText
+            };
+
+            return Result<PatientSummaryResponseDto>.Ok(result);
+        }
+
+        private static string BuildSummaryPrompt(
+            PatientResponseDto patient, 
+            List<Appointment> appointments, 
+            List<Treatment> treatments)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine($"Summarize the medical history of patient {patient.Name} {patient.LastName}" +
+                $"(DOB: {patient.DateOfBirth:yyyy-MM-dd}) in a concise clinical-style paragraph. " +
+                "Base it only on the visit and treatment data below:");
+            sb.AppendLine();
+
+            foreach(var appointment in appointments)
+            {
+                sb.AppendLine($"- Appointment on {appointment.DateTime:yyyy-MM-dd}, status: {appointment.Status}");
+
+                var appointmentTreatments = treatments.Where(t => t.AppointmentId == appointment.Id);
+                foreach(var treatment in appointmentTreatments)
+                {
+                    sb.AppendLine($" Treatment notes: {treatment.Description}");
+                    if (!string.IsNullOrWhiteSpace(treatment.Medication))
+                    {
+                        sb.AppendLine($" Medication: {treatment.Medication}");
+                    }
+                }
+            }
+
+            return sb.ToString();
         }
     }
 }
