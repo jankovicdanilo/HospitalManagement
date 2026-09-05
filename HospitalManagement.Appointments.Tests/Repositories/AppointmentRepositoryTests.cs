@@ -122,5 +122,70 @@ namespace HospitalManagement.Appointments.Tests.Repositories
             Assert.That(totalCount, Is.EqualTo(0));
             Assert.That(items, Is.Empty);
         }
+
+        [Test]
+        public async Task GetTopDoctorIdsByAppointmentCountAsync_ReturnsDoctorsOrderedByAppointmentCountDescending()
+        {
+            dbContext.Appointments.AddRange(
+                new Appointment { Id = 101, DoctorId = 501, PatientId = 501, DateTime = new DateTime(2026, 8, 1), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 102, DoctorId = 501, PatientId = 502, DateTime = new DateTime(2026, 8, 2), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 103, DoctorId = 501, PatientId = 503, DateTime = new DateTime(2026, 8, 3), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 104, DoctorId = 501, PatientId = 504, DateTime = new DateTime(2026, 8, 4), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 105, DoctorId = 501, PatientId = 505, DateTime = new DateTime(2026, 8, 5), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 106, DoctorId = 502, PatientId = 501, DateTime = new DateTime(2026, 8, 6), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 107, DoctorId = 502, PatientId = 502, DateTime = new DateTime(2026, 8, 7), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 108, DoctorId = 502, PatientId = 503, DateTime = new DateTime(2026, 8, 8), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 109, DoctorId = 502, PatientId = 504, DateTime = new DateTime(2026, 8, 9), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 110, DoctorId = 503, PatientId = 501, DateTime = new DateTime(2026, 8, 10), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 111, DoctorId = 503, PatientId = 502, DateTime = new DateTime(2026, 8, 11), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 112, DoctorId = 503, PatientId = 503, DateTime = new DateTime(2026, 8, 12), Duration = TimeSpan.FromMinutes(30) }
+            );
+            await dbContext.SaveChangesAsync();
+
+            var result = await appointmentRepository.GetTopDoctorIdsByAppointmentCountAsync(3);
+
+            Assert.That(result, Is.EqualTo(new List<int> { 501, 502, 503 }));
+        }
+
+        [Test]
+        public async Task GetTopDoctorIdsByAppointmentCountAsync_RespectsCountLimit()
+        {
+            dbContext.Appointments.AddRange(
+                new Appointment { Id = 113, DoctorId = 601, PatientId = 501, DateTime = new DateTime(2026, 8, 1), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 114, DoctorId = 601, PatientId = 502, DateTime = new DateTime(2026, 8, 2), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 115, DoctorId = 601, PatientId = 503, DateTime = new DateTime(2026, 8, 3), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 116, DoctorId = 602, PatientId = 501, DateTime = new DateTime(2026, 8, 4), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 117, DoctorId = 602, PatientId = 502, DateTime = new DateTime(2026, 8, 5), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 118, DoctorId = 602, PatientId = 503, DateTime = new DateTime(2026, 8, 6), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 119, DoctorId = 603, PatientId = 501, DateTime = new DateTime(2026, 8, 7), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 120, DoctorId = 603, PatientId = 502, DateTime = new DateTime(2026, 8, 8), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 121, DoctorId = 603, PatientId = 503, DateTime = new DateTime(2026, 8, 9), Duration = TimeSpan.FromMinutes(30) }
+            );
+            await dbContext.SaveChangesAsync();
+
+            var result = await appointmentRepository.GetTopDoctorIdsByAppointmentCountAsync(2);
+
+            Assert.That(result, Has.Count.EqualTo(2));
+        }
+
+        [Test]
+        public async Task GetTopPatientIdsByAppointmentCountAsync_ReturnsPatientsOrderedByAppointmentCountDescending()
+        {
+            dbContext.Appointments.AddRange(
+                new Appointment { Id = 122, DoctorId = 501, PatientId = 701, DateTime = new DateTime(2026, 8, 1), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 123, DoctorId = 502, PatientId = 701, DateTime = new DateTime(2026, 8, 2), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 124, DoctorId = 503, PatientId = 701, DateTime = new DateTime(2026, 8, 3), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 125, DoctorId = 501, PatientId = 701, DateTime = new DateTime(2026, 8, 4), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 126, DoctorId = 502, PatientId = 702, DateTime = new DateTime(2026, 8, 5), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 127, DoctorId = 501, PatientId = 702, DateTime = new DateTime(2026, 8, 6), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 128, DoctorId = 503, PatientId = 702, DateTime = new DateTime(2026, 8, 7), Duration = TimeSpan.FromMinutes(30) },
+                new Appointment { Id = 129, DoctorId = 501, PatientId = 703, DateTime = new DateTime(2026, 8, 8), Duration = TimeSpan.FromMinutes(30) }
+            );
+            await dbContext.SaveChangesAsync();
+
+            var result = await appointmentRepository.GetTopPatientIdsByAppointmentCountAsync(2);
+
+            Assert.That(result, Is.EqualTo(new List<int> { 701, 702 }));
+        }
     }
 }

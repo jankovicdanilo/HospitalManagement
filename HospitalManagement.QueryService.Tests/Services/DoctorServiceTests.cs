@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
-using HospitalManagement.Shared.Models.Domain;
-using HospitalManagement.Shared.Models.DTOs.Doctor;
+using HospitalManagement.QueryService.Clients.Interfaces;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Implementations;
+using HospitalManagement.Shared.Models.Domain;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -16,6 +17,7 @@ namespace HospitalManagement.QueryService.Tests.Services
     internal class DoctorServiceTests
     {
         private Mock<IDoctorRepository> doctorRepositoryMock;
+        private Mock<IAppointmentServiceClient> appointmentServiceClientMock;
         private Mock<IMapper> mapperMock;
         private Mock<ILogger<DoctorService>> loggerMock;
         private Mock<IDistributedCache> cacheMock;
@@ -26,6 +28,7 @@ namespace HospitalManagement.QueryService.Tests.Services
         public void SetUp()
         {
             doctorRepositoryMock = new Mock<IDoctorRepository>();
+            appointmentServiceClientMock = new Mock<IAppointmentServiceClient>();
             mapperMock = new Mock<IMapper>();
             loggerMock = new Mock<ILogger<DoctorService>>();
             cacheMock = new Mock<IDistributedCache>();
@@ -33,6 +36,7 @@ namespace HospitalManagement.QueryService.Tests.Services
 
             doctorService = new DoctorService(
                 doctorRepositoryMock.Object,
+                appointmentServiceClientMock.Object,
                 mapperMock.Object,
                 loggerMock.Object,
                 cacheMock.Object,
@@ -155,6 +159,67 @@ namespace HospitalManagement.QueryService.Tests.Services
 
             Assert.That(result.Success, Is.True);
             doctorRepositoryMock.Verify(r => r.GetAllAsync(It.Is<DoctorFilterDto>(f => string.IsNullOrEmpty(f.Search))), Times.Once);
+        }
+
+        [Test]
+        public async Task GetPopularDoctorsAsync_ReturnsSuccessInPopularityOrder()
+        {
+            var doctorIds = new List<int> { 3, 1, 2 };
+            var doctors = new List<Doctor> { new Doctor { Id = 1 }, new Doctor { Id = 2 }, new Doctor { Id = 3 } };
+            var doctorDtos = new List<DoctorResponseDto> { new DoctorResponseDto { Id = 3 }, new DoctorResponseDto { Id = 1 }, new DoctorResponseDto { Id = 2 } };
+
+            appointmentServiceClientMock.Setup(c => c.GetPopularDoctorIdsAsync(5)).ReturnsAsync(doctorIds);
+            doctorRepositoryMock.Setup(r => r.GetByIdsAsync(doctorIds)).ReturnsAsync(doctors);
+            mapperMock.Setup(m => m.Map<List<DoctorResponseDto>>(It.Is<List<Doctor?>>(l =>
+                l.Count == 3 && l[0]!.Id == 3 && l[1]!.Id == 1 && l[2]!.Id == 2))).Returns(doctorDtos);
+
+            var result = await doctorService.GetPopularDoctorsAsync(5);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Is.EqualTo(doctorDtos));
+        }
+
+        [Test]
+        public async Task GetPopularDoctorsAsync_AppointmentServiceUnavailable_ReturnsFailure()
+        {
+            appointmentServiceClientMock.Setup(c => c.GetPopularDoctorIdsAsync(5)).ReturnsAsync((List<int>?)null);
+
+            var result = await doctorService.GetPopularDoctorsAsync(5);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("HISTORY_UNAVAILABLE"));
+        }
+
+        [Test]
+        public async Task GetPopularDoctorsAsync_NoPopularDoctors_ReturnsSuccessWithEmptyList()
+        {
+            appointmentServiceClientMock.Setup(c => c.GetPopularDoctorIdsAsync(5)).ReturnsAsync(new List<int>());
+
+            var result = await doctorService.GetPopularDoctorsAsync(5);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Is.Empty);
+            doctorRepositoryMock.Verify(r => r.GetByIdsAsync(It.IsAny<List<int>>()), Times.Never);
+        }
+
+        [Test]
+        public async Task GetPopularDoctorsAsync_SomeIdHasNoMatchingDoctor_SkipsItWithoutThrowing()
+        {
+            // Regression test for the ID-mismatch bug found today — a popular id that
+            // doesn't correspond to any real doctor in this database must be silently
+            // skipped, not cause a crash or a missing/null entry in the result.
+            var doctorIds = new List<int> { 1, 999, 2 };
+            var doctors = new List<Doctor> { new Doctor { Id = 1 }, new Doctor { Id = 2 } }; // 999 doesn't exist
+            var doctorDtos = new List<DoctorResponseDto> { new DoctorResponseDto { Id = 1 }, new DoctorResponseDto { Id = 2 } };
+
+            appointmentServiceClientMock.Setup(c => c.GetPopularDoctorIdsAsync(5)).ReturnsAsync(doctorIds);
+            doctorRepositoryMock.Setup(r => r.GetByIdsAsync(doctorIds)).ReturnsAsync(doctors);
+            mapperMock.Setup(m => m.Map<List<DoctorResponseDto>>(It.Is<List<Doctor?>>(l => l.Count == 2))).Returns(doctorDtos);
+
+            var result = await doctorService.GetPopularDoctorsAsync(5);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Has.Count.EqualTo(2));
         }
     }
 }

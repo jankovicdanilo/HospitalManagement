@@ -196,5 +196,63 @@ namespace HospitalManagement.QueryService.Tests.Services
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("HISTORY_UNAVAILABLE"));
         }
+
+        [Test]
+        public async Task GetPopularPatientsAsync_ReturnsSuccessInPopularityOrder()
+        {
+            var patientIds = new List<int> { 11, 1, 2 };
+            var patients = new List<Patient> { new Patient { Id = 1 }, new Patient { Id = 2 }, new Patient { Id = 11 } };
+            var patientDtos = new List<PatientListDto> { new PatientListDto { Id = 11 }, new PatientListDto { Id = 1 }, new PatientListDto { Id = 2 } };
+
+            appointmentServiceClientMock.Setup(c => c.GetPopularPatientIdsAsync(5)).ReturnsAsync(patientIds);
+            patientRepositoryMock.Setup(r => r.GetByIdsAsync(patientIds)).ReturnsAsync(patients);
+            mapperMock.Setup(m => m.Map<List<PatientListDto>>(It.Is<List<Patient?>>(l =>
+                l.Count == 3 && l[0]!.Id == 11 && l[1]!.Id == 1 && l[2]!.Id == 2))).Returns(patientDtos);
+
+            var result = await patientService.GetPopularPatientsAsync(5);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Is.EqualTo(patientDtos));
+        }
+
+        [Test]
+        public async Task GetPopularPatientsAsync_AppointmentServiceUnavailable_ReturnsFailure()
+        {
+            appointmentServiceClientMock.Setup(c => c.GetPopularPatientIdsAsync(5)).ReturnsAsync((List<int>?)null);
+
+            var result = await patientService.GetPopularPatientsAsync(5);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("HISTORY_UNAVAILABLE"));
+        }
+
+        [Test]
+        public async Task GetPopularPatientsAsync_NoPopularPatients_ReturnsSuccessWithEmptyList()
+        {
+            appointmentServiceClientMock.Setup(c => c.GetPopularPatientIdsAsync(5)).ReturnsAsync(new List<int>());
+
+            var result = await patientService.GetPopularPatientsAsync(5);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Is.Empty);
+            patientRepositoryMock.Verify(r => r.GetByIdsAsync(It.IsAny<List<int>>()), Times.Never);
+        }
+
+        [Test]
+        public async Task GetPopularPatientsAsync_SomeIdHasNoMatchingPatient_SkipsItWithoutThrowing()
+        {
+            var patientIds = new List<int> { 1, 999, 2 };
+            var patients = new List<Patient> { new Patient { Id = 1 }, new Patient { Id = 2 } };
+            var patientDtos = new List<PatientListDto> { new PatientListDto { Id = 1 }, new PatientListDto { Id = 2 } };
+
+            appointmentServiceClientMock.Setup(c => c.GetPopularPatientIdsAsync(5)).ReturnsAsync(patientIds);
+            patientRepositoryMock.Setup(r => r.GetByIdsAsync(patientIds)).ReturnsAsync(patients);
+            mapperMock.Setup(m => m.Map<List<PatientListDto>>(It.Is<List<Patient?>>(l => l.Count == 2))).Returns(patientDtos);
+
+            var result = await patientService.GetPopularPatientsAsync(5);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Has.Count.EqualTo(2));
+        }
     }
 }
