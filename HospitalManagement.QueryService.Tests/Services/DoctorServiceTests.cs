@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
-using HospitalManagement.Shared.Models.Domain;
-using HospitalManagement.Shared.Models.DTOs.Doctor;
+using HospitalManagement.QueryService.Clients.Interfaces;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Implementations;
+using HospitalManagement.Shared.Models.Domain;
+using HospitalManagement.Shared.Models.DTOs.Doctor;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -16,6 +17,7 @@ namespace HospitalManagement.QueryService.Tests.Services
     internal class DoctorServiceTests
     {
         private Mock<IDoctorRepository> doctorRepositoryMock;
+        private Mock<IAppointmentServiceClient> appointmentServiceClientMock;
         private Mock<IMapper> mapperMock;
         private Mock<ILogger<DoctorService>> loggerMock;
         private Mock<IDistributedCache> cacheMock;
@@ -26,6 +28,7 @@ namespace HospitalManagement.QueryService.Tests.Services
         public void SetUp()
         {
             doctorRepositoryMock = new Mock<IDoctorRepository>();
+            appointmentServiceClientMock = new Mock<IAppointmentServiceClient>();
             mapperMock = new Mock<IMapper>();
             loggerMock = new Mock<ILogger<DoctorService>>();
             cacheMock = new Mock<IDistributedCache>();
@@ -33,6 +36,7 @@ namespace HospitalManagement.QueryService.Tests.Services
 
             doctorService = new DoctorService(
                 doctorRepositoryMock.Object,
+                appointmentServiceClientMock.Object,
                 mapperMock.Object,
                 loggerMock.Object,
                 cacheMock.Object,
