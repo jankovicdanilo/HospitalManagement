@@ -13,9 +13,13 @@ using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs.Doctor;
 using HospitalManagement.Shared.Models.DTOs.DoctorSchedule;
 using HospitalManagement.Shared.Models.DTOs.Patient;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using Polly;
+using System.Text;
+using System.Text.Json;
 
 namespace HospitalManagement.Appointments.Tests.Services
 {
@@ -32,6 +36,8 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IClinicTimeZoneProvider> clinicTimeZoneProviderMock;
         private Mock<ITreatmentRepository> treatmentRepositoryMock;
         private Mock<IClaudeSummaryService> claudeSummaryServiceMock;
+        private Mock<IDistributedCache> distributedCacheMock;
+        private IAsyncPolicy cachePolicy;
         private AppointmentService appointmentService;
 
         [SetUp]
@@ -47,6 +53,8 @@ namespace HospitalManagement.Appointments.Tests.Services
             clinicTimeZoneProviderMock = new Mock<IClinicTimeZoneProvider>();
             treatmentRepositoryMock = new Mock<ITreatmentRepository>();
             claudeSummaryServiceMock = new Mock<IClaudeSummaryService>();
+            distributedCacheMock = new Mock<IDistributedCache>();
+            cachePolicy = Policy.NoOpAsync();
 
             clinicTimeZoneProviderMock.Setup(c => c.ToLocal(It.IsAny<DateTime>())).Returns((DateTime dt) => dt);
             clinicTimeZoneProviderMock.Setup(c => c.ToUtc(It.IsAny<DateTime>())).Returns((DateTime dt) => dt);
@@ -61,7 +69,9 @@ namespace HospitalManagement.Appointments.Tests.Services
                 queryServiceClientMock.Object,
                 clinicTimeZoneProviderMock.Object,
                 treatmentRepositoryMock.Object,
-                claudeSummaryServiceMock.Object
+                claudeSummaryServiceMock.Object,
+                distributedCacheMock.Object,
+                cachePolicy
             );
         }
 
@@ -478,6 +488,74 @@ namespace HospitalManagement.Appointments.Tests.Services
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("INVALID_STATUS"));
+        }
+
+        [Test]
+        public async Task GetPatientSummaryAsync_CacheHit_ReturnsCachedSummaryWithoutCallingClaude()
+        {
+            int patientId = 5;
+            var cachedDto = new PatientSummaryResponseDto 
+            { 
+                PatientId = patientId, PatientName = "Ana Jovanovic", Summary = "Cached summary text" 
+            };
+            var cachedJson = JsonSerializer.Serialize(cachedDto);
+
+            distributedCacheMock.Setup(c => c.GetAsync($"patient-summary:{patientId}", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Encoding.UTF8.GetBytes(cachedJson));
+
+            var result = await appointmentService.GetPatientSummaryAsync(patientId);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data!.Summary, Is.EqualTo("Cached summary text"));
+            claudeSummaryServiceMock.Verify(c => c.GenerateSummaryAsync(It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public async Task GetPatientSummaryAsync_CacheMiss_GeneratesAndCachesSummary()
+        {
+            int patientId = 5;
+            var patient = new PatientResponseDto 
+            { 
+                Id = patientId, Name = "Ana", LastName = "Jovanovic", DateOfBirth = new DateOnly(1987, 4, 12) 
+            };
+            var appointments = new List<Appointment> { new Appointment { Id = 1, PatientId = patientId, DateTime = DateTime.UtcNow, Status = AppointmentStatus.Completed } };
+            var treatments = new List<Treatment>();
+
+            distributedCacheMock
+                .Setup(c => c.GetAsync($"patient-summary:{patientId}", It.IsAny<CancellationToken>()))
+                .ReturnsAsync((byte[]?)null);
+            queryServiceClientMock.Setup(c => c.GetPatientAsync(patientId)).ReturnsAsync(patient);
+            appointmentRepositoryMock.Setup(a => a.GetByPatientIdAsync(patientId)).ReturnsAsync(appointments);
+            treatmentRepositoryMock.Setup(t => t.GetByAppointmentIdsAsync(It.IsAny<IEnumerable<int>>())).ReturnsAsync(treatments);
+            claudeSummaryServiceMock.Setup(c => c.GenerateSummaryAsync(It.IsAny<string>())).ReturnsAsync("Generated summary text");
+            distributedCacheMock
+                .Setup(c => c.SetAsync
+                ($"patient-summary:{patientId}", It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()));
+
+            var result = await appointmentService.GetPatientSummaryAsync(patientId);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data!.Summary, Is.EqualTo("Generated summary text"));
+            Assert.That(result.Data!.PatientName, Is.EqualTo("Ana Jovanovic"));
+            distributedCacheMock
+                .Verify(c => c.SetAsync
+                ($"patient-summary:{patientId}", It.IsAny<byte[]>(), 
+                It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetPatientSummaryAsync_PatientNotFound_ReturnsFailure()
+        {
+            int patientId = 99;
+
+            distributedCacheMock
+                .Setup(c => c.GetAsync($"patient-summary:{patientId}", It.IsAny<CancellationToken>())).ReturnsAsync((byte[]?)null);
+            queryServiceClientMock.Setup(c => c.GetPatientAsync(patientId)).ReturnsAsync((PatientResponseDto?)null);
+
+            var result = await appointmentService.GetPatientSummaryAsync(patientId);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("INVALID_PATIENT_ID"));
         }
     }
 }
