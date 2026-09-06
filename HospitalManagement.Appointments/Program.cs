@@ -21,7 +21,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NLog;
 using NLog.Web;
+using Polly;
 using QuestPDF.Infrastructure;
+using StackExchange.Redis;
 using System.Text;
 
 var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
@@ -45,6 +47,7 @@ try
     builder.Services.AddScoped<IAppointmentService, AppointmentService>();
     builder.Services.AddScoped<IAppointmentProcedureService, AppointmentProcedureService>();
     builder.Services.AddScoped<ITreatmentService, TreatmentService>();
+    builder.Services.AddScoped<IClaudeSummaryService, ClaudeSummaryService>();
 
     // Validations
     builder.Services.AddScoped<IAppointmentValidation, AppointmentValidation>();
@@ -73,6 +76,26 @@ try
     builder.Services.AddAutoMapper(typeof(Program));
 
     QuestPDF.Settings.License = LicenseType.Community;
+
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = builder.Configuration["Redis:ConnectionString"];
+    });
+
+    builder.Services.AddSingleton<IAsyncPolicy>(sp =>
+    {
+        var logger = sp.GetRequiredService<ILogger<Program>>();
+        return Policy
+                .Handle<RedisConnectionException>()
+                .Or<RedisTimeoutException>()
+                .CircuitBreakerAsync(
+                exceptionsAllowedBeforeBreaking: 3,
+                durationOfBreak: TimeSpan.FromSeconds(30),
+                onBreak: (ex, breakDelay) => logger.LogWarning("Redis circuit opened for {Delay}s: {Message}", breakDelay.TotalSeconds, ex.Message),
+                onReset: () => logger.LogInformation("Redis circuit closed, resuming normal calls"),
+                onHalfOpen: () => logger.LogInformation("Redis circuit half-open, testing connection")
+            );
+    });
 
     // JWT settings
     var jwtSettings = new JwtSettings

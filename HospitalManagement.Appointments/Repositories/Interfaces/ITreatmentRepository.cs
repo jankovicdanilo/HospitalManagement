@@ -7,5 +7,6 @@ namespace HospitalManagement.Appointments.Repositories.Interfaces
         Task<Treatment> CreateAsync(Treatment treatment);
         Task<Treatment?> GetByIdAsync(int id);
         Task<bool> TreatmentExists(int appointmentId);
+        Task<List<Treatment>> GetByAppointmentIdsAsync(IEnumerable<int> appointmentIds);
     }
 }

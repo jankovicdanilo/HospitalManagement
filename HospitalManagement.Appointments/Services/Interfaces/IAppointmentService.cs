@@ -15,5 +15,7 @@ namespace HospitalManagement.Appointments.Services.Interfaces
         Task<Result<List<AppointmentResponseDto>>> GetPatientHistoryAsync(int patientId);
         Task<Result<List<int>>> GetPopularDoctorIdsAsync(int count);
         Task<Result<List<int>>> GetPopularPatientIdsAsync(int count);
+        Task<Result<PatientSummaryResponseDto>> GetPatientSummaryAsync(int patientId);
+        Task InvalidatePatientSummaryCacheAsync(int patientId);
     }
 }

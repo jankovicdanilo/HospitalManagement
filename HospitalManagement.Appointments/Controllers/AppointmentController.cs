@@ -179,6 +179,15 @@ namespace HospitalManagement.Appointments.Controllers
 
             return result.Success ? Ok(result.Data) : HandleFailure(result);
         }
-        
+
+        [HttpGet("patient/{patientId:int}/summary")]
+        public async Task<IActionResult> GetPatientSummaryAsync([FromRoute] int patientId)
+        {
+            var result = await appointmentService.GetPatientSummaryAsync(patientId);
+
+            return result.Success ? Ok(result.Data) : HandleFailure(result);
+        }
+
+
     }
 }
