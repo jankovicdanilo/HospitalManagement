@@ -30,6 +30,8 @@ namespace HospitalManagement.Appointments.Tests.Services
         private IOptions<AppointmentSettings> appointmentSettings;
         private Mock<IAppointmentDiscountCalculator> appointmentDiscountCalculatorMock;
         private Mock<IClinicTimeZoneProvider> clinicTimeZoneProviderMock;
+        private Mock<ITreatmentRepository> treatmentRepositoryMock;
+        private Mock<IClaudeSummaryService> claudeSummaryServiceMock;
         private AppointmentService appointmentService;
 
         [SetUp]
@@ -43,6 +45,8 @@ namespace HospitalManagement.Appointments.Tests.Services
             appointmentDiscountCalculatorMock = new Mock<IAppointmentDiscountCalculator>();
             appointmentSettings = Options.Create(new AppointmentSettings { SlotSizeMinutes = 30 });
             clinicTimeZoneProviderMock = new Mock<IClinicTimeZoneProvider>();
+            treatmentRepositoryMock = new Mock<ITreatmentRepository>();
+            claudeSummaryServiceMock = new Mock<IClaudeSummaryService>();
 
             clinicTimeZoneProviderMock.Setup(c => c.ToLocal(It.IsAny<DateTime>())).Returns((DateTime dt) => dt);
             clinicTimeZoneProviderMock.Setup(c => c.ToUtc(It.IsAny<DateTime>())).Returns((DateTime dt) => dt);
@@ -55,7 +59,9 @@ namespace HospitalManagement.Appointments.Tests.Services
                 appointmentSettings,
                 appointmentDiscountCalculatorMock.Object,
                 queryServiceClientMock.Object,
-                clinicTimeZoneProviderMock.Object
+                clinicTimeZoneProviderMock.Object,
+                treatmentRepositoryMock.Object,
+                claudeSummaryServiceMock.Object
             );
         }
 

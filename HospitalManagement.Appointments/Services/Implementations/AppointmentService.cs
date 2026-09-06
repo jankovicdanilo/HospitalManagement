@@ -10,8 +10,12 @@ using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs.Patient;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.CircuitBreaker;
 using System.Text;
+using System.Text.Json;
 
 namespace HospitalManagement.Appointments.Services.Implementations
 {
@@ -27,12 +31,15 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly IClinicTimeZoneProvider clinicTimeZoneProvider;
         private readonly ITreatmentRepository treatmentRepository;
         private readonly IClaudeSummaryService claudeSummaryService;
+        private readonly IDistributedCache distributedCache;
+        private readonly IAsyncPolicy cachePolicy;
 
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator,
             IQueryServiceClient queryServiceClient, IClinicTimeZoneProvider clinicTimeZoneProvider,
-            ITreatmentRepository treatmentRepository, IClaudeSummaryService claudeSummaryService)
+            ITreatmentRepository treatmentRepository, IClaudeSummaryService claudeSummaryService,
+            IDistributedCache distributedCache, IAsyncPolicy cachePolicy)
         {
             this.appointmentRepository = appointmentRepository;
             this.mapper = mapper;
@@ -44,6 +51,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
             this.clinicTimeZoneProvider = clinicTimeZoneProvider;
             this.treatmentRepository = treatmentRepository;
             this.claudeSummaryService = claudeSummaryService;
+            this.distributedCache = distributedCache;
+            this.cachePolicy = cachePolicy;
         }
 
         public async Task<Result<PagedResult<AppointmentListResponseDto>>> GetAllAsync(AppointmentFilterDto filter)
@@ -133,6 +142,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             var appointmentDomain = mapper.Map<Appointment>(request);
 
             appointmentDomain = await appointmentRepository.CreateAsync(appointmentDomain);
+            await InvalidatePatientSummaryCacheAsync(appointmentDomain.PatientId);
 
             logger.LogInformation("Appointment created with id {id}", appointmentDomain.Id);
             logger.LogInformation("Email sent to {Email}: Appointment confirmed for {DateTime} with Dr. {Doctor}",
@@ -193,6 +203,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             mapper.Map(request, appointmentDomain);
 
             appointmentDomain = await appointmentRepository.UpdateAsync(appointmentDomain);
+            await InvalidatePatientSummaryCacheAsync(appointmentDomain.PatientId);
 
             logger.LogInformation("Appointment with id {Id} updated", appointmentDomain.Id);
 
@@ -214,6 +225,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             }
 
             logger.LogInformation("Appointment with id {Id} deleted", id);
+            await InvalidatePatientSummaryCacheAsync(appointmentDomain.PatientId);
             return Result.Ok("Appointment deleted");
         }
 
@@ -292,6 +304,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             appointmentDomain.Status = request.Status;
 
             await appointmentRepository.UpdateAsync(appointmentDomain);
+            await InvalidatePatientSummaryCacheAsync(appointmentDomain.PatientId);
 
             logger.LogInformation("Appointment with id {Id} status updated to {Status}", request.Id, request.Status);
 
@@ -373,6 +386,28 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
         public async Task<Result<PatientSummaryResponseDto>> GetPatientSummaryAsync(int patientId)
         {
+            string cacheKey = $"patient-summary:{patientId}";
+            string? cached = null;
+            try
+            {
+                cached = await cachePolicy.ExecuteAsync(() => distributedCache.GetStringAsync(cacheKey));
+            }
+            catch (BrokenCircuitException)
+            {
+                logger.LogDebug("Redis circuit open, skipping cache read for {Key}", cacheKey);
+            }
+            catch(Exception ex)
+            {
+                logger.LogWarning("Cache unavailable for key {Key}, falling back to generation: {Message}", cacheKey, ex.Message);
+            }
+
+            if(cached != null)
+            {
+                logger.LogInformation("Cache hit for patient summary {PatientId}", patientId);
+                var cachedDto = JsonSerializer.Deserialize<PatientSummaryResponseDto>(cached);
+                return Result<PatientSummaryResponseDto>.Ok(cachedDto!);
+            }
+
             var patient = await queryServiceClient.GetPatientAsync(patientId);
             if(patient == null)
             {
@@ -406,14 +441,29 @@ namespace HospitalManagement.Appointments.Services.Implementations
                     "Failed to generate patient summary", "SUMMARY_GENERATION_FAILED", ErrorType.UpstreamFailure);
             }
 
-            logger.LogInformation("Summary generated for patient {PatientId}", patientId);
-
             var result = new PatientSummaryResponseDto
             {
                 PatientId = patientId,
                 PatientName = $"{patient.Name} {patient.LastName}",
                 Summary = summaryText
             };
+
+            try
+            {
+                await cachePolicy.ExecuteAsync(() => distributedCache.SetStringAsync(cacheKey, JsonSerializer.Serialize(result),
+                    new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1) }));
+                logger.LogInformation("Patient summary for {PatientId} cached", patientId);
+            }
+            catch (BrokenCircuitException)
+            {
+                logger.LogDebug("Redis circuit open, skipping cache write for {Key}", cacheKey);
+            }
+            catch(Exception ex)
+            {
+                logger.LogWarning("Failed to write cache for key {Key}: {Message}", cacheKey, ex.Message);
+            }
+
+            logger.LogInformation("Summary generated for patient {PatientId}", patientId);
 
             return Result<PatientSummaryResponseDto>.Ok(result);
         }
@@ -446,6 +496,24 @@ namespace HospitalManagement.Appointments.Services.Implementations
             }
 
             return sb.ToString();
+        }
+
+        public async Task InvalidatePatientSummaryCacheAsync(int patientId)
+        {
+            string cacheKey = $"patient-summary:{patientId}";
+            try
+            {
+                await cachePolicy.ExecuteAsync(() => distributedCache.RemoveAsync(cacheKey));
+                logger.LogInformation("Invalidated patient summary cache for {PatientId}", patientId);
+            }
+            catch (BrokenCircuitException)
+            {
+                logger.LogDebug("Redis circuit open, skipping cache invalidation for {Key}", cacheKey);
+            }
+            catch(Exception ex)
+            {
+                logger.LogWarning("Failed to invalidate cache for key {Key}: {Message}", cacheKey, ex.Message);
+            }
         }
     }
 }

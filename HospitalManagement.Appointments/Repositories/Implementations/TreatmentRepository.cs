@@ -14,9 +14,11 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
             this.dbContext = dbContext;
         }
 
-        public Task<Treatment> CreateAsync(Treatment treatment)
+        public async Task<Treatment> CreateAsync(Treatment treatment)
         {
-            throw new NotImplementedException();
+            dbContext.Treatments.Add(treatment);
+            await dbContext.SaveChangesAsync();
+            return treatment;
         }
 
         public async Task<List<Treatment>> GetByAppointmentIdsAsync(IEnumerable<int> appointmentIds)
@@ -27,14 +29,14 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
                 .ToListAsync();
         }
 
-        public Task<Treatment?> GetByIdAsync(int id)
+        public async Task<Treatment?> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await dbContext.Treatments.FirstOrDefaultAsync(t => t.Id == id);
         }
 
-        public Task<bool> TreatmentExists(int appointmentId)
+        public async Task<bool> TreatmentExists(int appointmentId)
         {
-            throw new NotImplementedException();
+            return await dbContext.Treatments.AnyAsync(x => x.AppointmentId == appointmentId);
         }
     }
 }
