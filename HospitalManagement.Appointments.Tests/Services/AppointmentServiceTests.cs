@@ -616,6 +616,47 @@ namespace HospitalManagement.Appointments.Tests.Services
             await appointmentService.InvalidatePatientSummaryCacheAsync(patientId);
 
             distributedCacheMock.Verify(c => c.RemoveAsync($"patient-summary:{patientId}", It.IsAny<CancellationToken>()), Times.Once);
+        public async Task GetPopularDoctorIdsAsync_ValidCount_ReturnsSuccess()
+        {
+            var ids = new List<int> { 3, 1, 2 };
+            appointmentRepositoryMock.Setup(r => r.GetTopDoctorIdsByAppointmentCountAsync(5)).ReturnsAsync(ids);
+
+            var result = await appointmentService.GetPopularDoctorIdsAsync(5);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Is.EqualTo(ids));
+        }
+
+        [Test]
+        public async Task GetPopularDoctorIdsAsync_CountIsZeroOrNegative_ReturnsFailure()
+        {
+            var result = await appointmentService.GetPopularDoctorIdsAsync(0);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("INVALID_COUNT"));
+            appointmentRepositoryMock.Verify(r => r.GetTopDoctorIdsByAppointmentCountAsync(It.IsAny<int>()), Times.Never);
+        }
+
+        [Test]
+        public async Task GetPopularPatientIdsAsync_ValidCount_ReturnsSuccess()
+        {
+            var ids = new List<int> { 11, 1, 2 };
+            appointmentRepositoryMock.Setup(r => r.GetTopPatientIdsByAppointmentCountAsync(5)).ReturnsAsync(ids);
+
+            var result = await appointmentService.GetPopularPatientIdsAsync(5);
+
+            Assert.That(result.Success, Is.True);
+            Assert.That(result.Data, Is.EqualTo(ids));
+        }
+
+        [Test]
+        public async Task GetPopularPatientIdsAsync_CountIsZeroOrNegative_ReturnsFailure()
+        {
+            var result = await appointmentService.GetPopularPatientIdsAsync(-1);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorCode, Is.EqualTo("INVALID_COUNT"));
+            appointmentRepositoryMock.Verify(r => r.GetTopPatientIdsByAppointmentCountAsync(It.IsAny<int>()), Times.Never);
         }
     }
 }
