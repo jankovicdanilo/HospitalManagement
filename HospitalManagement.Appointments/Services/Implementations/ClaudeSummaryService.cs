@@ -21,7 +21,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             var parameters = new MessageCreateParams
             {
                 MaxTokens = 1024,
-                Model = Model.ClaudeSonnet5,
+                Model = Model.ClaudeHaiku4_5,
                 Messages =
                 [
                     new()
