@@ -12,13 +12,16 @@ namespace HospitalManagement.Appointments.Services.Implementations
     {
         private readonly ITreatmentRepository treatmentRepository;
         private readonly ITreatmentValidation treatmentValidation;
+        private readonly IAppointmentService appointmentService;
         private readonly IMapper mapper;
         private readonly ILogger<TreatmentService> logger;
 
-        public TreatmentService(ITreatmentRepository treatmentRepository, IMapper mapper, ITreatmentValidation treatmentValidation,
+        public TreatmentService(ITreatmentRepository treatmentRepository,IAppointmentService appointmentService, 
+            IMapper mapper, ITreatmentValidation treatmentValidation,
             ILogger<TreatmentService> logger)
         {
             this.treatmentRepository = treatmentRepository;
+            this.appointmentService = appointmentService;
             this.mapper = mapper;
             this.treatmentValidation = treatmentValidation;
             this.logger = logger;
@@ -39,6 +42,12 @@ namespace HospitalManagement.Appointments.Services.Implementations
             treatmentDomain = await treatmentRepository.CreateAsync(treatmentDomain);
 
             logger.LogInformation("Treatment created with id {id}", treatmentDomain.Id);
+
+            var appointment = await appointmentService.GetByIdAsync(treatmentDomain.AppointmentId);
+            if(appointment.Success && appointment.Data?.Patient != null)
+            {
+                await appointmentService.InvalidatePatientSummaryCacheAsync(appointment.Data.Patient.Id);
+            }
 
             var result = mapper.Map<TreatmentCreateResponseDto>(treatmentDomain);
 
