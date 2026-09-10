@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointments
+  namespace: hms-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appointments
+  template:
+    metadata:
+      labels:
+        app: appointments
+    spec:
+      containers:
+        - name: appointments
+          image: hospitalmanagement-appointments:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hms-secrets
+                  key: DB_PASSWORD
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Development"
+            - name: ConnectionStrings__AppointmentDb
+              value: "Server=db;Database=HospitalManagementAppointments;User Id=sa;Password=$(DB_PASSWORD);TrustServerCertificate=True"
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef:
+                  name: hms-secrets
+                  key: JWT_KEY
+            - name: Jwt__Issuer
+              valueFrom:
+                secretKeyRef:
+                  name: hms-secrets
+                  key: JWT_ISSUER
+            - name: Jwt__Audience
+              valueFrom:
+                secretKeyRef:
+                  name: hms-secrets
+                  key: JWT_AUDIENCE
+            - name: Jwt__ExpiryMinutes
+              value: "60"
+            - name: QueryService__BaseUrl
+              value: "http://queryservice:8080"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appointments
+  namespace: hms-dev
+spec:
+  selector:
+    app: appointments
+  ports:
+    - port: 8080
+      targetPort: 8080
