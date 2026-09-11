@@ -159,6 +159,8 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddFrontendCors(builder.Configuration);
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseCors("AllowFrontend");
@@ -173,5 +175,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

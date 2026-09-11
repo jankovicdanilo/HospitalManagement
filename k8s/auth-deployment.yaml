@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: hospitalmanagement-auth:latest
+          image: hospitalmanagement-auth:test1
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_PASSWORD
@@ -44,6 +44,18 @@ spec:
                   key: JWT_AUDIENCE
           ports:
             - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
 ---
 apiVersion: v1
 kind: Service
