@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hms-sqldata
+  namespace: {{ .Values.namespace }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hms-secrets
+                  key: DB_PASSWORD
+          ports:
+            - containerPort: 1433
+          volumeMounts:
+            - name: sqldata
+              mountPath: /var/opt/mssql
+      volumes:
+        - name: sqldata
+          persistentVolumeClaim:
+            claimName: hms-sqldata
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 1433
+      targetPort: 1433

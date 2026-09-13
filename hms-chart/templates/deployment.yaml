@@ -1,0 +1,48 @@
+{{- range $name, $svc := .Values.services }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      containers:
+      - name: {{ $name }}
+        image: {{ $svc.image }}
+        imagePullPolicy: IfNotPresent
+        env:
+        {{- range $envName, $secretKey := $svc.secretEnv }}
+        - name: {{ $envName }}
+          valueFrom:
+            secretKeyRef:
+              name: hms-secrets
+              key: {{ $secretKey }}
+        {{- end }}
+        {{- range $key, $val := $svc.env }}
+        - name: {{ $key }}
+          value: "{{ $val }}"
+        {{- end }}
+        ports:
+        - containerPort: {{ $svc.port }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ $svc.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ $svc.port }}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+{{- end }}
