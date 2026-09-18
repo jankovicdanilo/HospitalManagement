@@ -181,9 +181,9 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet("patient/{patientId:int}/summary")]
-        public async Task<IActionResult> GetPatientSummaryAsync([FromRoute] int patientId)
+        public async Task<IActionResult> GetPatientSummaryAsync([FromRoute] int patientId, [FromQuery] string language = "en")
         {
-            var result = await appointmentService.GetPatientSummaryAsync(patientId);
+            var result = await appointmentService.GetPatientSummaryAsync(patientId, language);
 
             return result.Success ? Ok(result.Data) : HandleFailure(result);
         }
