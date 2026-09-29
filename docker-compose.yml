@@ -104,6 +104,34 @@ services:
       appointments:
         condition: service_started
 
+  statisticsservice:
+    container_name: hospitalmanagement-statistics
+    build:
+      context: .
+      dockerfile: HospitalManagement.Statistics/Dockerfile
+    ports:
+      - "8086:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__ExpiryMinutes: "60"
+      AppointmentService__BaseUrl: ${APPOINTMENT_SERVICE_URL}
+      QueryService__BaseUrl: ${QUERY_SERVICE_URL}
+      Redis__ConnectionString: "redis:6379,abortConnect=false"
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Cors__AllowedOrigins__1: http://localhost:5174
+    volumes:
+      - ./logs/statistics:/app/logs
+    depends_on:
+      appointments:
+        condition: service_started
+      queryservice:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
   command:
     container_name: hospitalmanagement-command
     build:
