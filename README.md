@@ -36,6 +36,7 @@ architecture-beta
     service app(server)[AppointmentService] in system
     service query(server)[QueryService] in system
     service invoice(server)[InvoiceService] in system
+    service stats(server)[StatisticsService] in system
 
     %% Database ownership
     command:R -- L:cqrsdb
@@ -52,6 +53,8 @@ architecture-beta
     %% Business communication
     app:L -- R:query
     invoice:T -- B:app
+    stats:B -- T:app
+    query:R -- L:stats
 ```
 
 ### Services
@@ -61,20 +64,35 @@ user registration, login, and JWT token issuance. It is the only service that ge
 tokens. All other services validate incoming tokens using the same shared signing key
 but never generate them.
 
-**HMS API** (`HospitalManagement`) owns the core domain entities: Doctor,
-DoctorSchedule, Patient, and Procedure catalog. It exposes standard CRUD endpoints
-for each and serves as the source of truth for all non-appointment data.
+**Command Service** (`HospitalManagement.CommandService`) is the write side of the
+core domain. It owns Doctor, DoctorSchedule, Patient, and Procedure data in the CQRS
+database and publishes changes to RabbitMQ.
+
+**Query Service** (`HospitalManagement.QueryService`) is the read side of the core
+domain. It serves Doctor, DoctorSchedule, Patient, and Procedure data from the CQRS
+database and is the source other services call to look these up.
 
 **Appointment Service** (`HospitalManagement.Appointments`) owns everything
 appointment-related: Appointment, AppointmentProcedure, Treatment, and the discount
-calculator. It maintains its own database and communicates with the Main HMS API via
-live HTTP calls to validate and look up Doctor, Patient, Procedure, and DoctorSchedule
-data at request time. To avoid cross-service joins at read time, key fields (doctor name,
-patient name, procedure name and price) are snapshotted onto appointment records at
-creation time.
+calculator. It has its own database and calls the Query Service over HTTP to validate
+and look up doctors, patients, and schedules. Procedure name and price are
+snapshotted onto appointment records at creation time, so later catalog changes do not
+alter past appointments. It also exposes `GET /api/appointment/stats-data`, a flat
+list of appointments with discounted totals used by the Statistics Service.
+
+**Invoice Service** (`HospitalManagement.InvoiceService`) generates PDF and DOCX
+invoices (English or Montenegrin) for completed appointments. It has no database and
+fetches appointment data from the Appointment Service.
+
+**Statistics Service** (`HospitalManagement.Statistics`) provides read-only aggregates
+for the statistics dashboard: doctor load and revenue, procedure revenue, and patient
+statistics. It has no database; it aggregates data from the Appointment and Query
+services and caches results in Redis for 5 minutes. Downstream calls use Polly
+(retry, circuit breaker, timeout). All endpoints take `from` and `to` dates.
 
 ### Shared library
 
-`HospitalManagement.Shared` is a class library referenced by all three services. It
-contains shared primitives: `Result<T>`, `PagedResult<T>`, and `BaseController`. It has
-no runtime dependency on any service and is not deployed independently.
+`HospitalManagement.Shared` is a class library referenced by all services. It contains
+shared primitives (`Result<T>`, `PagedResult<T>`, `BaseController`), the token-forwarding
+HTTP handler, and shared DTOs and enums such as `AppointmentStatus`. It has no runtime
+dependency on any service and is not deployed independently.
