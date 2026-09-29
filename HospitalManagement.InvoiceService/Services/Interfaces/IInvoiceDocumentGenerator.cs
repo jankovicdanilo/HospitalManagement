@@ -4,7 +4,7 @@ namespace HospitalManagement.InvoiceService.Services.Interfaces
 {
     public interface IInvoiceDocumentGenerator
     {
-        byte[] CreateDocument(InvoiceData data);
+        byte[] CreateDocument(InvoiceData data, string language);
         string ContentType { get; }
         string FileExtension { get; }
     }
