@@ -16,6 +16,14 @@ namespace HospitalManagement.Statistics.Services.Implementations
             this.cache = cache;
         }
 
+        public Task<Result<List<DoctorLoadTimelineDto>>> GetDoctorsLoadTimelineAsync(DateOnly from, DateOnly to, int top)
+    => cache.GetOrSetAsync($"doctors-load-timeline-{top}", from, to,
+        () => builder.BuildDoctorsLoadTimelineAsync(from, to, top));
+
+        public Task<Result<DoctorStatisticsDto>> GetDoctorStatisticsAsync(int doctorId, DateOnly from, DateOnly to)
+            => cache.GetOrSetAsync($"doctor-{doctorId}", from, to,
+                () => builder.BuildDoctorStatisticsAsync(doctorId, from, to));
+
         public Task<Result<List<DoctorLoadDto>>> GetDoctorsLoadAsync(DateOnly from, DateOnly to)
             => cache.GetOrSetAsync("doctors-load", from, to, () => builder.BuildDoctorsLoadAsync(from, to));
 
