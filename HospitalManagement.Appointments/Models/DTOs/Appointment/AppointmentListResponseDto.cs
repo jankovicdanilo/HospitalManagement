@@ -1,6 +1,6 @@
 ﻿using HospitalManagement.Appointments.Models.DTOs.AppointmentProcedure;
 using HospitalManagement.Appointments.Models.DTOs.Treatment;
-using HospitalManagement.Appointments.Models.Enums;
+using HospitalManagement.Shared.Models.Enums;
 using HospitalManagement.Shared.Models.DTOs;
 
 namespace HospitalManagement.Appointments.Models.DTOs.Appointment

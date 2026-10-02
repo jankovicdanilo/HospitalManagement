@@ -188,6 +188,11 @@ namespace HospitalManagement.Appointments.Controllers
             return result.Success ? Ok(result.Data) : HandleFailure(result);
         }
 
-
+        [HttpGet("stats-data")]
+        public async Task<IActionResult> GetStatsDataAsync([FromQuery] DateOnly from, [FromQuery] DateOnly to)
+        {
+            var result = await appointmentService.GetStatsDataAsync(from, to);
+            return result.Success ? Ok(result.Data) : HandleFailure(result);
+        }
     }
 }
