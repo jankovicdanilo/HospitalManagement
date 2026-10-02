@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Appointments.Models.Enums;
+﻿using HospitalManagement.Shared.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 
 namespace HospitalManagement.Appointments.Services.Background
