@@ -14,6 +14,22 @@ namespace HospitalManagement.Statistics.Controllers
         public StatisticsController(IStatisticsService statisticsService)
             => this.statisticsService = statisticsService;
 
+        [HttpGet("doctors/load/timeline")]
+        public async Task<IActionResult> GetDoctorsLoadTimelineAsync(
+    [FromQuery] DateOnly from, [FromQuery] DateOnly to, [FromQuery] int top = 10)
+        {
+            var result = await statisticsService.GetDoctorsLoadTimelineAsync(from, to, top);
+            return result.Success ? Ok(result.Data) : HandleFailure(result);
+        }
+
+        [HttpGet("doctors/{doctorId:int}")]
+        public async Task<IActionResult> GetDoctorStatisticsAsync(
+            [FromRoute] int doctorId, [FromQuery] DateOnly from, [FromQuery] DateOnly to)
+        {
+            var result = await statisticsService.GetDoctorStatisticsAsync(doctorId, from, to);
+            return result.Success ? Ok(result.Data) : HandleFailure(result);
+        }
+
         [HttpGet("doctors/revenue")]
         public async Task<IActionResult> GetDoctorsRevenueAsync([FromQuery] DateOnly from, [FromQuery] DateOnly to)
         {
