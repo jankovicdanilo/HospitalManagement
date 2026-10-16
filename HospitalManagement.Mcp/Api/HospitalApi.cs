@@ -87,7 +87,9 @@ namespace HospitalManagement.Mcp.Api
             {
                 using var doc = JsonDocument.Parse(body);
                 var root = doc.RootElement;
-                var message = root.TryGetProperty("message", out var m) ? m.GetString() : null;
+                var message = root.TryGetProperty("message", out var m) ? m.GetString()
+                    : root.TryGetProperty("title", out var t) ? t.GetString() 
+                    : null;
                 var errorCode = root.TryGetProperty("errorCode", out var c) ? c.GetString() : null;
 
                 var sb = new StringBuilder($"Error {code} {errorCode}: {message}");

@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.Mcp.Api;
+using HospitalManagement.Mcp.Reports;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
@@ -42,11 +43,13 @@ namespace HospitalManagement.Mcp.Tools
         }
 
         [McpServerTool(Name = "create_appointment"),
-            Description("Creates an appointment. The slot must be free and inside the doctors working hours; the backend validates this.")]
+            Description("Creates an appointment. The doctor must work that weekday (check get_doctor_schedule or get_free_slots first) " +
+            "and the slot must be free; the backend validates this.")]
         public Task<string> CreateAppointment(
             [Description("Patient id")] int patientId,
             [Description("Doctor id")] int doctorId,
-            [Description("Start time as UTC ISO 8601, e.g. 2026-10-12T09:00:00Z")] string dateTime,
+            [Description("Start time in clinic local time (Europe/Podgorica), " +
+            "format yyyy-MM-dd HH:mm, e.g. 2026-10-19 10:00")] string startLocal,
             [Description("Duration in minutes, 1 to 480")] int durationMinutes,
             [Description("Optional notes, max 500 characters")] string? notes = null)
         {
@@ -55,20 +58,30 @@ namespace HospitalManagement.Mcp.Tools
                 logger.LogWarning("create_appointment rejected: duration {Minutes} out of range", durationMinutes);
                 return Task.FromResult("Error: durationMinutes must be between 1 and 480.");
             }
-            if(!DateTimeOffset.TryParse(dateTime, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var start))
+
+            if(!DateTime.TryParseExact(startLocal, ["yyyy-MM-dd HH:mm", "yyyy-MM-ddTHH:mm"],
+                 CultureInfo.InvariantCulture, DateTimeStyles.None, out var local))
             {
-                logger.LogWarning("create_appointment rejected: dateTime could not be parsed");
-                return Task.FromResult("Error: dateTime must be an ISO 8601 UTC value such as 2026-10-12T09:00:00Z.");
+                logger.LogWarning("create_appointment rejected: startLocal could not be parsed");
+                return Task.FromResult("Error: startLocal must look like 2026-10-19 10:00 (clinic local time).");
             }
-            
-            logger.LogInformation("create_appointment doctor {DoctorId} patient {PatientId} for {Minutes} min", 
-                doctorId, patientId, durationMinutes);
+
+            if (ClinicTime.IsValid(local))
+            {
+                logger.LogWarning("create_appointment rejected: {Local} does not exist in the clinic time zone", local);
+                return Task.FromResult("Error: that local time does not exist (daylight saving change). Pick another time.");
+            }
+
+            var startUtc = ClinicTime.ToUtc(local);
+
+            logger.LogInformation("create_appointment doctor {DoctorId} patient {PatientId} at {StartUtc} UTC for {Minutes} min",
+                doctorId, patientId, startUtc, durationMinutes);
 
             return hospitalApi.PostAsync(ApiNames.Appointments, "api/appointment", new
             {
                 patientId,
                 doctorId,
-                dateTime = start.UtcDateTime,
+                dateTime = startUtc,
                 duration = TimeSpan.FromMinutes(durationMinutes).ToString("c", CultureInfo.InvariantCulture),
                 notes
             });
