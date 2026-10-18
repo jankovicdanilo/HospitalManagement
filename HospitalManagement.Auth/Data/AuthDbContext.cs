@@ -12,6 +12,7 @@ namespace HospitalManagement.Auth.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<ServiceToken> ServiceTokens => Set<ServiceToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,6 +33,15 @@ namespace HospitalManagement.Auth.Data
                 entity.Property(e => e.PasswordHash).HasMaxLength(255);
                 entity.Property(e => e.Role).HasMaxLength(50).HasConversion<string>();
                 entity.Property(e => e.Username).HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<ServiceToken>(entity =>
+            {
+                entity.HasIndex(t => t.Jti).IsUnique();
+                entity.Property(t => t.Jti).HasMaxLength(64);
+                entity.Property(t => t.Name).HasMaxLength(50);
+                entity.Property(t => t.Role).HasMaxLength(30);
+                entity.Property(t => t.CreatedBy).HasMaxLength(100);
             });
         }
     }

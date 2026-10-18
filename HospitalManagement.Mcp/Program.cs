@@ -2,6 +2,7 @@
 using HospitalManagement.Mcp.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 
 // ContentRootPath = the exe folder, because Claude Code starts this
@@ -18,17 +19,23 @@ builder.Logging.AddConsole(o => o.LogToStandardErrorThreshold = LogLevel.Trace);
 
 foreach (var (name, key) in new[]
 {
-    (ApiNames.Auth, "Auth"), (ApiNames.Command, "Command"),
-    (ApiNames.Query, "Query"), (ApiNames.Appointments, "Appointments")
+    (ApiNames.Command, "Command"),
+    (ApiNames.Query, "Query"), 
+    (ApiNames.Appointments, "Appointments")
 })
 {
     var url = builder.Configuration[$"Services:{key}"]
         ?? throw new InvalidOperationException($"Services:{key} is not configured.");
-    builder.Services.AddHttpClient(name, c => c.BaseAddress = new Uri(url));
+    var client = builder.Services.AddHttpClient(name, c => c.BaseAddress = new Uri(url));
+
+    // The first handler registered is the outermost, so resilience wraps the auth handler
+    // and every retry attempt gets the Authorization header applied.
+    client.AddStandardResilienceHandler(o => o.Retry.DisableForUnsafeHttpMethods());
+    client.AddHttpMessageHandler<AuthHandler>();
 }
 
-builder.Services.AddSingleton<TokenProvider>();
 builder.Services.AddSingleton<HospitalApi>();
+builder.Services.AddTransient<AuthHandler>();
 
 builder.Services
     .AddOptions<AuthOptions>()

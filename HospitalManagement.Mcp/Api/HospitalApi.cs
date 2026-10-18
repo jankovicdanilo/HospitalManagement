@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
@@ -8,8 +10,7 @@ using System.Text.Json;
 
 namespace HospitalManagement.Mcp.Api
 {
-    public class HospitalApi(IHttpClientFactory httpClientFactory, TokenProvider tokenProvider,
-        ILogger<HospitalApi> logger)
+    public class HospitalApi(IHttpClientFactory httpClientFactory, ILogger<HospitalApi> logger)
     {
         public Task<string> GetAsync(string service, string path) =>
             SendAsync(service, HttpMethod.Get, path, null);
@@ -33,36 +34,24 @@ namespace HospitalManagement.Mcp.Api
         private async Task<string> SendAsync(string service, HttpMethod httpMethod,
             string path, object? body)
         {
-            // query strings can contain names, so keep them out of the logs
             var pathOnly = path.Split('?')[0]; 
 
-            for(var attempt = 0; attempt < 2; attempt++)
+            using var request = new HttpRequestMessage(httpMethod, path);
+            if (body != null)
             {
-                var token = await tokenProvider.GetTokenAsync(forceRefresh: attempt > 0);
+                request.Content = JsonContent.Create(body);
+            }
 
-                using var request = new HttpRequestMessage(httpMethod, path);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                if(body != null)
-                {
-                    request.Content = JsonContent.Create(body);
-                }
-
-                logger.LogInformation("{Method} {Service}/{Path}", httpMethod, service, pathOnly);
-
+            try
+            {
                 using var response = await httpClientFactory.CreateClient(service).SendAsync(request);
                 var text = await response.Content.ReadAsStringAsync();
-
-                if(response.StatusCode == HttpStatusCode.Unauthorized && attempt == 0)
-                {
-                    logger.LogWarning("401 from {Service}, refreshing the token " +
-                        "and retrying once", service);
-                    continue;
-                }
 
                 if (response.IsSuccessStatusCode)
                 {
                     logger.LogInformation("{Method} {Service}/{Path} -> {StatusCode}",
                         httpMethod, service, pathOnly, (int)response.StatusCode);
+
                     return string.IsNullOrWhiteSpace(text) ? "OK" : text;
                 }
 
@@ -71,8 +60,11 @@ namespace HospitalManagement.Mcp.Api
 
                 return FormatError(response.StatusCode, text);
             }
-
-            return "Error 401: not authorized.";
+            catch (Exception ex) when (ex is HttpRequestException or TimeoutRejectedException or BrokenCircuitException)
+            {
+                logger.LogError(ex, "{Method} {Service}/{Path} could not be completed", httpMethod, service, pathOnly);
+                return $"Error: {service} could not be reached. {ex.Message}";
+            }
         }
 
         private static string FormatError(HttpStatusCode statusCode, string body)

@@ -5,6 +5,7 @@ using HospitalManagement.Auth.Repositories.Interfaces;
 using HospitalManagement.Auth.Services.Implementations;
 using HospitalManagement.Auth.Services.Interfaces;
 using HospitalManagement.Shared.Extensions;
+using HospitalManagement.Shared.Security;
 using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -23,8 +24,12 @@ builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAutoMapper(typeof(Program));
 
+builder.Services.AddStackExchangeRedisCache(options => options.Configuration = builder.Configuration["Redis:ConnectionString"]);
+builder.Services.AddScoped<IServiceTokenService, ServiceTokenService>();
+
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
+
 
 // Read JWT settings for token validation configuration
 var jwtSettings = new JwtSettings
@@ -59,7 +64,8 @@ builder.Services.AddAuthentication(options =>
                     ErrorCode = "UNAUTHORIZED",
                     Message = "You must be logged in to access this resource"
                 });
-            }
+            },
+            OnTokenValidated = TokenRevocation.CheckAsync
         };
 
         options.TokenValidationParameters = new TokenValidationParameters
