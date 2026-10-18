@@ -1,5 +1,6 @@
 using HospitalManagement.Shared.Extensions;
 using HospitalManagement.Shared.Http;
+using HospitalManagement.Shared.Security;
 using HospitalManagement.Shared.Settings;
 using HospitalManagement.Statistics.Clients.Implementations;
 using HospitalManagement.Statistics.Clients.Interfaces;
@@ -78,7 +79,8 @@ try
                     ErrorCode = "UNAUTHORIZED",
                     Message = "You must be logged in to access this resource"
                 });
-            }
+            },
+            OnTokenValidated = TokenRevocation.CheckAsync
         };
 
         options.TokenValidationParameters = new TokenValidationParameters

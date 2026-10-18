@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalManagement.Statisti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalManagement.Statistics.Tests", "HospitalManagement.Statistics.Tests\HospitalManagement.Statistics.Tests.csproj", "{79171248-FB1D-4E6F-A467-5AC4A77B0EA6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalManagement.Mcp", "HospitalManagement.Mcp\HospitalManagement.Mcp.csproj", "{5462BD92-ED7B-4C84-8427-1C561D5271C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -228,6 +230,18 @@ Global
 		{79171248-FB1D-4E6F-A467-5AC4A77B0EA6}.Release|x64.Build.0 = Release|Any CPU
 		{79171248-FB1D-4E6F-A467-5AC4A77B0EA6}.Release|x86.ActiveCfg = Release|Any CPU
 		{79171248-FB1D-4E6F-A467-5AC4A77B0EA6}.Release|x86.Build.0 = Release|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Debug|x64.Build.0 = Debug|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Debug|x86.Build.0 = Debug|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Release|x64.ActiveCfg = Release|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Release|x64.Build.0 = Release|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Release|x86.ActiveCfg = Release|Any CPU
+		{5462BD92-ED7B-4C84-8427-1C561D5271C9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
