@@ -38,23 +38,39 @@ architecture-beta
     service invoice(server)[InvoiceService] in system
     service stats(server)[StatisticsService] in system
 
+    %% Invisible bend, so AppointmentsDB sits below AuthService but connects only to AppointmentService
+    junction appjunction in system
+
+    %% Clients and shared infrastructure (outside the system boundary)
+    service claude(internet)[Claude Code]
+    service mcp(server)[MCP Server]
+    service redis(database)[Redis]
+
+    %% Connections that cannot sit side by side (listed first, so the layout edges below take priority)
+    auth:L -- R:command
+    auth:R -- L:invoice
+    app:L -- R:query
+
     %% Database ownership
     command:R -- L:cqrsdb
     query:L -- R:cqrsdb
-    auth:T -- B:authdb
-    app:R -- L:appdb
+    auth:L -- R:authdb
+    app:B -- T:appjunction
+    appjunction:L -- R:appdb
 
-    %% Authentication (JWT)
-    auth:L -- R:command
-    auth:R -- L:app
+    %% Authentication (JWT) and business communication
     auth:T -- B:query
-    auth:B -- T:invoice
-
-    %% Business communication
-    app:L -- R:query
-    invoice:T -- B:app
+    auth:R -- L:app
     stats:B -- T:app
     query:R -- L:stats
+    app:R -- L:invoice
+
+    %% MCP: started by Claude Code, calls the services with a service token issued by Auth
+    claude:R -- L:mcp
+    mcp:R -- L:command{group}
+
+    %% Redis: statistics cache and token revocation list
+    redis:L -- R:invoice{group}
 ```
 
 ### Services
