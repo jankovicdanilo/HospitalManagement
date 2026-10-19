@@ -47,7 +47,7 @@ namespace HospitalManagement.InvoiceService.Services.Docx
         {
             body.AppendChild(new Paragraph(new Run(new RunProperties(new Bold()), new Text($"{labels.Patient}: {data.PatientName}"))));
             body.AppendChild(new Paragraph(new Run(new RunProperties(new Bold()), new Text($"{labels.Doctor}: {data.DoctorName}"))));
-            body.AppendChild(new Paragraph(new Run(new Text($"{labels.AppointmentDate}: {data.AppointmentDate:dd/MM/yyyy HH:mm} UTC"))));
+            body.AppendChild(new Paragraph(new Run(new Text($"{labels.AppointmentDate}: {data.AppointmentDateText}"))));
             body.AppendChild(new Paragraph(new Run(new Text($"{labels.Duration}: {data.Duration.TotalMinutes} min"))));
             body.AppendChild(new Paragraph(new Run(new RunProperties(new Bold()), new Text($"{labels.Status}: {labels.StatusText(data.Status.ToString())}"))));
             body.AppendChild(new Paragraph());
