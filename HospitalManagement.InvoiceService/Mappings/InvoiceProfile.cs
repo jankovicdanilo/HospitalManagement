@@ -28,7 +28,8 @@ namespace HospitalManagement.InvoiceService.Mappings
                 .ForMember(dest => dest.Subtotal,
                     opt => opt.MapFrom(src => src.Procedures.Sum(p => p.ProcedurePrice)))
                 .ForMember(dest => dest.TotalAmount,
-                    opt => opt.MapFrom(src => src.TotalCost));
+                    opt => opt.MapFrom(src => src.TotalCost))
+                .ForMember(dest => dest.UtcOffsetMinutes, opt => opt.Ignore());
         }
     }
 }

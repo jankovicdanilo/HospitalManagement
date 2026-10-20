@@ -89,7 +89,7 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
                 row.RelativeItem().Column(col =>
                 {
                     col.Item().Text(labels.AppointmentDate).Bold().FontColor(Colors.Grey.Medium);
-                    col.Item().Text(data.AppointmentDate.ToString("dd/MM/yyyy HH:mm"));
+                    col.Item().Text($"{data.AppointmentDateText}");
                 });
 
                 row.RelativeItem().Column(col =>

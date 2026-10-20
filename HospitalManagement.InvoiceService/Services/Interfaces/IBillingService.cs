@@ -7,6 +7,6 @@ namespace HospitalManagement.InvoiceService.Services.Interfaces
     public interface IBillingService
     {
         Task<Result<InvoiceResult>> GenerateInvoiceAsync(int appointmentId, InvoiceFormat format,
-            string language);
+            string language, int utcOffsetMinutes = 0);
     }
 }
