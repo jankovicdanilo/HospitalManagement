@@ -1,9 +1,13 @@
 namespace: hms-dev
 
+ingress:
+  host: localhost
+
 services:
   auth:
     image: hospitalmanagement-auth:v3
     port: 8080
+    ingressPath: auth
     env:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__AuthDb: "Server=db;Database=HospitalManagementAuth;User Id=sa;Password=$(DB_PASSWORD);TrustServerCertificate=True"
@@ -12,9 +16,11 @@ services:
       Jwt__Key: JWT_KEY
       Jwt__Issuer: JWT_ISSUER
       Jwt__Audience: JWT_AUDIENCE
+
   appointments:
-    image: hospitalmanagement-appointments:v4
+    image: hospitalmanagement-appointments:v5
     port: 8080
+    ingressPath: appointments
     env:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__AppointmentDb: "Server=db;Database=HospitalManagementAppointments;User Id=sa;Password=$(DB_PASSWORD);TrustServerCertificate=True"
@@ -28,6 +34,7 @@ services:
   command:
     image: hospitalmanagement-command:v3
     port: 8080
+    ingressPath: command
     env:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__HospitalManagementCQRS: "Server=db;Database=HospitalManagementCQRS;User Id=sa;Password=$(DB_PASSWORD);TrustServerCertificate=True"
@@ -41,6 +48,7 @@ services:
   queryservice:
     image: hospitalmanagement-queryservice:v3
     port: 8080
+    ingressPath: query
     env:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__HospitalManagementCQRS: "Server=db;Database=HospitalManagementCQRS;User Id=sa;Password=$(DB_PASSWORD);TrustServerCertificate=True"
@@ -55,9 +63,25 @@ services:
   invoiceservice:
     image: hospitalmanagement-invoiceservice:v3
     port: 8080
+    ingressPath: invoice
     env:
       ASPNETCORE_ENVIRONMENT: "Development"
       AppointmentService__BaseUrl: "http://appointments:8080"
+      Jwt__ExpiryMinutes: "60"
+    secretEnv:
+      Jwt__Key: JWT_KEY
+      Jwt__Issuer: JWT_ISSUER
+      Jwt__Audience: JWT_AUDIENCE
+
+  statisticsservice:
+    image: hospitalmanagement-statistics:v1
+    port: 8080
+    ingressPath: statistics
+    env:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      AppointmentService__BaseUrl: "http://appointments:8080"
+      QueryService__BaseUrl: "http://queryservice:8080"
+      Redis__ConnectionString: "redis:6379, abortConnection=false"
       Jwt__ExpiryMinutes: "60"
     secretEnv:
       Jwt__Key: JWT_KEY
