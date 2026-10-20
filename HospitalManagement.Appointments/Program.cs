@@ -192,6 +192,8 @@ try
 
     builder.Services.AddFrontendCors(builder.Configuration);
 
+    builder.Services.AddHealthChecks();
+
     var app = builder.Build();
 
     using (var scope = app.Services.CreateScope())
@@ -212,6 +214,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapHealthChecks("/health").AllowAnonymous();
 
     app.Run();
 }
