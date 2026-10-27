@@ -1,5 +1,6 @@
-﻿using HospitalManagement.Shared.Common;
-using HospitalManagement.Appointments.Models.DTOs.Appointment;
+﻿using HospitalManagement.Appointments.Models.DTOs.Appointment;
+using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Models.DTOs.Statistics;
 
 namespace HospitalManagement.Appointments.Services.Interfaces
 {
@@ -15,7 +16,8 @@ namespace HospitalManagement.Appointments.Services.Interfaces
         Task<Result<List<AppointmentResponseDto>>> GetPatientHistoryAsync(int patientId);
         Task<Result<List<int>>> GetPopularDoctorIdsAsync(int count);
         Task<Result<List<int>>> GetPopularPatientIdsAsync(int count);
-        Task<Result<PatientSummaryResponseDto>> GetPatientSummaryAsync(int patientId);
+        Task<Result<PatientSummaryResponseDto>> GetPatientSummaryAsync(int patientId, string language);
         Task InvalidatePatientSummaryCacheAsync(int patientId);
+        Task<Result<List<AppointmentStatsRowDto>>> GetStatsDataAsync(DateOnly from, DateOnly to);
     }
 }

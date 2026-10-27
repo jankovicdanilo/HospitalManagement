@@ -1,4 +1,5 @@
 ﻿using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
+using HospitalManagement.InvoiceService.Services.Implementations;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -8,10 +9,12 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
     public class PdfInvoiceDocument : IDocument
     {
         private readonly InvoiceData data;
+        private readonly InvoiceLabels labels;
 
-        public PdfInvoiceDocument(InvoiceData data)
+        public PdfInvoiceDocument(InvoiceData data, string language)
         {
             this.data = data;
+            this.labels = InvoiceLabels.Get(language);
         }
 
         public void Compose(IDocumentContainer container)
@@ -34,17 +37,17 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
             {
                 row.RelativeItem().Column(col =>
                 {
-                    col.Item().Text("City Hospital")
+                    col.Item().Text(labels.HospitalName)
                         .Bold().FontSize(20);
-                    col.Item().Text("Medical Invoice")
+                    col.Item().Text(labels.Title)
                         .FontSize(12).FontColor(Colors.Grey.Medium); 
                 });
 
                 row.RelativeItem().Column(col =>
                 {
-                    col.Item().AlignRight().Text($"Invoice: {data.InvoiceNumber}")
+                    col.Item().AlignRight().Text($"{labels.Invoice}: {data.InvoiceNumber}")
                         .Bold().FontSize(12);
-                    col.Item().AlignRight().Text($"Date: {data.IssuedDate:dd/MM/yyyy}")
+                    col.Item().AlignRight().Text($"{labels.Date}: {data.IssuedDate:dd/MM/yyyy}")
                         .FontColor(Colors.Grey.Medium);
                 });
             });
@@ -73,32 +76,32 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
             {
                 row.RelativeItem().Column(col =>
                 {
-                    col.Item().Text("Patient").Bold().FontColor(Colors.Grey.Medium);
+                    col.Item().Text(labels.Patient).Bold().FontColor(Colors.Grey.Medium);
                     col.Item().Text(data.PatientName).Bold();
                 });
 
                 row.RelativeItem().Column(col =>
                 {
-                    col.Item().Text("Doctor").Bold().FontColor(Colors.Grey.Medium);
+                    col.Item().Text(labels.Doctor).Bold().FontColor(Colors.Grey.Medium);
                     col.Item().Text(data.DoctorName).Bold();
                 });
 
                 row.RelativeItem().Column(col =>
                 {
-                    col.Item().Text("Appointment Date").Bold().FontColor(Colors.Grey.Medium);
+                    col.Item().Text(labels.AppointmentDate).Bold().FontColor(Colors.Grey.Medium);
                     col.Item().Text(data.AppointmentDate.ToString("dd/MM/yyyy HH:mm"));
                 });
 
                 row.RelativeItem().Column(col =>
                 {
-                    col.Item().Text("Duration").Bold().FontColor(Colors.Grey.Medium);
+                    col.Item().Text(labels.Duration).Bold().FontColor(Colors.Grey.Medium);
                     col.Item().Text($"{data.Duration.TotalMinutes} min");
                 });
 
                 row.RelativeItem().Column(col =>
                 {
-                    col.Item().Text("Status").Bold().FontColor(Colors.Grey.Medium);
-                    col.Item().Text(data.Status.ToString()).Bold();
+                    col.Item().Text(labels.Status).Bold().FontColor(Colors.Grey.Medium);
+                    col.Item().Text(labels.StatusText(data.Status.ToString())).Bold();
                 });
             });
         }
@@ -116,9 +119,9 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
                 table.Header(header =>
                 {
                     header.Cell().Background(Colors.Grey.Lighten2).Padding(5)
-                        .Text("Procedure").Bold();
+                        .Text(labels.Procedure).Bold();
                     header.Cell().Background(Colors.Grey.Lighten2).Padding(5)
-                        .AlignRight().Text("Price").Bold();
+                        .AlignRight().Text(labels.Price).Bold();
                 });
 
                 foreach(var item in data.Procedures)
@@ -139,13 +142,13 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
 
                 col.Item().Row(row =>
                 {
-                    row.RelativeItem().Text("Subtotal").FontColor(Colors.Grey.Medium);
+                    row.RelativeItem().Text(labels.Subtotal).FontColor(Colors.Grey.Medium);
                     row.ConstantItem(100).AlignRight().Text($"{data.Subtotal:C}");
                 });
 
                 col.Item().Row(row =>
                 {
-                    row.RelativeItem().Text("Discount").FontColor(Colors.Grey.Medium);
+                    row.RelativeItem().Text(labels.Discount).FontColor(Colors.Grey.Medium);
                     row.ConstantItem(100).AlignRight().Text($"-{data.Discount:C}")
                         .FontColor(Colors.Red.Medium);
                 });
@@ -154,7 +157,7 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
 
                 col.Item().Row(row =>
                 {
-                    row.RelativeItem().Text("Total").Bold().FontSize(12);
+                    row.RelativeItem().Text(labels.Total).Bold().FontSize(12);
                     row.ConstantItem(100).AlignRight().Text($"{data.TotalAmount:C}")
                         .Bold().FontSize(12);
                 });
@@ -165,7 +168,7 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
         {
             container.Column(col =>
             {
-                col.Item().Text("Notes").Bold().FontColor(Colors.Grey.Medium);
+                col.Item().Text(labels.Notes).Bold().FontColor(Colors.Grey.Medium);
                 col.Item().Text(data.Notes);
             });
         }
@@ -174,9 +177,9 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
         {
             container.AlignCenter().Text(text =>
             {
-                text.Span("Page ");
+                text.Span($"{labels.Page} ");
                 text.CurrentPageNumber();
-                text.Span(" of ");
+                text.Span($" {labels.Of} ");
                 text.TotalPages();
             });
         }

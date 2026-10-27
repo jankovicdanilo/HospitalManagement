@@ -1,4 +1,4 @@
-﻿namespace HospitalManagement.Appointments.Models.Enums
+﻿namespace HospitalManagement.Shared.Models.Enums
 {
     public enum AppointmentStatus
     {

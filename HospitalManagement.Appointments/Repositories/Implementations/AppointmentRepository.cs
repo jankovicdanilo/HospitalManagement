@@ -2,7 +2,7 @@
 using HospitalManagement.Appointments.Data;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
-using HospitalManagement.Appointments.Models.Enums;
+using HospitalManagement.Shared.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -151,6 +151,15 @@ namespace HospitalManagement.Appointments.Repositories.Implementations
                 .OrderByDescending(g => g.Count())
                 .Take(count)
                 .Select(g => g.Key)
+                .ToListAsync();
+        }
+
+        public async Task<List<Appointment>> GetByDateRangeAsync(DateTime fromUtc, DateTime toUtc)
+        {
+            return await dbContext.Appointments
+                .Include(x => x.AppointmentProcedures)
+                .AsNoTracking()
+                .Where(x => x.DateTime >= fromUtc && x.DateTime < toUtc)
                 .ToListAsync();
         }
     }

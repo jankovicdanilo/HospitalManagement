@@ -24,7 +24,7 @@ namespace HospitalManagement.InvoiceService.Services.Implementations
 
         }
 
-        public async Task<Result<InvoiceResult>> GenerateInvoiceAsync(int appointmentId, InvoiceFormat format)
+        public async Task<Result<InvoiceResult>> GenerateInvoiceAsync(int appointmentId, InvoiceFormat format, string language)
         {
             var appointment = await appointmentService.GetAppointmentAsync(appointmentId);
 
@@ -43,7 +43,7 @@ namespace HospitalManagement.InvoiceService.Services.Implementations
 
             var invoiceData = mapper.Map<InvoiceData>(appointment);
             var invoiceDocumentGenerator = invoiceDocumentGeneratorFactory.CreateGenerator(format);
-            var fileBytes = invoiceDocumentGenerator.CreateDocument(invoiceData);
+            var fileBytes = invoiceDocumentGenerator.CreateDocument(invoiceData, language);
 
             var invoiceResult = new InvoiceResult
             {

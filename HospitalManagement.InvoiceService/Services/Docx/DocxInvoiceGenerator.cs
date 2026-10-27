@@ -12,14 +12,14 @@ namespace HospitalManagement.InvoiceService.Services.Docx
 
         public string FileExtension => "docx";
 
-        public byte[] CreateDocument(InvoiceData data)
+        public byte[] CreateDocument(InvoiceData data, string language)
         {
             using var memoryStream = new MemoryStream();
 
             using (var wordDocument = WordprocessingDocument.Create(memoryStream, WordprocessingDocumentType.Document))
             {
                 var mainPart = wordDocument.AddMainDocumentPart();
-                new DocxInvoiceDocument(data).Compose(mainPart);
+                new DocxInvoiceDocument(data, language).Compose(mainPart);
                 mainPart.Document?.Save();
             }
 

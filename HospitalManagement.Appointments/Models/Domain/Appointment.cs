@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Appointments.Models.Enums;
+﻿using HospitalManagement.Shared.Models.Enums;
 
 namespace HospitalManagement.Appointments.Models.Domain;
 

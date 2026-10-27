@@ -9,11 +9,11 @@ namespace HospitalManagement.InvoiceService.Services.Pdf
         public string ContentType => "application/pdf";
         public string FileExtension => "pdf";
 
-        public byte[] CreateDocument(InvoiceData data)
+        public byte[] CreateDocument(InvoiceData data, string language)
         {
             return Document.Create(container =>
             {
-                new PdfInvoiceDocument(data).Compose(container);
+                new PdfInvoiceDocument(data, language).Compose(container);
             }).GeneratePdf();
         }
     }

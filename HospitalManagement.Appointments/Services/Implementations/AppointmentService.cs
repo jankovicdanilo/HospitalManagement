@@ -2,7 +2,6 @@ using AutoMapper;
 using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
-using HospitalManagement.Appointments.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Services.Calculators.Interfaces;
 using HospitalManagement.Appointments.Services.Calculators.Results;
@@ -10,6 +9,8 @@ using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.DTOs.Patient;
+using HospitalManagement.Shared.Models.DTOs.Statistics;
+using HospitalManagement.Shared.Models.Enums;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using Polly;
@@ -384,9 +385,9 @@ namespace HospitalManagement.Appointments.Services.Implementations
             return Result<List<int>>.Ok(ids);
         }
 
-        public async Task<Result<PatientSummaryResponseDto>> GetPatientSummaryAsync(int patientId)
+        public async Task<Result<PatientSummaryResponseDto>> GetPatientSummaryAsync(int patientId, string language)
         {
-            string cacheKey = $"patient-summary:{patientId}";
+            string cacheKey = $"patient-summary:{patientId}:{language}";
             string? cached = null;
             try
             {
@@ -427,7 +428,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
             }
 
             var treatments = await treatmentRepository.GetByAppointmentIdsAsync(appointments.Select(a => a.Id));
-            var prompt = BuildSummaryPrompt(patient, appointments, treatments);
+            var prompt = BuildSummaryPrompt(patient, appointments, treatments, language);
 
             string summaryText;
             try
@@ -471,13 +472,17 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private static string BuildSummaryPrompt(
             PatientResponseDto patient, 
             List<Appointment> appointments, 
-            List<Treatment> treatments)
+            List<Treatment> treatments,
+            string language)
         {
             var sb = new StringBuilder();
+            var languageInstruction = language.ToLowerInvariant() == "me"
+                ? "Respond in Montenegrin."
+                : "Respond in English.";
 
             sb.AppendLine($"Summarize the medical history of patient {patient.Name} {patient.LastName}" +
                 $"(DOB: {patient.DateOfBirth:yyyy-MM-dd}) in a concise clinical-style paragraph. " +
-                "Base it only on the visit and treatment data below:");
+                $"{languageInstruction} Base it only on the visit and treatment data below:");
             sb.AppendLine();
 
             foreach(var appointment in appointments)
@@ -500,20 +505,55 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
         public async Task InvalidatePatientSummaryCacheAsync(int patientId)
         {
-            string cacheKey = $"patient-summary:{patientId}";
-            try
+            foreach (var language in new[] { "en", "me" })
             {
-                await cachePolicy.ExecuteAsync(() => distributedCache.RemoveAsync(cacheKey));
-                logger.LogInformation("Invalidated patient summary cache for {PatientId}", patientId);
+                string cacheKey = $"patient-summary:{patientId}:{language}";
+                try
+                {
+                    await cachePolicy.ExecuteAsync(() => distributedCache.RemoveAsync(cacheKey));
+                    logger.LogInformation("Invalidated patient summary cache for {Key}", cacheKey);
+                }
+                catch (BrokenCircuitException)
+                {
+                    logger.LogDebug("Redis circuit open, skipping cache invalidation for {Key}", cacheKey);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning("Failed to invalidate cache for key {Key}: {Message}", cacheKey, ex.Message);
+                }
             }
-            catch (BrokenCircuitException)
+        }
+
+        public async Task<Result<List<AppointmentStatsRowDto>>> GetStatsDataAsync(DateOnly from, DateOnly to)
+        {
+            if (from > to)
             {
-                logger.LogDebug("Redis circuit open, skipping cache invalidation for {Key}", cacheKey);
+                return Result<List<AppointmentStatsRowDto>>.Fail("From must not be after to",
+                    "INVALID_DATE_RANGE", ErrorType.Validation);
             }
-            catch(Exception ex)
+
+            var fromUtc = clinicTimeZoneProvider.ToUtc(from.ToDateTime(TimeOnly.MinValue));
+            var toUtc = clinicTimeZoneProvider.ToUtc(to.AddDays(1).ToDateTime(TimeOnly.MinValue));
+
+            var appointments = await appointmentRepository.GetByDateRangeAsync(fromUtc, toUtc);
+
+            var rows = appointments.Select(a => new AppointmentStatsRowDto
             {
-                logger.LogWarning("Failed to invalidate cache for key {Key}: {Message}", cacheKey, ex.Message);
-            }
+                Id = a.Id,
+                DoctorId = a.DoctorId,
+                PatientId = a.PatientId,
+                DateTime = a.DateTime,
+                Status = a.Status,
+                TotalCost = GetDiscountResult(a).TotalCost,
+                Procedures = a.AppointmentProcedures.Select(ap => new AppointmentStatsProcedureDto
+                {
+                    ProcedureId = ap.ProcedureId,
+                    ProcedureName = ap.ProcedureName,
+                    ProcedurePrice = ap.ProcedurePrice
+                }).ToList()
+            }).ToList();
+
+            return Result<List<AppointmentStatsRowDto>>.Ok(rows);
         }
     }
 }

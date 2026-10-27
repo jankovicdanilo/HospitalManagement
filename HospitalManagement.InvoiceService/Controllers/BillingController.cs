@@ -19,14 +19,15 @@ namespace HospitalManagement.InvoiceService.Controllers
         }
 
         [HttpGet("{appointmentId:int}")]
-        public async Task<IActionResult> GenerateInvoiceAsync(int appointmentId, [FromQuery] string format = "pdf")
+        public async Task<IActionResult> GenerateInvoiceAsync(int appointmentId, [FromQuery] string format = "pdf",
+            [FromQuery] string language = "en")
         {
             if(!Enum.TryParse<InvoiceFormat>(format, ignoreCase: true, out var invoiceFormat))
             {
                 return BadRequest(new { Message = $"Unsupported format '{format}'. Supported formats: pdf, docx.", ErrorCode = "INVALID_FORMAT" });
             }
 
-            var result = await billingService.GenerateInvoiceAsync(appointmentId, invoiceFormat);
+            var result = await billingService.GenerateInvoiceAsync(appointmentId, invoiceFormat, language);
 
             if (!result.Success)
             {

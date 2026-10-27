@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
-using HospitalManagement.Appointments.Models.Enums;
+using HospitalManagement.Shared.Models.Enums;
 
 namespace HospitalManagement.Appointments.Validators.Appointment
 {

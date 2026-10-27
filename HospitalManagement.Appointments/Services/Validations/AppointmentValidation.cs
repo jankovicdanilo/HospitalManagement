@@ -1,7 +1,7 @@
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Appointments.Models.Domain;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
-using HospitalManagement.Appointments.Models.Enums;
+using HospitalManagement.Shared.Models.Enums;
 using HospitalManagement.Appointments.Repositories.Interfaces;
 using HospitalManagement.Appointments.Clients.Interfaces;
 using HospitalManagement.Appointments.Services.Implementations;

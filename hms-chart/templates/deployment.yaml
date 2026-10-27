@@ -30,6 +30,10 @@ spec:
         - name: {{ $key }}
           value: "{{ $val }}"
         {{- end }}
+        {{- range $i, $origin := $.Values.cors.allowedOrigins }}
+        - name: Cors__AllowedOrigins__{{ $i }}
+          value: {{ $origin | quote }}
+        {{- end }}
         ports:
         - containerPort: {{ $svc.port }}
         resources:

@@ -1,4 +1,4 @@
-﻿using HospitalManagement.Appointments.Models.Enums;
+﻿using HospitalManagement.Shared.Models.Enums;
 using HospitalManagement.Shared.Models.DTOs.Doctor;
 using HospitalManagement.Shared.Models.DTOs.Patient;
 
