@@ -4,8 +4,9 @@ using HospitalManagement.CommandService.Repositories.Interfaces;
 using HospitalManagement.CommandService.Services.Implementations;
 using HospitalManagement.CommandService.Services.Interfaces;
 using HospitalManagement.Shared.Data;
-using HospitalManagement.Shared.Settings;
 using HospitalManagement.Shared.Extensions;
+using HospitalManagement.Shared.Security;
+using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -84,7 +85,8 @@ builder.Services.AddAuthentication(options =>
                 ErrorCode = "UNAUTHORIZED",
                 Message = "You must be logged in to access this resource"
             });
-        }
+        },
+        OnTokenValidated = TokenRevocation.CheckAsync
     };
 
     options.TokenValidationParameters = new TokenValidationParameters

@@ -24,8 +24,20 @@ namespace HospitalManagement.InvoiceService.Services.Implementations
 
         }
 
-        public async Task<Result<InvoiceResult>> GenerateInvoiceAsync(int appointmentId, InvoiceFormat format, string language)
+        public async Task<Result<InvoiceResult>> GenerateInvoiceAsync(int appointmentId, InvoiceFormat format, 
+            string language, int utcOffsetMinutes = 0)
         {
+            if (utcOffsetMinutes is < -840 or > 840)
+            {
+                logger.LogWarning("Invoice for appointment {AppointmentId} rejected: UTC offset {Offset} is out of range",
+                    appointmentId, utcOffsetMinutes);
+                return Result<InvoiceResult>.Fail("UTC offset must be between -840 and 840 minutes",
+                    "INVALID_UTC_OFFSET", ErrorType.Validation);
+            }
+
+            logger.LogInformation("Generating {Format} invoice for appointment {AppointmentId} with UTC offset {Offset} min",
+                format, appointmentId, utcOffsetMinutes);
+
             var appointment = await appointmentService.GetAppointmentAsync(appointmentId);
 
             if (appointment == null)
@@ -42,6 +54,7 @@ namespace HospitalManagement.InvoiceService.Services.Implementations
             }
 
             var invoiceData = mapper.Map<InvoiceData>(appointment);
+            invoiceData.UtcOffsetMinutes = utcOffsetMinutes;
             var invoiceDocumentGenerator = invoiceDocumentGeneratorFactory.CreateGenerator(format);
             var fileBytes = invoiceDocumentGenerator.CreateDocument(invoiceData, language);
 

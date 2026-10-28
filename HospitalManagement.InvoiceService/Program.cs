@@ -7,6 +7,7 @@ using HospitalManagement.InvoiceService.Services.Interfaces;
 using HospitalManagement.InvoiceService.Services.Pdf;
 using HospitalManagement.Shared.Extensions;
 using HospitalManagement.Shared.Http;
+using HospitalManagement.Shared.Security;
 using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -74,7 +75,8 @@ try
                     ErrorCode = "UNAUTHORIZED",
                     Message = "You must be logged in to access this resource"
                 });
-            }
+            },
+            OnTokenValidated = TokenRevocation.CheckAsync
         };
 
         options.TokenValidationParameters = new TokenValidationParameters

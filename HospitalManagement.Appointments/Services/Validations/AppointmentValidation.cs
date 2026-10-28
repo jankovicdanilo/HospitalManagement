@@ -13,14 +13,12 @@ namespace HospitalManagement.Appointments.Services.Validations
     {
         private readonly IQueryServiceClient hospitalClient;
         private readonly IAppointmentRepository appointmentRepository;
-        private readonly IClinicTimeZoneProvider clinicTimeZoneProvider;
 
         public AppointmentValidation(IAppointmentRepository appointmentRepository,
-            IQueryServiceClient hospitalClient, IClinicTimeZoneProvider clinicTimeZoneProvider)
+            IQueryServiceClient hospitalClient)
         {
             this.appointmentRepository = appointmentRepository;
             this.hospitalClient = hospitalClient;
-            this.clinicTimeZoneProvider = clinicTimeZoneProvider;
         }
 
         public async Task<Result> ValidateAll(AppointmentCreateRequestDto request)
@@ -39,22 +37,19 @@ namespace HospitalManagement.Appointments.Services.Validations
                     ErrorType.NotFound);
             }
 
-            var localDateTime = clinicTimeZoneProvider.ToLocal(request.DateTime);
-
-
-            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, localDateTime.DayOfWeek);
+            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, request.DateTime.DayOfWeek);
             if (schedule == null)
             {
                 return Result.Fail($"Doctor does not work on " +
-                    $"{localDateTime.ToString("dddd, dd MMM yyyy", 
+                    $"{request.DateTime.ToString("dddd, dd MMM yyyy", 
                     System.Globalization.CultureInfo.InvariantCulture)}", "DOCTOR_NOT_AVAILABLE",
                     ErrorType.Conflict);
             }
 
-            if (localDateTime.Hour < schedule.StartHour || localDateTime.Hour * 60 + localDateTime.Minute +
+            if (request.DateTime.Hour < schedule.StartHour || request.DateTime.Hour * 60 + request.DateTime.Minute +
                 (int)request.Duration.TotalMinutes > schedule.EndHour * 60)
             {
-                return Result.Fail($"Doctor works {schedule.StartHour}:00 - {schedule.EndHour}:00", "OUTSIDE_WORKING_HOURS",
+                return Result.Fail($"Doctor works {schedule.StartHour}:00 - {schedule.EndHour}:00 UTC", "OUTSIDE_WORKING_HOURS",
                     ErrorType.Conflict);
             }
                 
@@ -82,20 +77,18 @@ namespace HospitalManagement.Appointments.Services.Validations
                     ErrorType.NotFound);
             }
 
-            var localDateTime = clinicTimeZoneProvider.ToLocal(request.DateTime);
-
-            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, localDateTime.DayOfWeek);
+            var schedule = await hospitalClient.GetDoctorScheduleAsync(request.DoctorId, request.DateTime.DayOfWeek);
             if (schedule == null)
             {
                 return Result.Fail($"Doctor does not work on " +
-                    $"{localDateTime.ToString("dddd, dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)}",
+                    $"{request.DateTime.ToString("dddd, dd MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)}",
                      "DOCTOR_NOT_AVAILABLE", ErrorType.Conflict);
             }
                 
-            if (localDateTime.Hour < schedule.StartHour || localDateTime.Hour * 60 + localDateTime.Minute
+            if (request.DateTime.Hour < schedule.StartHour || request.DateTime.Hour * 60 + request.DateTime.Minute
                 + (int)request.Duration.TotalMinutes > schedule.EndHour * 60)
             {
-                return Result.Fail($"Doctor works {schedule.StartHour}:00 - {schedule.EndHour}:00", 
+                return Result.Fail($"Doctor works {schedule.StartHour}:00 - {schedule.EndHour}:00 UTC", 
                     "OUTSIDE_WORKING_HOURS", ErrorType.Conflict);
             }
                 
