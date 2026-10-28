@@ -136,6 +136,8 @@ try
 
     builder.Services.AddFrontendCors(builder.Configuration);
 
+    builder.Services.AddHealthChecks();
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -151,6 +153,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapHealthChecks("/health").AllowAnonymous();
 
     app.Run();
 }

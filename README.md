@@ -112,3 +112,10 @@ services and caches results in Redis for 5 minutes. Downstream calls use Polly
 shared primitives (`Result<T>`, `PagedResult<T>`, `BaseController`), the token-forwarding
 HTTP handler, and shared DTOs and enums such as `AppointmentStatus`. It has no runtime
 dependency on any service and is not deployed independently.
+
+## Deploy to Kubernetes
+
+1. Build the images (once per change): `docker build -t hospitalmanagement-<service>:<tag> -f HospitalManagement.<Project>/Dockerfile .`
+2. Create the secret: `.\hms-chart\scripts\create-secrets.ps1`
+3. Install: `helm upgrade --install hms .\hms-chart -n hms-dev`
+4. Check: `kubectl get pods -n hms-dev`

@@ -43,6 +43,8 @@ try
         .AddHttpMessageHandler<AuthTokenHandler>()
         .AddStandardResilience();
 
+    builder.Services.AddHealthChecks();
+
     builder.Services.AddAutoMapper(typeof(Program));
 
     builder.Services.AddStackExchangeRedisCache(o =>
@@ -141,6 +143,8 @@ try
     builder.Services.AddFrontendCors(builder.Configuration);
 
     var app = builder.Build();
+
+    app.MapHealthChecks("/health").AllowAnonymous();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())

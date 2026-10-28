@@ -1,0 +1,7 @@
+Start-Process powershell -ArgumentList "kubectl port-forward svc/auth 8081:8080 -n hms-dev"
+Start-Process powershell -ArgumentList "kubectl port-forward svc/appointments 8082:8080 -n hms-dev"
+Start-Process powershell -ArgumentList "kubectl port-forward svc/command 8083:8080 -n hms-dev"
+Start-Process powershell -ArgumentList "kubectl port-forward svc/queryservice 8084:8080 -n hms-dev"
+Start-Process powershell -ArgumentList "kubectl port-forward svc/invoiceservice 8085:8080 -n hms-dev"
+Start-Process powershell -ArgumentList "kubectl port-forward svc/db 1433:1433 -n hms-dev"
+Start-Process powershell -ArgumentList "kubectl port-forward svc/statisticsservice 8086:8080 -n hms-dev"
