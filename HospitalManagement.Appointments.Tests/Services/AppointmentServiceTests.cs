@@ -33,7 +33,6 @@ namespace HospitalManagement.Appointments.Tests.Services
         private Mock<IQueryServiceClient> queryServiceClientMock;
         private IOptions<AppointmentSettings> appointmentSettings;
         private Mock<IAppointmentDiscountCalculator> appointmentDiscountCalculatorMock;
-        private Mock<IClinicTimeZoneProvider> clinicTimeZoneProviderMock;
         private Mock<ITreatmentRepository> treatmentRepositoryMock;
         private Mock<IClaudeSummaryService> claudeSummaryServiceMock;
         private Mock<IDistributedCache> distributedCacheMock;
@@ -50,14 +49,10 @@ namespace HospitalManagement.Appointments.Tests.Services
             queryServiceClientMock = new Mock<IQueryServiceClient>();
             appointmentDiscountCalculatorMock = new Mock<IAppointmentDiscountCalculator>();
             appointmentSettings = Options.Create(new AppointmentSettings { SlotSizeMinutes = 30 });
-            clinicTimeZoneProviderMock = new Mock<IClinicTimeZoneProvider>();
             treatmentRepositoryMock = new Mock<ITreatmentRepository>();
             claudeSummaryServiceMock = new Mock<IClaudeSummaryService>();
             distributedCacheMock = new Mock<IDistributedCache>();
             cachePolicy = Policy.NoOpAsync();
-
-            clinicTimeZoneProviderMock.Setup(c => c.ToLocal(It.IsAny<DateTime>())).Returns((DateTime dt) => dt);
-            clinicTimeZoneProviderMock.Setup(c => c.ToUtc(It.IsAny<DateTime>())).Returns((DateTime dt) => dt);
 
             appointmentService = new AppointmentService(
                 appointmentRepositoryMock.Object,
@@ -67,7 +62,6 @@ namespace HospitalManagement.Appointments.Tests.Services
                 appointmentSettings,
                 appointmentDiscountCalculatorMock.Object,
                 queryServiceClientMock.Object,
-                clinicTimeZoneProviderMock.Object,
                 treatmentRepositoryMock.Object,
                 claudeSummaryServiceMock.Object,
                 distributedCacheMock.Object,
@@ -423,26 +417,24 @@ namespace HospitalManagement.Appointments.Tests.Services
         {
             var doctorId = 1;
             var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
+            var bookedStart = date.ToDateTime(new TimeOnly(8, 0), DateTimeKind.Utc);
 
             queryServiceClientMock
                 .Setup(c => c.GetDoctorScheduleAsync(doctorId, date.DayOfWeek))
                 .ReturnsAsync(new DoctorScheduleResponseDto { StartHour = 8, EndHour = 10 });
 
-            var bookedAppointment = new Appointment
-            {
-                DateTime = date.ToDateTime(new TimeOnly(8, 0)),
-                Duration = TimeSpan.FromMinutes(30)
-            };
-
             appointmentRepositoryMock
                 .Setup(r => r.GetByDoctorIdAndDateAsync(doctorId, date))
-                .ReturnsAsync(new List<Appointment> { bookedAppointment });
+                .ReturnsAsync(new List<Appointment>
+                {
+                    new Appointment { DateTime = bookedStart, Duration = TimeSpan.FromMinutes(30) }
+                });
 
             var result = await appointmentService.GetFreeSlotsAsync(doctorId, date);
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.Data, Has.Count.EqualTo(3)); // 8:30, 9:00, 9:30
-            Assert.That(result.Data!.Any(s => s.Start == new TimeOnly(8, 0)), Is.False);
+            Assert.That(result.Data!.Any(s => s.Start == bookedStart), Is.False);
         }
 
         [Test]
@@ -675,13 +667,11 @@ namespace HospitalManagement.Appointments.Tests.Services
         }
 
         [Test]
-        public async Task GetStatsDataAsync_ConvertsLocalRangeToUtcBounds_WithExclusiveEnd()
+        public async Task GetStatsDataAsync_UsesUtcDayBounds_WithExclusiveEnd()
         {
             var from = new DateOnly(2026, 9, 1);
             var to = new DateOnly(2026, 9, 30);
 
-            clinicTimeZoneProviderMock.Setup(c => c.ToUtc(It.IsAny<DateTime>()))
-                .Returns((DateTime dt) => dt.AddHours(-2));
             appointmentRepositoryMock
                 .Setup(r => r.GetByDateRangeAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>()))
                 .ReturnsAsync(new List<Appointment>());
@@ -689,7 +679,8 @@ namespace HospitalManagement.Appointments.Tests.Services
             await appointmentService.GetStatsDataAsync(from, to);
 
             appointmentRepositoryMock.Verify(r => r.GetByDateRangeAsync(
-                new DateTime(2026, 8, 31, 22, 0, 0), new DateTime(2026, 9, 30, 22, 0, 0)), Times.Once);
+                new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc),
+                new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc)), Times.Once);
         }
 
         [Test]

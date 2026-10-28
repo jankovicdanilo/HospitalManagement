@@ -1,4 +1,6 @@
-﻿namespace HospitalManagement.InvoiceService.Models.DTOs.Invoice
+﻿using System.Globalization;
+
+namespace HospitalManagement.InvoiceService.Models.DTOs.Invoice
 {
     public class InvoiceData
     {
@@ -15,5 +17,13 @@
         public decimal Discount { get; set; }
         public decimal Subtotal { get; set; }
         public decimal TotalAmount { get; set; }
+        public int UtcOffsetMinutes { get; set; }
+
+        public string AppointmentDateText => string.Create(CultureInfo.InvariantCulture,
+            $"{AppointmentDate.AddMinutes(UtcOffsetMinutes):dd/MM/yyyy HH:mm} {UtcLabel}");
+
+        private string UtcLabel => UtcOffsetMinutes == 0
+            ? "UTC"
+            : $"UTC{(UtcOffsetMinutes < 0 ? '-' : '+')}{TimeSpan.FromMinutes(Math.Abs(UtcOffsetMinutes)):hh\\:mm}";
     }
 }

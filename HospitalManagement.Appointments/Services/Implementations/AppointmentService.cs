@@ -29,7 +29,6 @@ namespace HospitalManagement.Appointments.Services.Implementations
         private readonly AppointmentSettings appointmentSettings;
         private readonly IAppointmentDiscountCalculator appointmentDiscountCalculator;
         private readonly IQueryServiceClient queryServiceClient;
-        private readonly IClinicTimeZoneProvider clinicTimeZoneProvider;
         private readonly ITreatmentRepository treatmentRepository;
         private readonly IClaudeSummaryService claudeSummaryService;
         private readonly IDistributedCache distributedCache;
@@ -38,8 +37,7 @@ namespace HospitalManagement.Appointments.Services.Implementations
         public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper,
             IAppointmentValidation appointmentValidation, ILogger<AppointmentService> logger,
             IOptions<AppointmentSettings> appointmentSettings, IAppointmentDiscountCalculator appointmentDiscountCalculator,
-            IQueryServiceClient queryServiceClient, IClinicTimeZoneProvider clinicTimeZoneProvider,
-            ITreatmentRepository treatmentRepository, IClaudeSummaryService claudeSummaryService,
+            IQueryServiceClient queryServiceClient, ITreatmentRepository treatmentRepository, IClaudeSummaryService claudeSummaryService,
             IDistributedCache distributedCache, IAsyncPolicy cachePolicy)
         {
             this.appointmentRepository = appointmentRepository;
@@ -49,7 +47,6 @@ namespace HospitalManagement.Appointments.Services.Implementations
             this.appointmentSettings = appointmentSettings.Value;
             this.appointmentDiscountCalculator = appointmentDiscountCalculator;
             this.queryServiceClient = queryServiceClient;
-            this.clinicTimeZoneProvider = clinicTimeZoneProvider;
             this.treatmentRepository = treatmentRepository;
             this.claudeSummaryService = claudeSummaryService;
             this.distributedCache = distributedCache;
@@ -232,8 +229,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
         public async Task<Result<List<TimeSlotDto>>> GetFreeSlotsAsync(int doctorId, DateOnly date)
         {
-            var nowLocal = clinicTimeZoneProvider.ToLocal(DateTime.UtcNow);
-            if (date < DateOnly.FromDateTime(nowLocal))
+            var nowUtc = DateTime.UtcNow;
+            if (date < DateOnly.FromDateTime(nowUtc))
             {
                 logger.LogWarning("Free slots requested for past date {Date}", date);
                 return Result<List<TimeSlotDto>>.Fail("Cannot get free slots for a past date", "INVALID_DATE",
@@ -259,28 +256,29 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             while (current + slotSize <= workEnd)
             {
-                var slotStartLocal = date.ToDateTime(TimeOnly.FromTimeSpan(current));
-                var slotEndLocal = slotStartLocal.Add(slotSize);
-                var slotStartUtc = clinicTimeZoneProvider.ToUtc(slotStartLocal);
-                var slotEndUtc = clinicTimeZoneProvider.ToUtc(slotEndLocal);
+                var slotStart = date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).Add(current);
+                var slotEnd = slotStart.Add(slotSize);
 
                 var isBooked = appointments.Any(a =>
                     a.Status != AppointmentStatus.Cancelled &&
                     a.Status != AppointmentStatus.Missed &&
-                    slotStartUtc < a.DateTime.Add(a.Duration) &&
-                    slotEndUtc > a.DateTime);
+                    slotStart < a.DateTime.Add(a.Duration) &&
+                    slotEnd > a.DateTime);
 
-                if (!isBooked)
+                if (!isBooked && slotStart > nowUtc)
                 {
                     freeSlots.Add(new TimeSlotDto
                     {
-                        Start = TimeOnly.FromDateTime(slotStartLocal),
-                        End = TimeOnly.FromDateTime(slotEndLocal)
+                        Start = slotStart,
+                        End = slotEnd
                     });
                 }
 
                 current = current.Add(slotSize);
             }
+
+            logger.LogInformation("Doctor {DoctorId} has {FreeCount} free slots on {Date} (UTC)",
+                doctorId, freeSlots.Count, date);
 
             return Result<List<TimeSlotDto>>.Ok(freeSlots);
         }
@@ -532,8 +530,8 @@ namespace HospitalManagement.Appointments.Services.Implementations
                     "INVALID_DATE_RANGE", ErrorType.Validation);
             }
 
-            var fromUtc = clinicTimeZoneProvider.ToUtc(from.ToDateTime(TimeOnly.MinValue));
-            var toUtc = clinicTimeZoneProvider.ToUtc(to.AddDays(1).ToDateTime(TimeOnly.MinValue));
+            var fromUtc = from.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var toUtc = to.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
 
             var appointments = await appointmentRepository.GetByDateRangeAsync(fromUtc, toUtc);
 
