@@ -1,9 +1,10 @@
 ﻿using FluentValidation;
 using HospitalManagement.Appointments.Models.DTOs.Appointment;
 using HospitalManagement.Appointments.Services.Interfaces;
+using HospitalManagement.Shared.Controllers;
+using HospitalManagement.Shared.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using HospitalManagement.Shared.Controllers;
 
 namespace HospitalManagement.Appointments.Controllers
 {
@@ -19,6 +20,7 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await appointmentService.Delete(id);
@@ -32,6 +34,7 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpPut]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> UpdateAsync([FromBody] AppointmentUpdateRequestDto request,
             [FromServices] IValidator<AppointmentUpdateRequestDto> validator)
         {
@@ -54,6 +57,7 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentFilterDto filter,
             [FromServices] IValidator<AppointmentFilterDto> validator)
         {
@@ -74,6 +78,7 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> GetByIdAsync(int id)
         {
             var result = await appointmentService.GetByIdAsync(id);
@@ -88,6 +93,7 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> CreateAsync([FromBody] AppointmentCreateRequestDto request,
             [FromServices] IValidator<AppointmentCreateRequestDto> validator)
         {
@@ -110,6 +116,7 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet("free-slots")]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> FreeSlots([FromQuery] FreeSlotsRequestDto request,
             [FromServices] IValidator<FreeSlotsRequestDto> validator)
         {
@@ -131,6 +138,7 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpPatch("status")]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> UpdateStatusAsync([FromBody] AppointmentStatusUpdateDto request,
             [FromServices] IValidator<AppointmentStatusUpdateDto> validator)
         {
@@ -152,6 +160,7 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet("patient/{patientId:int}/history")]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> GetPatientHistoryAsync([FromRoute] int patientId)
         {
             var result = await appointmentService.GetPatientHistoryAsync(patientId);
@@ -181,6 +190,7 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet("patient/{patientId:int}/summary")]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> GetPatientSummaryAsync([FromRoute] int patientId, [FromQuery] string language = "en")
         {
             var result = await appointmentService.GetPatientSummaryAsync(patientId, language);
@@ -189,9 +199,19 @@ namespace HospitalManagement.Appointments.Controllers
         }
 
         [HttpGet("stats-data")]
+        [Authorize(Policy = PolicyNames.ReportsAccess)]
         public async Task<IActionResult> GetStatsDataAsync([FromQuery] DateOnly from, [FromQuery] DateOnly to)
         {
             var result = await appointmentService.GetStatsDataAsync(from, to);
+            return result.Success ? Ok(result.Data) : HandleFailure(result);
+        }
+
+        [HttpGet("{id:int}/invoice")]
+        [Authorize(Policy = PolicyNames.ReportsAccess)]
+        public async Task<IActionResult> GetForInvoiceAsync([FromRoute] int id)
+        {
+            var result = await appointmentService.GetByIdAsync(id);
+
             return result.Success ? Ok(result.Data) : HandleFailure(result);
         }
     }

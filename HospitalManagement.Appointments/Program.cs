@@ -14,6 +14,7 @@ using HospitalManagement.Appointments.Services.Validations;
 using HospitalManagement.Appointments.Settings;
 using HospitalManagement.Shared.Extensions;
 using HospitalManagement.Shared.Http;
+using HospitalManagement.Shared.Security;
 using HospitalManagement.Shared.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -127,7 +128,8 @@ try
                     ErrorCode = "UNAUTHORIZED",
                     Message = "You must be logged in to access this resource"
                 });
-            }
+            },
+            OnForbidden = ForbiddenHandler.HandleAsync
         };
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -143,11 +145,7 @@ try
         };
     });
 
-    builder.Services.AddAuthorization(options =>
-    {
-        options.FallbackPolicy = new AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser().Build();
-    });
+    builder.Services.AddHospitalAuthorization();
 
     builder.Services.AddControllers()
         .AddJsonOptions(options =>

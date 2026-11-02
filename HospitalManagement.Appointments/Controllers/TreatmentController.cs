@@ -2,12 +2,15 @@
 using HospitalManagement.Appointments.Models.DTOs.Treatment;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
+using HospitalManagement.Shared.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalManagement.Appointments.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = PolicyNames.AppointmentAccess)]
     public class TreatmentController : BaseController
     {
         private readonly ITreatmentService treatmentService;
