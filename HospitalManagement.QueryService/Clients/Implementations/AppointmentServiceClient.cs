@@ -28,20 +28,24 @@ namespace HospitalManagement.QueryService.Clients.Implementations
                 var response = await httpClient.GetAsync($"api/appointment/patient/{patientId}/history");
                 if (!response.IsSuccessStatusCode)
                 {
+                    logger.LogWarning("Failed to get patient history for patient {PatientId}, status {StatusCode}",
+                        patientId, (int)response.StatusCode);
                     return null;
                 }
-                var json = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ApiResponse<List<AppointmentResponseDto>>>(json, JsonOptions);
 
-                if(result?.Data == null)
+                var appointments = await response.Content.ReadFromJsonAsync<List<AppointmentResponseDto>>(JsonOptions);
+                if (appointments == null)
                 {
+                    logger.LogWarning("Appointments returned an empty body for the history of patient {PatientId}", patientId);
                     return null;
                 }
+
+                logger.LogInformation("Loaded {Count} appointments for the history of patient {PatientId}", appointments.Count, patientId);
 
                 return new PatientMedicalHistoryDto
                 {
                     PatientId = patientId,
-                    Appointments = result.Data.Select(a => new AppointmentHistoryDto
+                    Appointments = appointments.Select(a => new AppointmentHistoryDto
                     {
                         Id = a.Id,
                         DateTime = a.DateTime,
@@ -55,7 +59,6 @@ namespace HospitalManagement.QueryService.Clients.Implementations
                         Treatment = a.Treatment
                     }).ToList()
                 };
-
             }
             catch (Exception ex)
             {
@@ -105,13 +108,6 @@ namespace HospitalManagement.QueryService.Clients.Implementations
                 logger.LogError(ex, "Failed to get popular patient ids");
                 return null;
             }
-        }
-
-        internal class ApiResponse<T>
-        {
-            public T? Data { get; set; }
-            public bool Success { get; set; }
-            public string? Message { get; set; }
         }
     }
 }

@@ -86,7 +86,8 @@ builder.Services.AddAuthentication(options =>
                 Message = "You must be logged in to access this resource"
             });
         },
-        OnTokenValidated = TokenRevocation.CheckAsync
+        OnTokenValidated = TokenRevocation.CheckAsync,
+        OnForbidden = ForbiddenHandler.HandleAsync
     };
 
     options.TokenValidationParameters = new TokenValidationParameters
@@ -102,11 +103,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser().Build();
-});
+builder.Services.AddHospitalAuthorization();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
