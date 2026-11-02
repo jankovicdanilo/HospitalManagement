@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using HospitalManagement.Auth.Models.DTOs;
+using HospitalManagement.Auth.Models.Enums;
 
 namespace HospitalManagement.Auth.Validators.User
 {
@@ -21,6 +22,20 @@ namespace HospitalManagement.Auth.Validators.User
 
             RuleFor(x => x.Role)
                 .IsInEnum().WithMessage("Invalid role");
+
+            When(x => x.Role == UserRole.Doctor, () =>
+            {
+                RuleFor(x => x.DoctorId)
+                    .NotNull().WithMessage("DoctorId is required for the Doctor role")
+                    .GreaterThan(0).WithMessage("DoctorId must be greater than 0");
+            });
+
+            When(x => x.Role != UserRole.Doctor, () =>
+            {
+                RuleFor(x => x.DoctorId)
+                    .Null()
+                    .WithMessage("DoctorId is only allowed for the Doctor role");
+            });
         }
     }
 }
