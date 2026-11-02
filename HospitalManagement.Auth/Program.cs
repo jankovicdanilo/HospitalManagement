@@ -65,7 +65,8 @@ builder.Services.AddAuthentication(options =>
                     Message = "You must be logged in to access this resource"
                 });
             },
-            OnTokenValidated = TokenRevocation.CheckAsync
+            OnTokenValidated = TokenRevocation.CheckAsync,
+            OnForbidden = ForbiddenHandler.HandleAsync
         };
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -82,14 +83,7 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
-// Enable authorization middleware
-builder.Services.AddAuthorization(options =>
-{
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser().Build();
-});
-
-//builder.Services.AddAuthorization();
+builder.Services.AddHospitalAuthorization();
 
 // Register controllers
 builder.Services.AddControllers()
@@ -161,6 +155,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapControllers();
 app.MapHealthChecks("/health").WithMetadata(new AllowAnonymousAttribute());

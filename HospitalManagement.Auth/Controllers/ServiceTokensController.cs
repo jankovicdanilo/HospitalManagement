@@ -2,6 +2,7 @@
 using HospitalManagement.Auth.Models.DTOs;
 using HospitalManagement.Auth.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
+using HospitalManagement.Shared.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ namespace HospitalManagement.Auth.Controllers
 {
     [Route("api/auth/service-tokens")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = RoleNames.Admin)]
     public class ServiceTokensController : BaseController
     {
         private readonly IServiceTokenService serviceTokenService;

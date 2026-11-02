@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using HospitalManagement.Shared.Settings;
+using HospitalManagement.Shared.Security;
 
 namespace HospitalManagement.Auth.Services.Implementations
 {
@@ -107,7 +108,7 @@ namespace HospitalManagement.Auth.Services.Implementations
 
             if (user.DoctorId.HasValue)
             {
-                claims.Add(new Claim("doctorId", user.DoctorId.Value.ToString()));
+                claims.Add(new Claim(AppClaims.DoctorId, user.DoctorId.Value.ToString()));
             }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
