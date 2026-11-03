@@ -13,16 +13,24 @@ namespace HospitalManagement.Appointments.Controllers
     public class AppointmentController : BaseController
     {
         private readonly IAppointmentService appointmentService;
+        private readonly IAppointmentAccess appointmentAccess;
 
-        public AppointmentController(IAppointmentService appointmentService)
+        public AppointmentController(IAppointmentService appointmentService, IAppointmentAccess appointmentAccess)
         {
             this.appointmentService = appointmentService;
+            this.appointmentAccess = appointmentAccess;
         }
 
         [HttpDelete("{id:int}")]
         [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> Delete(int id)
         {
+            var access = await appointmentAccess.CheckAppointmentAsync(User, id);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
             var result = await appointmentService.Delete(id);
 
             if (!result.Success)
@@ -44,7 +52,18 @@ namespace HospitalManagement.Appointments.Controllers
             {
                 return ValidationFailed(validation);
             }
-                
+
+            var access = await appointmentAccess.CheckAppointmentAsync(User, request.Id);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
+            var doctorAccess = appointmentAccess.CheckDoctor(User, request.DoctorId);
+            if (!doctorAccess.Success)
+            {
+                return HandleFailure(doctorAccess);
+            }
 
             var result = await appointmentService.UpdateAsync(request);
 
@@ -67,6 +86,17 @@ namespace HospitalManagement.Appointments.Controllers
                 return ValidationFailed(validation);
             }
 
+            var scope = appointmentAccess.GetDoctorScope(User);
+            if (!scope.Success)
+            {
+                return HandleFailure(scope);
+            }
+
+            if (scope.Data.HasValue)
+            {
+                filter.DoctorId = scope.Data;
+            }
+
             var result = await appointmentService.GetAllAsync(filter);
 
             if (!result.Success)
@@ -81,6 +111,12 @@ namespace HospitalManagement.Appointments.Controllers
         [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> GetByIdAsync(int id)
         {
+            var access = await appointmentAccess.CheckAppointmentAsync(User, id);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
             var result = await appointmentService.GetByIdAsync(id);
 
             if (!result.Success)
@@ -105,6 +141,12 @@ namespace HospitalManagement.Appointments.Controllers
 
             }
 
+            var access = appointmentAccess.CheckDoctor(User, request.DoctorId);
+            if(!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
             var result = await appointmentService.CreateAsync(request);
 
             if (!result.Success)
@@ -125,6 +167,12 @@ namespace HospitalManagement.Appointments.Controllers
             if (!validation.IsValid)
             {
                 return ValidationFailed(validation);
+            }
+
+            var access = appointmentAccess.CheckDoctor(User, request.DoctorId);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
             }
                 
             var result = await appointmentService.GetFreeSlotsAsync(request.DoctorId, request.Date);
@@ -148,6 +196,12 @@ namespace HospitalManagement.Appointments.Controllers
             {
                 return ValidationFailed(validation);
             }
+
+            var access = await appointmentAccess.CheckAppointmentAsync(User, request.Id);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
+            }
                 
             var result = await appointmentService.UpdateStatusAsync(request);
 
@@ -163,6 +217,12 @@ namespace HospitalManagement.Appointments.Controllers
         [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> GetPatientHistoryAsync([FromRoute] int patientId)
         {
+            var access = await appointmentAccess.CheckPatientAsync(User, patientId);
+            if(!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
             var result = await appointmentService.GetPatientHistoryAsync(patientId);
 
             if (!result.Success)
@@ -193,6 +253,12 @@ namespace HospitalManagement.Appointments.Controllers
         [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> GetPatientSummaryAsync([FromRoute] int patientId, [FromQuery] string language = "en")
         {
+            var access = await appointmentAccess.CheckPatientAsync(User, patientId);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
             var result = await appointmentService.GetPatientSummaryAsync(patientId, language);
 
             return result.Success ? Ok(result.Data) : HandleFailure(result);

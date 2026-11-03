@@ -49,6 +49,7 @@ try
     builder.Services.AddScoped<IAppointmentProcedureService, AppointmentProcedureService>();
     builder.Services.AddScoped<ITreatmentService, TreatmentService>();
     builder.Services.AddScoped<IClaudeSummaryService, ClaudeSummaryService>();
+    builder.Services.AddScoped<IAppointmentAccess,  AppointmentAccess>();
 
     // Validations
     builder.Services.AddScoped<IAppointmentValidation, AppointmentValidation>();
