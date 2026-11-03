@@ -95,6 +95,15 @@ namespace HospitalManagement.Appointments.Controllers
             if (scope.Data.HasValue)
             {
                 filter.DoctorId = scope.Data;
+
+                if (filter.PatientId.HasValue)
+                {
+                    var patientAccess = await appointmentAccess.CheckPatientAsync(User, filter.PatientId.Value);
+                    if (!patientAccess.Success)
+                    {
+                        return HandleFailure(patientAccess);
+                    }
+                }
             }
 
             var result = await appointmentService.GetAllAsync(filter);
