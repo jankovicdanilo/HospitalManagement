@@ -42,6 +42,12 @@ try
     })
         .AddHttpMessageHandler<AuthTokenHandler>();
 
+    builder.Services.AddStackExchangeRedisCache(options =>
+    options.Configuration = builder.Configuration["Redis:ConnectionString"]);
+
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddTransient<AuthTokenHandler>();
+
     builder.Services.AddAutoMapper(typeof(Program));
 
     QuestPDF.Settings.License = LicenseType.Community;
