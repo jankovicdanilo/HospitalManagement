@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using HospitalManagement.Appointments.Models.DTOs.Treatment;
+using HospitalManagement.Appointments.Services.Implementations;
 using HospitalManagement.Appointments.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
 using HospitalManagement.Shared.Security;
@@ -14,10 +15,12 @@ namespace HospitalManagement.Appointments.Controllers
     public class TreatmentController : BaseController
     {
         private readonly ITreatmentService treatmentService;
+        private readonly IAppointmentAccess appointmentAccess;
 
-        public TreatmentController(ITreatmentService treatmentService)
+        public TreatmentController(ITreatmentService treatmentService, IAppointmentAccess appointmentAccess)
         {
             this.treatmentService = treatmentService;
+            this.appointmentAccess = appointmentAccess;
         }
 
         [HttpPost]
@@ -30,7 +33,13 @@ namespace HospitalManagement.Appointments.Controllers
             {
                 return ValidationFailed(validation);
             }
-                
+
+            var access = await appointmentAccess.CheckAppointmentAsync(User, request.AppointmentId);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
             var result = await treatmentService.CreateAsync(request);
 
             if (!result.Success)

@@ -13,15 +13,23 @@ namespace HospitalManagement.Appointments.Controllers
     public class AppointmentProcedureController : BaseController
     {
         private readonly IAppointmentProcedureService appointmentProcedureService;
+        private readonly IAppointmentAccess appointmentAccess;
 
-        public AppointmentProcedureController(IAppointmentProcedureService appointmentProcedureService)
+        public AppointmentProcedureController(IAppointmentProcedureService appointmentProcedureService, IAppointmentAccess appointmentAccess)
         {
             this.appointmentProcedureService = appointmentProcedureService;
+            this.appointmentAccess = appointmentAccess;
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateAsync([FromBody] AppointmentProcedureCreateRequestDto request)
         {
+            var access = await appointmentAccess.CheckAppointmentAsync(User, request.AppointmentId);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
             var result = await appointmentProcedureService.CreateAsync(request);
 
             if (!result.Success)
@@ -35,6 +43,12 @@ namespace HospitalManagement.Appointments.Controllers
         [HttpGet]
         public async Task<IActionResult> GetByAppointmentAndProcedureIdAsync(int appointmentId, int procedureId)
         {
+            var access = await appointmentAccess.CheckAppointmentAsync(User, appointmentId);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
             var result = await appointmentProcedureService.GetByAppointmentAndProcedureIdAsync(appointmentId, procedureId);
 
             if (!result.Success)
@@ -48,6 +62,12 @@ namespace HospitalManagement.Appointments.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteAsync(int appointmentId, int procedureId)
         {
+            var access = await appointmentAccess.CheckAppointmentAsync(User, appointmentId);
+            if (!access.Success)
+            {
+                return HandleFailure(access);
+            }
+
             var result = await appointmentProcedureService.DeleteAsync(appointmentId, procedureId);
 
             if (!result.Success)
