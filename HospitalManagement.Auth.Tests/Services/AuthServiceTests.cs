@@ -14,6 +14,7 @@ using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using HospitalManagement.Shared.Security;
 
 namespace HospitalManagement.Auth.Tests.Services
 {
@@ -249,6 +250,62 @@ namespace HospitalManagement.Auth.Tests.Services
             Assert.That(jwt.Claims.First(c => c.Type == ClaimTypes.Name).Value, Is.EqualTo("existinguser"));
             Assert.That(jwt.Claims.First(c => c.Type == ClaimTypes.Email).Value, Is.EqualTo("user@example.com"));
             Assert.That(jwt.Claims.First(c => c.Type == ClaimTypes.Role).Value, Is.EqualTo("Doctor"));
+        }
+
+        [Test]
+        public async Task LoginAsync_DoctorWithDoctorId_TokenContainsRoleAndDoctorIdClaims()
+        {
+            var request = new LoginRequestDto { Username = "doctor6", Password = "Password123" };
+            var user = new User
+            {
+                Id = 3,
+                Username = "doctor6",
+                Email = "doctor6@example.com",
+                Role = UserRole.Doctor,
+                DoctorId = 6,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123")
+            };
+            var userDto = new AuthResponseDto { Username = user.Username, Email = user.Email };
+
+            authRepositoryMock.Setup(r => r.GetByUsernameAsync(request.Username)).ReturnsAsync(user);
+            mapperMock.Setup(m => m.Map<AuthResponseDto>(It.IsAny<User>())).Returns(userDto);
+
+            var result = await authService.LoginAsync(request);
+
+            Assert.That(result.Success, Is.True);
+
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(result.Data.Token);
+
+            Assert.That(jwt.Claims.First(c => c.Type == ClaimTypes.Role).Value, Is.EqualTo("Doctor"));
+            Assert.That(jwt.Claims.First(c => c.Type == AppClaims.DoctorId).Value, Is.EqualTo("6"));
+        }
+
+        [TestCase(UserRole.Admin)]
+        [TestCase(UserRole.Manager)]
+        public async Task LoginAsync_UserWithoutDoctorId_TokenHasRoleAndNoDoctorIdClaim(UserRole role)
+        {
+            var request = new LoginRequestDto { Username = "staffuser", Password = "Password123" };
+            var user = new User
+            {
+                Id = 4,
+                Username = "staffuser",
+                Email = "staff@example.com",
+                Role = role,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123")
+            };
+            var userDto = new AuthResponseDto { Username = user.Username, Email = user.Email };
+
+            authRepositoryMock.Setup(r => r.GetByUsernameAsync(request.Username)).ReturnsAsync(user);
+            mapperMock.Setup(m => m.Map<AuthResponseDto>(It.IsAny<User>())).Returns(userDto);
+
+            var result = await authService.LoginAsync(request);
+
+            Assert.That(result.Success, Is.True);
+
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(result.Data.Token);
+
+            Assert.That(jwt.Claims.First(c => c.Type == ClaimTypes.Role).Value, Is.EqualTo(role.ToString()));
+            Assert.That(jwt.Claims.Any(c => c.Type == AppClaims.DoctorId), Is.False);
         }
 
         [Test]

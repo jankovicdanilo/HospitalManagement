@@ -26,7 +26,9 @@ namespace HospitalManagement.Appointments.Services.Implementations
 
             if (!user.IsDoctor())
             {
-                return Result<int?>.Ok(null);
+                logger.LogWarning("User {User} with role {Role} has no access to appointments",
+                    user.Identity?.Name, user.FindFirst(ClaimTypes.Role)?.Value);
+                return Result<int?>.Fail("You do not have access to appointments", "FORBIDDEN", ErrorType.Forbidden);
             }
 
             var doctorId = user.GetDoctorId();
