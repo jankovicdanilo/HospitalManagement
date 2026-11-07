@@ -1,0 +1,67 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+      
+      - name: Set up .NET 8 and .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Cache NuGet packages 
+        uses: actions/cache@v4
+        with: 
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            nuget-${{ runner-os }}-
+
+      - name: Find the solution file
+        id: solution
+        run: |
+          SOLUTION=$(git ls-files '*.sln' '*.sln' | head-n-1)
+          if [ -z "$SOLUTION" ]; then
+            echo "No solution file found"
+            exit 1
+          fi
+          echo "Using $SOLUTION"
+          echo "path=$SOLUTION" >> "$GITHUB_OUTPUT"
+
+      - name: Restore
+        run: dotnet restore "${{ steps.solution.outputs.path }}"
+
+      - name: Build
+        run: dotnet build "${{ steps.solution.outputs.path }}" - c Release --no-restore
+
+      - name: Run unit tests
+        run: dotnet test "${{ steps.solution.outputs.path }}" -c Release --no-build --logger trx --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+          if-no-files-found: ignore
