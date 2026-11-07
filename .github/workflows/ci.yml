@@ -41,7 +41,7 @@ jobs:
       - name: Find the solution file
         id: solution
         run: |
-          SOLUTION=$(git ls-files '*.sln' '*.sln' | head-n-1)
+          SOLUTION=$(git ls-files '*.sln' '*.sln' | head -n 1)
           if [ -z "$SOLUTION" ]; then
             echo "No solution file found"
             exit 1
