@@ -60,5 +60,10 @@ namespace HospitalManagement.Auth.Repositories.Implementations
 
             return user;
         }
+
+        public async Task<User?> GetByDoctorIdAsync(int doctorId)
+        {
+            return await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(x => x.DoctorId == doctorId);
+        }
     }
 }

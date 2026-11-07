@@ -4,6 +4,8 @@ using HospitalManagement.Auth.Models.DTOs;
 using HospitalManagement.Auth.Models.Enums;
 using HospitalManagement.Auth.Repositories.Interfaces;
 using HospitalManagement.Auth.Services.Implementations;
+using HospitalManagement.Shared.Common;
+using HospitalManagement.Shared.Security;
 using HospitalManagement.Shared.Settings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,7 +16,6 @@ using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using HospitalManagement.Shared.Security;
 
 namespace HospitalManagement.Auth.Tests.Services
 {
@@ -50,6 +51,24 @@ namespace HospitalManagement.Auth.Tests.Services
                     mapperMock.Object,
                     loggerMock.Object
                 );
+        }
+
+        private void SetupSuccessfulUpdate(User user)
+        {
+            authRepositoryMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
+            authRepositoryMock.Setup(r => r.UpdateAsync(user)).ReturnsAsync(user);
+            mapperMock.Setup(m => m.Map<AuthResponseUpdateDto>(user))
+                .Returns(new AuthResponseUpdateDto { Id = user.Id, Username = user.Username });
+        }
+
+        private void SetupSuccessfulRegister(User user)
+        {
+            authRepositoryMock.Setup(r => r.GetByUsernameAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
+            authRepositoryMock.Setup(r => r.GetByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
+            mapperMock.Setup(m => m.Map<User>(It.IsAny<RegisterRequestDto>())).Returns(user);
+            authRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<User>())).ReturnsAsync(user);
+            mapperMock.Setup(m => m.Map<AuthResponseDto>(It.IsAny<User>()))
+                .Returns(new AuthResponseDto { Username = user.Username, Email = user.Email });
         }
 
         [Test]
@@ -139,6 +158,74 @@ namespace HospitalManagement.Auth.Tests.Services
             Assert.That(result.Data.Username, Is.EqualTo(request.Username));
             Assert.That(result.Data.Token, Is.Not.Null.And.Not.Empty);
             authRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<User>()), Times.Once);
+        }
+
+        [Test]
+        public async Task RegisterAsync_DoctorAlreadyHasAnAccount_ReturnsConflictAndDoesNotCreate()
+        {
+            var request = new RegisterRequestDto
+            {
+                Username = "seconddoctor6",
+                Email = "second@example.com",
+                Password = "Password123!",
+                Role = UserRole.Doctor,
+                DoctorId = 6
+            };
+            var existing = new User { Id = 3, Username = "doctor6", DoctorId = 6, Role = UserRole.Doctor };
+
+            authRepositoryMock.Setup(r => r.GetByUsernameAsync(request.Username)).ReturnsAsync((User?)null);
+            authRepositoryMock.Setup(r => r.GetByEmailAsync(request.Email)).ReturnsAsync((User?)null);
+            authRepositoryMock.Setup(r => r.GetByDoctorIdAsync(6)).ReturnsAsync(existing);
+
+            var result = await authService.RegisterAsync(request);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.Conflict));
+            Assert.That(result.ErrorCode, Is.EqualTo("DOCTOR_ALREADY_LINKED"));
+            authRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Test]
+        public async Task RegisterAsync_DoctorWithoutAnAccountYet_ReturnsSuccess()
+        {
+            var request = new RegisterRequestDto
+            {
+                Username = "doctor9",
+                Email = "doctor9@example.com",
+                Password = "Password123!",
+                Role = UserRole.Doctor,
+                DoctorId = 9
+            };
+            var user = new User { Id = 5, Username = "doctor9", Email = "doctor9@example.com", Role = UserRole.Doctor, DoctorId = 9 };
+
+            SetupSuccessfulRegister(user);
+            authRepositoryMock.Setup(r => r.GetByDoctorIdAsync(9)).ReturnsAsync((User?)null);
+
+            var result = await authService.RegisterAsync(request);
+
+            Assert.That(result.Success, Is.True);
+            authRepositoryMock.Verify(r => r.GetByDoctorIdAsync(9), Times.Once);
+            authRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<User>()), Times.Once);
+        }
+
+        [Test]
+        public async Task RegisterAsync_UserWithoutDoctorId_DoesNotLookUpTheDoctorLink()
+        {
+            var request = new RegisterRequestDto
+            {
+                Username = "manager2",
+                Email = "manager2@example.com",
+                Password = "Password123!",
+                Role = UserRole.Manager
+            };
+            var user = new User { Id = 6, Username = "manager2", Email = "manager2@example.com", Role = UserRole.Manager };
+
+            SetupSuccessfulRegister(user);
+
+            var result = await authService.RegisterAsync(request);
+
+            Assert.That(result.Success, Is.True);
+            authRepositoryMock.Verify(r => r.GetByDoctorIdAsync(It.IsAny<int>()), Times.Never);
         }
 
         [Test]
@@ -352,10 +439,11 @@ namespace HospitalManagement.Auth.Tests.Services
         public async Task DeleteUser_UserNotFound_ReturnsFail()
         {
             int id = 1;
+            int existingUserId = 99;
 
             authRepositoryMock.Setup(r => r.GetByIdAsync(id)).ReturnsAsync((User?)null);
 
-            var result = await authService.DeleteUser(id);
+            var result = await authService.DeleteUser(id, existingUserId);
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("USER_NOT_FOUND"));
@@ -366,26 +454,41 @@ namespace HospitalManagement.Auth.Tests.Services
         public async Task DeleteUser_UserExists_ReturnsSuccess()
         {
             var user = new User { Id = 1, Username = "existinguser" };
+            int existingUserId = 99;
 
             authRepositoryMock
                 .Setup(r => r.GetByIdAsync(user.Id))
                 .ReturnsAsync(user);
 
-            var result = await authService.DeleteUser(user.Id);
+            var result = await authService.DeleteUser(user.Id, existingUserId);
 
             Assert.That(result.Success, Is.True);
             authRepositoryMock.Verify(r => r.Delete(1), Times.Once);
         }
 
         [Test]
+        public async Task DeleteUser_OwnAccount_ReturnsConflictAndDoesNotDelete()
+        {
+            int id = 5;
+
+            var result = await authService.DeleteUser(id, id);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.Conflict));
+            Assert.That(result.ErrorCode, Is.EqualTo("CANNOT_DELETE_SELF"));
+            authRepositoryMock.Verify(r => r.Delete(It.IsAny<int>()), Times.Never);
+        }
+
+        [Test]
         public async Task UpdateUserAsync_UserNotFound_ReturnsFail()
         {
             int id = 1;
+            int existingUserId = 99;
             var request = new UpdateUserRequestDto { Id = id };
 
             authRepositoryMock.Setup(r => r.GetByIdAsync(id)).ReturnsAsync((User?)null);
 
-            var result = await authService.UpdateUserAsync(request);
+            var result = await authService.UpdateUserAsync(request, existingUserId);
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("USER_NOT_FOUND"));
@@ -396,6 +499,7 @@ namespace HospitalManagement.Auth.Tests.Services
         public async Task UpdateUserAsync_UserExists_ReturnsSuccess()
         {
             var request = new UpdateUserRequestDto { Id = 1, Username = "updatedname" };
+            int existingUserId = 99;
             var user = new User
             {
                 Id = 1,
@@ -418,12 +522,202 @@ namespace HospitalManagement.Auth.Tests.Services
 
             mapperMock.Setup(m => m.Map<AuthResponseUpdateDto>(user)).Returns(userDto);
 
-            var result = await authService.UpdateUserAsync(request);
+            var result = await authService.UpdateUserAsync(request, existingUserId);
 
             Assert.That(result.Success, Is.True);
             Assert.That(result.Data.Username, Is.EqualTo("updatedname"));
             Assert.That(user.Username, Is.EqualTo("updatedname"));
             authRepositoryMock.Verify(r => r.UpdateAsync(user), Times.Once);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_ChangingOwnRole_ReturnsConflictAndDoesNotUpdate()
+        {
+            var user = new User { Id = 5, Username = "admin", Email = "admin@example.com", Role = UserRole.Admin };
+            var request = new UpdateUserRequestDto { Id = 5, Username = "admin", Email = "admin@example.com", Role = UserRole.Manager };
+
+            authRepositoryMock.Setup(r => r.GetByIdAsync(5)).ReturnsAsync(user);
+
+            var result = await authService.UpdateUserAsync(request, 5);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.Conflict));
+            Assert.That(result.ErrorCode, Is.EqualTo("CANNOT_CHANGE_OWN_ROLE"));
+            mapperMock.Verify(m => m.Map(request, user), Times.Never);
+            authRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_OwnAccountKeepingSameRole_ReturnsSuccess()
+        {
+            var user = new User { Id = 5, Username = "admin", Email = "admin@example.com", Role = UserRole.Admin };
+            var request = new UpdateUserRequestDto { Id = 5, Username = "admin", Email = "new@example.com", Role = UserRole.Admin };
+
+            SetupSuccessfulUpdate(user);
+
+            var result = await authService.UpdateUserAsync(request, 5);
+
+            Assert.That(result.Success, Is.True);
+            authRepositoryMock.Verify(r => r.UpdateAsync(user), Times.Once);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_ChangingAnotherUsersRole_ReturnsSuccess()
+        {
+            var user = new User { Id = 1, Username = "doctor6", Email = "doctor6@example.com", Role = UserRole.Doctor };
+            var request = new UpdateUserRequestDto { Id = 1, Username = "doctor6", Email = "doctor6@example.com", Role = UserRole.Manager };
+
+            SetupSuccessfulUpdate(user);
+
+            var result = await authService.UpdateUserAsync(request, 99);
+
+            Assert.That(result.Success, Is.True);
+            authRepositoryMock.Verify(r => r.UpdateAsync(user), Times.Once);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_UsernameTakenByAnotherUser_ReturnsConflictAndDoesNotUpdate()
+        {
+            var user = new User { Id = 1, Username = "doctor7", Email = "doctor7@example.com", Role = UserRole.Doctor };
+            var otherUser = new User { Id = 2, Username = "doctor6", Email = "doctor6@example.com" };
+            var request = new UpdateUserRequestDto { Id = 1, Username = "doctor6", Email = "doctor7@example.com", Role = UserRole.Doctor };
+
+            authRepositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
+            authRepositoryMock.Setup(r => r.GetByUsernameAsync("doctor6")).ReturnsAsync(otherUser);
+
+            var result = await authService.UpdateUserAsync(request, 99);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.Conflict));
+            Assert.That(result.ErrorCode, Is.EqualTo("USERNAME_TAKEN"));
+            mapperMock.Verify(m => m.Map(request, user), Times.Never);
+            authRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_EmailTakenByAnotherUser_ReturnsConflictAndDoesNotUpdate()
+        {
+            var user = new User { Id = 1, Username = "doctor7", Email = "doctor7@example.com", Role = UserRole.Doctor };
+            var otherUser = new User { Id = 2, Username = "doctor6", Email = "doctor6@example.com" };
+            var request = new UpdateUserRequestDto { Id = 1, Username = "doctor7", Email = "doctor6@example.com", Role = UserRole.Doctor };
+
+            authRepositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
+            authRepositoryMock.Setup(r => r.GetByUsernameAsync("doctor7")).ReturnsAsync(user);
+            authRepositoryMock.Setup(r => r.GetByEmailAsync("doctor6@example.com")).ReturnsAsync(otherUser);
+
+            var result = await authService.UpdateUserAsync(request, 99);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.Conflict));
+            Assert.That(result.ErrorCode, Is.EqualTo("EMAIL_TAKEN"));
+            mapperMock.Verify(m => m.Map(request, user), Times.Never);
+            authRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_UnchangedUsernameAndEmail_DoesNotTreatTheUserAsItsOwnDuplicate()
+        {
+            var user = new User { Id = 1, Username = "doctor6", Email = "doctor6@example.com", Role = UserRole.Doctor };
+            var request = new UpdateUserRequestDto { Id = 1, Username = "doctor6", Email = "doctor6@example.com", Role = UserRole.Doctor };
+
+            SetupSuccessfulUpdate(user);
+            authRepositoryMock.Setup(r => r.GetByUsernameAsync("doctor6")).ReturnsAsync(user);
+            authRepositoryMock.Setup(r => r.GetByEmailAsync("doctor6@example.com")).ReturnsAsync(user);
+
+            var result = await authService.UpdateUserAsync(request, 99);
+
+            Assert.That(result.Success, Is.True);
+            authRepositoryMock.Verify(r => r.UpdateAsync(user), Times.Once);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_DoctorLinkedToAnotherUser_ReturnsConflictAndDoesNotUpdate()
+        {
+            var user = new User { Id = 1, Username = "doctor7", Email = "doctor7@example.com", Role = UserRole.Doctor, DoctorId = 7 };
+            var otherUser = new User { Id = 2, Username = "doctor6", Email = "doctor6@example.com", Role = UserRole.Doctor, DoctorId = 6 };
+            var request = new UpdateUserRequestDto
+            {
+                Id = 1,
+                Username = "doctor7",
+                Email = "doctor7@example.com",
+                Role = UserRole.Doctor,
+                DoctorId = 6
+            };
+
+            authRepositoryMock.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(user);
+            authRepositoryMock.Setup(r => r.GetByDoctorIdAsync(6)).ReturnsAsync(otherUser);
+
+            var result = await authService.UpdateUserAsync(request, 99);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.Conflict));
+            Assert.That(result.ErrorCode, Is.EqualTo("DOCTOR_ALREADY_LINKED"));
+            mapperMock.Verify(m => m.Map(request, user), Times.Never);
+            authRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_KeepingTheUsersOwnDoctorLink_DoesNotTreatItAsADuplicate()
+        {
+            var user = new User { Id = 1, Username = "doctor6", Email = "doctor6@example.com", Role = UserRole.Doctor, DoctorId = 6 };
+            var request = new UpdateUserRequestDto
+            {
+                Id = 1,
+                Username = "doctor6",
+                Email = "doctor6@example.com",
+                Role = UserRole.Doctor,
+                DoctorId = 6
+            };
+
+            SetupSuccessfulUpdate(user);
+            authRepositoryMock.Setup(r => r.GetByDoctorIdAsync(6)).ReturnsAsync(user);
+
+            var result = await authService.UpdateUserAsync(request, 99);
+
+            Assert.That(result.Success, Is.True);
+            authRepositoryMock.Verify(r => r.UpdateAsync(user), Times.Once);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_LinkingToADoctorWithoutAnAccount_ReturnsSuccess()
+        {
+            var user = new User { Id = 1, Username = "doctor6", Email = "doctor6@example.com", Role = UserRole.Doctor, DoctorId = 6 };
+            var request = new UpdateUserRequestDto
+            {
+                Id = 1,
+                Username = "doctor6",
+                Email = "doctor6@example.com",
+                Role = UserRole.Doctor,
+                DoctorId = 9
+            };
+
+            SetupSuccessfulUpdate(user);
+            authRepositoryMock.Setup(r => r.GetByDoctorIdAsync(9)).ReturnsAsync((User?)null);
+
+            var result = await authService.UpdateUserAsync(request, 99);
+
+            Assert.That(result.Success, Is.True);
+            authRepositoryMock.Verify(r => r.UpdateAsync(user), Times.Once);
+        }
+
+        [Test]
+        public async Task UpdateUserAsync_RequestWithoutDoctorId_DoesNotLookUpTheDoctorLink()
+        {
+            var user = new User { Id = 2, Username = "manager", Email = "manager@example.com", Role = UserRole.Manager };
+            var request = new UpdateUserRequestDto
+            {
+                Id = 2,
+                Username = "manager",
+                Email = "manager@example.com",
+                Role = UserRole.Manager
+            };
+
+            SetupSuccessfulUpdate(user);
+
+            var result = await authService.UpdateUserAsync(request, 99);
+
+            Assert.That(result.Success, Is.True);
+            authRepositoryMock.Verify(r => r.GetByDoctorIdAsync(It.IsAny<int>()), Times.Never);
         }
     }
 }
