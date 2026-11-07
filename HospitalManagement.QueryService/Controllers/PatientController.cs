@@ -3,6 +3,8 @@ using HospitalManagement.QueryService.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
 using HospitalManagement.Shared.Models.DTOs.Common;
 using HospitalManagement.Shared.Models.DTOs.Patient;
+using HospitalManagement.Shared.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalManagement.QueryService.Controllers
@@ -51,6 +53,7 @@ namespace HospitalManagement.QueryService.Controllers
         }
 
         [HttpGet("{patientId:int}/history")]
+        [Authorize(Policy = PolicyNames.AppointmentAccess)]
         public async Task<IActionResult> GetMedicalHistoryAsync([FromRoute] int patientId)
         {
             var result = await patientService.GetMedicalHistoryAsync(patientId);

@@ -54,20 +54,21 @@ namespace HospitalManagement.QueryService.Services.Implementations
         {
             string cacheKey = $"doctor:{id}";
             string? cached = null;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 cached = await cachePolicy.ExecuteAsync(() => cache.GetStringAsync(cacheKey));
             }
             catch (BrokenCircuitException)
             {
-                logger.LogDebug("Redus circuit open, skipping cache read for {Key}", cacheKey);
+                logger.LogDebug("Redis circuit open, skipping cache read for {Key}", cacheKey);
             }
             catch(Exception ex)
             {
                 logger.LogWarning("Cache unavailable for key {Key}, falling back to DB: {Message}", cacheKey, ex.Message);
             }
 
-            if(cached != null)
+            if (cached != null)
             {
                 logger.LogInformation("Cache hit for doctor {Id}", id);
                 var cachedDto = JsonSerializer.Deserialize<DoctorResponseDto>(cached);

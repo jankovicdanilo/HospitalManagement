@@ -1,14 +1,16 @@
 using FluentValidation;
-using HospitalManagement.Shared.Models.DTOs.Patient;
-using HospitalManagement.Shared.Models.DTOs.Patient;
 using HospitalManagement.CommandService.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
+using HospitalManagement.Shared.Models.DTOs.Patient;
+using HospitalManagement.Shared.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalManagement.CommandService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = PolicyNames.ManagePatients)]
     public class PatientController : BaseController
     {
         private readonly IPatientService patientService;

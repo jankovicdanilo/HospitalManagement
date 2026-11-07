@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using HospitalManagement.Shared.Settings;
+using HospitalManagement.Shared.Security;
 
 namespace HospitalManagement.Auth.Services.Implementations
 {
@@ -97,13 +98,18 @@ namespace HospitalManagement.Auth.Services.Implementations
 
         private string GenerateToken(User user)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             };
+
+            if (user.DoctorId.HasValue)
+            {
+                claims.Add(new Claim(AppClaims.DoctorId, user.DoctorId.Value.ToString()));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

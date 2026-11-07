@@ -12,6 +12,7 @@ namespace HospitalManagement.Shared.Common
         Validation,
         Conflict,
         Unauthorized,
+        Forbidden,
         UpstreamFailure
     }
 
