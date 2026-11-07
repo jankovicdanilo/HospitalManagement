@@ -2,9 +2,9 @@ name: Backend CI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: true
+  contents: read
 
 jobs:
   build-and-test:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Check out the code
         uses: actions/checkout@v4
-      
+
       - name: Set up .NET 8 and .NET 10
         uses: actions/setup-dotnet@v4
         with:
@@ -30,13 +30,13 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Cache NuGet packages 
+      - name: Cache NuGet packages
         uses: actions/cache@v4
-        with: 
+        with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
           restore-keys: |
-            nuget-${{ runner-os }}-
+            nuget-${{ runner.os }}-
 
       - name: Find the solution file
         id: solution
