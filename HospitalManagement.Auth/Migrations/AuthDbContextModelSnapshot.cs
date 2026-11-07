@@ -111,6 +111,16 @@ namespace HospitalManagement.Auth.Migrations
                     b.HasKey("Id")
                         .HasName("PK__User__3214EC076709E5A4");
 
+                    b.HasIndex("DoctorId")
+                        .IsUnique()
+                        .HasFilter("[DoctorId] IS NOT NULL");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
                     b.ToTable("User", (string)null);
                 });
 #pragma warning restore 612, 618

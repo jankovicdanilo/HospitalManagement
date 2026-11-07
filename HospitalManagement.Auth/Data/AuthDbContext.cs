@@ -33,6 +33,9 @@ namespace HospitalManagement.Auth.Data
                 entity.Property(e => e.PasswordHash).HasMaxLength(255);
                 entity.Property(e => e.Role).HasMaxLength(50).HasConversion<string>();
                 entity.Property(e => e.Username).HasMaxLength(100);
+                entity.HasIndex(e => e.Username).IsUnique();
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.HasIndex(e => e.DoctorId).IsUnique();
             });
 
             modelBuilder.Entity<ServiceToken>(entity =>
