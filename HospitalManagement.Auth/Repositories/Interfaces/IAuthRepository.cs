@@ -17,5 +17,7 @@ namespace HospitalManagement.Auth.Repositories.Interfaces
         Task Delete(int id);
 
         Task<User> UpdateAsync(User user);
+
+        Task<User?> GetByDoctorIdAsync(int doctorId);
     }
 }

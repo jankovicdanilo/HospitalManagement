@@ -13,8 +13,8 @@ namespace HospitalManagement.Auth.Services.Interfaces
 
         Task<Result<CurrentUserDto>> GetCurrentUserAsync(int userId);
 
-        Task<Result> DeleteUser(int id);
+        Task<Result> DeleteUser(int id, int currentUserId);
 
-        Task<Result<AuthResponseUpdateDto>> UpdateUserAsync(UpdateUserRequestDto request);
+        Task<Result<AuthResponseUpdateDto>> UpdateUserAsync(UpdateUserRequestDto request, int currentUserId);
     }
 }

@@ -101,7 +101,9 @@ namespace HospitalManagement.Auth.Controllers
         [Authorize(Roles = RoleNames.Admin)]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await authService.DeleteUser(id);
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var result = await authService.DeleteUser(id, currentUserId);
 
             if (!result.Success)
             {
@@ -117,6 +119,8 @@ namespace HospitalManagement.Auth.Controllers
             [FromBody] UpdateUserRequestDto request,
             [FromServices] IValidator<UpdateUserRequestDto> validator)
         {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
             var validation = await validator.ValidateAsync(request);
 
             if (!validation.IsValid)
@@ -124,7 +128,7 @@ namespace HospitalManagement.Auth.Controllers
                 return ValidationFailed(validation);
             }
 
-            var result = await authService.UpdateUserAsync(request);
+            var result = await authService.UpdateUserAsync(request, currentUserId);
 
             if (!result.Success)
             {
