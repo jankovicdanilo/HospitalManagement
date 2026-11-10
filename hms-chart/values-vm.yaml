@@ -1,0 +1,34 @@
+# Overrides for the VM, merged over values.yaml. No secrets here.
+# Maps merge key by key. Lists (like cors) are replaced whole.
+
+ingress:
+  host: ""   # match any host, so http://<server-ip>/auth works
+
+services:
+  auth:
+    image: ghcr.io/jankovicdanilo/hospitalmanagement/auth-service:COMMIT
+    env:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      Redis__ConnectionString: "redis:6379,abortConnect=false"
+  appointments:
+    image: ghcr.io/jankovicdanilo/hospitalmanagement/appointments-service:COMMIT
+    env:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      Redis__ConnectionString: "redis:6379,abortConnect=false"
+  command:
+    image: ghcr.io/jankovicdanilo/hospitalmanagement/command-service:COMMIT
+    env:
+      ASPNETCORE_ENVIRONMENT: "Production"
+  queryservice:
+    image: ghcr.io/jankovicdanilo/hospitalmanagement/query-service:COMMIT
+    env:
+      ASPNETCORE_ENVIRONMENT: "Production"
+  invoiceservice:
+    image: ghcr.io/jankovicdanilo/hospitalmanagement/invoice-service:COMMIT
+    env:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      Redis__ConnectionString: "redis:6379,abortConnect=false"
+  statisticsservice:
+    image: ghcr.io/jankovicdanilo/hospitalmanagement/statistics-service:COMMIT
+    env:
+      ASPNETCORE_ENVIRONMENT: "Production"
