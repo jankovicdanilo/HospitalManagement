@@ -7,6 +7,12 @@ ingress:
     enabled: true
     issuer: letsencrypt-prod
 
+cors:
+  allowedOrigins:
+    - https://hospital-management-frontend.jankovic-danilo23.workers.dev
+    - http://localhost:5173
+    - http://localhost:5174
+
 services:
   auth:
     image: ghcr.io/jankovicdanilo/hospitalmanagement/auth-service:COMMIT
