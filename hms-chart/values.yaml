@@ -2,6 +2,10 @@ namespace: hms-dev
 
 ingress:
   host: localhost
+  tls:
+    enabled: false
+    issuer: letsencrypt-staging
+    secretName: hms-tls
 
 cors:
   allowedOrigins:

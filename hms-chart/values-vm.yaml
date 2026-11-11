@@ -2,7 +2,10 @@
 # Maps merge key by key. Lists (like cors) are replaced whole.
 
 ingress:
-  host: ""   # match any host, so http://<server-ip>/auth works
+  host: hospital-management.duckdns.org
+  tls:
+    enabled: true
+    issuer: letsencrypt-prod
 
 services:
   auth:
