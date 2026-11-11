@@ -144,7 +144,7 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
     context.Database.Migrate();
-    await SeedData.SeedAdminAsync(context);
+    await SeedData.SeedAdminAsync(context, app.Configuration, app.Environment, app.Logger);
 }
 
 app.UseCors("AllowFrontend");
