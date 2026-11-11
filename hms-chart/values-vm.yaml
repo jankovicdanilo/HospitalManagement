@@ -2,6 +2,7 @@
 # Maps merge key by key. Lists (like cors) are replaced whole.
 
 ingress:
+  className: traefik
   host: hospital-management.duckdns.org
   tls:
     enabled: true
