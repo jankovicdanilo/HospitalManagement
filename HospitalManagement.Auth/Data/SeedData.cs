@@ -6,25 +6,38 @@ namespace HospitalManagement.Auth.Data
 {
     public static class SeedData
     {
-        public static async Task SeedAdminAsync(AuthDbContext dbContext)
+        public static async Task SeedAdminAsync(AuthDbContext dbContext, IConfiguration configuration,
+            IHostEnvironment environment, ILogger logger)
         {
-            var adminExists = await dbContext.Users.AnyAsync(x => x.Role == UserRole.Admin);
-
-            if (adminExists)
+            if (await dbContext.Users.AnyAsync(x => x.Role == UserRole.Admin))
+            {
                 return;
+            }
+
+            var password = configuration["Admin:Password"];
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                if (!environment.IsDevelopment())
+                {
+                    throw new InvalidOperationException("Admin:Password must be set to create the first admin account.");
+                }
+
+                logger.LogWarning("Admin:Password is not set, using the development default password");
+                password = "Admin123!";
+            }
 
             var admin = new User
             {
-                Username = "admin",
-                Email = "admin@hospital.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                Username = configuration["Admin:Username"] ?? "admin",
+                Email = configuration["Admin:Email"] ?? "admin@hospital.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
                 Role = UserRole.Admin,
             };
 
             await dbContext.Users.AddAsync(admin);
             await dbContext.SaveChangesAsync();
 
-            Console.WriteLine("Default admin seeded successfully.");
+            logger.LogInformation("Admin account {Username} created", admin.Username);
         }
     }
 }
