@@ -1,0 +1,86 @@
+name: Deploy to VM
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Full 40-character commit SHA on main to deploy (its images must already exist)"
+        required: true
+
+concurrency:
+  group: deploy-vm
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check the commit id
+        env:
+          SHA: ${{ inputs.sha }}
+        run: |
+          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "The commit id must be 40 lowercase hex characters"
+            exit 1
+          fi
+          git cat-file -e "${SHA}^{commit}"
+          if ! git merge-base --is-ancestor "$SHA" origin/main; then
+            echo "Commit $SHA is not on main, refusing to deploy it"
+            exit 1
+          fi
+          echo "Commit $SHA is on main"
+
+      - name: Check that the six images exist
+        env:
+          SHA: ${{ inputs.sha }}
+        run: |
+          TAG="${SHA:0:7}"
+          for n in auth-service appointments-service command-service invoice-service query-service statistics-service; do
+            docker manifest inspect "ghcr.io/${GITHUB_REPOSITORY,,}/${n}:${TAG}" > /dev/null
+            echo "${n}:${TAG} ok"
+          done
+
+      - name: Set up SSH
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          SHA: ${{ inputs.sha }}
+        run: |
+          ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -i ~/.ssh/deploy_key \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" "deploy ${SHA}"
+
+      - name: Smoke test the six services
+        run: |
+          failed=""
+          for s in auth query command appointments invoice statistics; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --retry 5 --retry-delay 5 --retry-connrefused \
+              "https://hospital-management.duckdns.org/${s}/health" || true)
+            echo "${s}: ${code}"
+            [ "${code}" = "200" ] || failed="yes"
+          done
+          [ -z "${failed}" ]
+
+      - name: Remove the SSH key from the runner
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
