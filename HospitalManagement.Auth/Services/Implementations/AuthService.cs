@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using HospitalManagement.Shared.Settings;
+using HospitalManagement.Shared.Security;
 
 namespace HospitalManagement.Auth.Services.Implementations
 {
@@ -46,6 +47,16 @@ namespace HospitalManagement.Auth.Services.Implementations
             {
                 logger.LogWarning("Registration failed, email {Email} already exists", request.Email);
                 return Result<AuthResponseDto>.Fail($"Email {request.Email} already exists", "EMAIL_TAKEN", ErrorType.Conflict);
+            }
+
+            if (request.DoctorId.HasValue)
+            {
+                var linkedUser = await authRepository.GetByDoctorIdAsync(request.DoctorId.Value);
+                if(linkedUser != null)
+                {
+                    logger.LogWarning("Registration failed, doctor {DoctorId} already has account {Username}", request.DoctorId, linkedUser.Username);
+                    return Result<AuthResponseDto>.Fail($"Doctor {request.DoctorId} already has an account", "DOCTOR_ALREADY_LINKED", ErrorType.Conflict);
+                }
             }
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -97,13 +108,18 @@ namespace HospitalManagement.Auth.Services.Implementations
 
         private string GenerateToken(User user)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             };
+
+            if (user.DoctorId.HasValue)
+            {
+                claims.Add(new Claim(AppClaims.DoctorId, user.DoctorId.Value.ToString()));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -144,8 +160,14 @@ namespace HospitalManagement.Auth.Services.Implementations
             return Result<CurrentUserDto>.Ok(result);
         }
 
-        public async Task<Result> DeleteUser(int id)
+        public async Task<Result> DeleteUser(int id, int currentUserId)
         {
+            if(id == currentUserId)
+            {
+                logger.LogWarning("User {Id} tried to delete their own account", id);
+                return Result.Fail("You cannot delete your own account", "CANNOT_DELETE_SELF", ErrorType.Conflict);
+            }
+
             if (await authRepository.GetByIdAsync(id) == null)
             {
                 logger.LogWarning("User with id {Id} not found for deletion", id);
@@ -159,7 +181,7 @@ namespace HospitalManagement.Auth.Services.Implementations
             return Result.Ok("User deleted");
         }
 
-        public async Task<Result<AuthResponseUpdateDto>> UpdateUserAsync(UpdateUserRequestDto request)
+        public async Task<Result<AuthResponseUpdateDto>> UpdateUserAsync(UpdateUserRequestDto request, int currentUserId)
         {
             var user = await authRepository.GetByIdAsync(request.Id);
 
@@ -168,6 +190,38 @@ namespace HospitalManagement.Auth.Services.Implementations
                 logger.LogWarning("User with id {Id} not found for update", request.Id);
                 return Result<AuthResponseUpdateDto>.Fail
                     ($"User with the {request.Id} not found", "USER_NOT_FOUND", ErrorType.NotFound);
+            }
+
+            if(user.Id == currentUserId && request.Role != user.Role)
+            {
+                logger.LogWarning("User {Id} tried to change their own role", user.Id);
+                return Result<AuthResponseUpdateDto>.Fail("You cannot change your own role", "CANNOT_CHANGE_OWN_ROLE", ErrorType.Conflict);
+            }
+
+            var existingUsername = await authRepository.GetByUsernameAsync(request.Username);
+            if(existingUsername != null && existingUsername.Id != request.Id)
+            {
+                logger.LogWarning("Update of user {Id} failed, username {Username} already exists", request.Id, request.Username);
+                return Result<AuthResponseUpdateDto>.Fail($"Username {request.Username} already exists", "USERNAME_TAKEN", ErrorType.Conflict);
+            }
+
+            var existingEmail = await authRepository.GetByEmailAsync(request.Email);
+            if(existingEmail != null && existingEmail.Id != request.Id)
+            {
+                logger.LogWarning("Update of user {Id} failed, email {Email} already exists", request.Id, request.Email);
+                return Result<AuthResponseUpdateDto>.Fail($"Email {request.Email} already exists", "EMAIL_TAKEN", ErrorType.Conflict);
+            }
+
+            if (request.DoctorId.HasValue)
+            {
+                var linkedUser = await authRepository.GetByDoctorIdAsync(request.DoctorId.Value);
+                if (linkedUser != null && linkedUser.Id != request.Id)
+                {
+                    logger.LogWarning("Update of user {Id} failed, doctor {DoctorId} already has account {Username}", 
+                        request.Id, request.DoctorId, linkedUser.Username);
+                    return Result<AuthResponseUpdateDto>.Fail($"Doctor {request.DoctorId} already has an account", 
+                        "DOCTOR_ALREADY_LINKED", ErrorType.Conflict);
+                }
             }
 
             mapper.Map(request, user);

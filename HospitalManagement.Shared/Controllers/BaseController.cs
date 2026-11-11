@@ -55,6 +55,7 @@ namespace HospitalManagement.Shared.Controllers
             ErrorType.Validation => BadRequest(body),
             ErrorType.Conflict => Conflict(body),
             ErrorType.Unauthorized => Unauthorized(body),
+            ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, body),
             ErrorType.UpstreamFailure => StatusCode(502, body),
             _ => StatusCode(500, body)
         };

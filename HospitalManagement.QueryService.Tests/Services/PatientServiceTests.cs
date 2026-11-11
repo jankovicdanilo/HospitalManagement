@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using HospitalManagement.QueryService.Clients;
 using HospitalManagement.QueryService.Clients.Interfaces;
 using HospitalManagement.QueryService.Models.DTOs.Patient;
 using HospitalManagement.QueryService.Repositories.Interfaces;
 using HospitalManagement.QueryService.Services.Implementations;
+using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.Domain;
 using HospitalManagement.Shared.Models.DTOs.Patient;
 using Microsoft.Extensions.Logging;
@@ -162,7 +164,8 @@ namespace HospitalManagement.QueryService.Tests.Services
             var history = new PatientMedicalHistoryDto { PatientId = patientId, PatientName = "placeholder" };
 
             patientRepositoryMock.Setup(r => r.GetByIdAsync(patientId)).ReturnsAsync(patient);
-            appointmentServiceClientMock.Setup(c => c.GetPatientHistoryAsync(patientId)).ReturnsAsync(history);
+            appointmentServiceClientMock.Setup(c => c.GetPatientHistoryAsync(patientId))
+                .ReturnsAsync(new HistoryFetchResult { Status = HistoryFetchStatus.Ok, History = history});
 
             var result = await patientService.GetMedicalHistoryAsync(patientId);
 
@@ -189,12 +192,73 @@ namespace HospitalManagement.QueryService.Tests.Services
             var patient = new Patient { Id = patientId, Name = "John", LastName = "Doe" };
 
             patientRepositoryMock.Setup(r => r.GetByIdAsync(patientId)).ReturnsAsync(patient);
-            appointmentServiceClientMock.Setup(c => c.GetPatientHistoryAsync(patientId)).ReturnsAsync((PatientMedicalHistoryDto?)null);
+            appointmentServiceClientMock.Setup(c => c.GetPatientHistoryAsync(patientId))
+                .ReturnsAsync(new HistoryFetchResult { Status = HistoryFetchStatus.Failed});
 
             var result = await patientService.GetMedicalHistoryAsync(patientId);
 
             Assert.That(result.Success, Is.False);
             Assert.That(result.ErrorCode, Is.EqualTo("HISTORY_UNAVAILABLE"));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.UpstreamFailure));
+        }
+
+        [Test]
+        public async Task GetMedicalHistoryAsync_AppointmentsRefuse_ReturnsForbiddenWithCodePassedThrough()
+        {
+            int patientId = 1;
+            var patient = new Patient { Id = patientId, Name = "John", LastName = "Doe" };
+
+            patientRepositoryMock.Setup(r => r.GetByIdAsync(patientId)).ReturnsAsync(patient);
+            appointmentServiceClientMock.Setup(c => c.GetPatientHistoryAsync(patientId))
+                .ReturnsAsync(new HistoryFetchResult
+                {
+                    Status = HistoryFetchStatus.Forbidden,
+                    Message = "You can only see your own patients",
+                    ErrorCode = "NOT_YOUR_PATIENT"
+                });
+
+            var result = await patientService.GetMedicalHistoryAsync(patientId);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.Forbidden));
+            Assert.That(result.ErrorCode, Is.EqualTo("NOT_YOUR_PATIENT"));
+            Assert.That(result.Message, Is.EqualTo("You can only see your own patients"));
+            Assert.That(result.Data, Is.Null);
+        }
+
+        [Test]
+        public async Task GetMedicalHistoryAsync_AppointmentsRefuseWithoutDetails_UsesDefaultCodeAndMessage()
+        {
+            int patientId = 1;
+            var patient = new Patient { Id = patientId, Name = "John", LastName = "Doe" };
+
+            patientRepositoryMock.Setup(r => r.GetByIdAsync(patientId)).ReturnsAsync(patient);
+            appointmentServiceClientMock.Setup(c => c.GetPatientHistoryAsync(patientId))
+                .ReturnsAsync(new HistoryFetchResult { Status = HistoryFetchStatus.Forbidden });
+
+            var result = await patientService.GetMedicalHistoryAsync(patientId);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.Forbidden));
+            Assert.That(result.ErrorCode, Is.EqualTo("NOT_YOUR_PATIENT"));
+            Assert.That(result.Message, Is.EqualTo("You can only see your own patients"));
+        }
+
+        [Test]
+        public async Task GetMedicalHistoryAsync_AppointmentsReturnNotFound_ReturnsNotFound()
+        {
+            int patientId = 1;
+            var patient = new Patient { Id = patientId, Name = "John", LastName = "Doe" };
+
+            patientRepositoryMock.Setup(r => r.GetByIdAsync(patientId)).ReturnsAsync(patient);
+            appointmentServiceClientMock.Setup(c => c.GetPatientHistoryAsync(patientId))
+                .ReturnsAsync(new HistoryFetchResult { Status = HistoryFetchStatus.NotFound });
+
+            var result = await patientService.GetMedicalHistoryAsync(patientId);
+
+            Assert.That(result.Success, Is.False);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.NotFound));
+            Assert.That(result.ErrorCode, Is.EqualTo("INVALID_PATIENT_ID"));
         }
 
         [Test]

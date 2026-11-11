@@ -6,6 +6,8 @@ namespace HospitalManagement.Auth.Models.Domain
     {
         public int Id { get; set; }
 
+        public int? DoctorId { get; set; }
+
         public string Username { get; set; } = null!;
 
         public string Email { get; set; } = null!;

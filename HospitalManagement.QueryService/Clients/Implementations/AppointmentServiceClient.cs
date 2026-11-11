@@ -1,6 +1,7 @@
 ﻿using HospitalManagement.QueryService.Clients.Interfaces;
 using HospitalManagement.QueryService.Models.DTOs.Patient;
 using NLog.Targets;
+using System.Net;
 using System.Text.Json;
 
 namespace HospitalManagement.QueryService.Clients.Implementations
@@ -21,46 +22,71 @@ namespace HospitalManagement.QueryService.Clients.Implementations
             this.logger = logger;
         }
 
-        public async Task<PatientMedicalHistoryDto?> GetPatientHistoryAsync(int patientId)
+        public async Task<HistoryFetchResult> GetPatientHistoryAsync(int patientId)
         {
             try
             {
                 var response = await httpClient.GetAsync($"api/appointment/patient/{patientId}/history");
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    var error = await ReadErrorAsync(response);
+                    logger.LogWarning("Appointments refused the history of patient {PatientId}: {ErrorCode}", patientId, error.ErrorCode);
+                    return new HistoryFetchResult
+                    {
+                        Status = HistoryFetchStatus.Forbidden,
+                        Message = error.Message ?? "You can only see your own patients",
+                        ErrorCode = error.ErrorCode ?? "NOT_YOUR_PATIENT"
+                    };
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    logger.LogWarning("Appointments has no history for patient {PatientId}", patientId);
+                    return new HistoryFetchResult { Status = HistoryFetchStatus.NotFound };
+                }
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    return null;
-                }
-                var json = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<ApiResponse<List<AppointmentResponseDto>>>(json, JsonOptions);
-
-                if(result?.Data == null)
-                {
-                    return null;
+                    logger.LogWarning("Failed to get patient history for patient {PatientId}, status {StatusCode}",
+                        patientId, (int)response.StatusCode);
+                    return new HistoryFetchResult { Status = HistoryFetchStatus.Failed };
                 }
 
-                return new PatientMedicalHistoryDto
+                var appointments = await response.Content.ReadFromJsonAsync<List<AppointmentResponseDto>>(JsonOptions);
+                if (appointments == null)
                 {
-                    PatientId = patientId,
-                    Appointments = result.Data.Select(a => new AppointmentHistoryDto
+                    logger.LogWarning("Appointments returned an empty body for the history of patient {PatientId}", patientId);
+                    return new HistoryFetchResult { Status = HistoryFetchStatus.Failed };
+                }
+
+                logger.LogInformation("Loaded {Count} appointments for the history of patient {PatientId}", appointments.Count, patientId);
+
+                return new HistoryFetchResult
+                {
+                    Status = HistoryFetchStatus.Ok,
+                    History = new PatientMedicalHistoryDto
                     {
-                        Id = a.Id,
-                        DateTime = a.DateTime,
-                        Duration = a.Duration,
-                        Status = a.Status,
-                        Notes = a.Notes,
-                        DoctorName = a.DoctorName,
-                        TotalCost = a.TotalCost,
-                        Discount = a.Discount,
-                        Procedures = a.Procedures,
-                        Treatment = a.Treatment
-                    }).ToList()
+                        PatientId = patientId,
+                        Appointments = appointments.Select(a => new AppointmentHistoryDto
+                        {
+                            Id = a.Id,
+                            DateTime = a.DateTime,
+                            Duration = a.Duration,
+                            Status = a.Status,
+                            Notes = a.Notes,
+                            DoctorName = a.DoctorName,
+                            TotalCost = a.TotalCost,
+                            Discount = a.Discount,
+                            Procedures = a.Procedures,
+                            Treatment = a.Treatment
+                        }).ToList()
+                    }
                 };
-
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to get patient history for patient {PatientId}", patientId);
-                return null;
+                return new HistoryFetchResult { Status = HistoryFetchStatus.Failed };
             }
         }
 
@@ -107,11 +133,21 @@ namespace HospitalManagement.QueryService.Clients.Implementations
             }
         }
 
-        internal class ApiResponse<T>
+        private static async Task<(string? Message, string? ErrorCode)> ReadErrorAsync(HttpResponseMessage response)
         {
-            public T? Data { get; set; }
-            public bool Success { get; set; }
-            public string? Message { get; set; }
+            try
+            {
+                using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                var root = doc.RootElement;
+                var message = root.TryGetProperty("message", out var m) ? m.GetString() : null;
+                var errorCode = root.TryGetProperty("errorCode", out var c) ? c.GetString() : null;
+
+                return (message, errorCode);
+            }
+            catch(Exception ex)
+            {
+                return (null, null);
+            }
         }
     }
 }

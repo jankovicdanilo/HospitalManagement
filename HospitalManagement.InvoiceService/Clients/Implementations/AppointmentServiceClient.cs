@@ -1,4 +1,5 @@
-﻿using HospitalManagement.InvoiceService.Clients.Interfaces;
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using HospitalManagement.InvoiceService.Clients.Interfaces;
 using HospitalManagement.InvoiceService.Models.DTOs.Invoice;
 using HospitalManagement.Shared.Common;
 using HospitalManagement.Shared.Models.Domain;
@@ -21,7 +22,7 @@ namespace HospitalManagement.InvoiceService.Clients.Implementations
         {
             try
             {
-                var response = await httpClient.GetAsync($"api/appointment/{appointmentId}");
+                var response = await httpClient.GetAsync($"api/appointment/{appointmentId}/invoice");
                 if (!response.IsSuccessStatusCode)
                 {
                     logger.LogWarning("Failed to fetch appointment {Id}, status {Status}", appointmentId, response.StatusCode);

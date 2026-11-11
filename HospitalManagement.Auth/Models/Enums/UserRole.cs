@@ -3,7 +3,7 @@
     public enum UserRole
     {
         Admin,
+        Manager,
         Doctor,
-        Receptionist
     }
 }

@@ -3,6 +3,7 @@ using HospitalManagement.Auth.Models.Domain;
 using HospitalManagement.Auth.Models.DTOs;
 using HospitalManagement.Auth.Services.Interfaces;
 using HospitalManagement.Shared.Controllers;
+using HospitalManagement.Shared.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +23,7 @@ namespace HospitalManagement.Auth.Controllers
         }
 
         [HttpPost("register")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = RoleNames.Admin)]
         public async Task<IActionResult> RegisterAsync(
             [FromBody] RegisterRequestDto request,
             [FromServices] IValidator<RegisterRequestDto> validator)
@@ -68,7 +69,7 @@ namespace HospitalManagement.Auth.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = RoleNames.Admin)]
         public async Task<IActionResult> GetAllAsync()
         {
             var result = await authService.GetAllAsync();
@@ -97,10 +98,12 @@ namespace HospitalManagement.Auth.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = RoleNames.Admin)]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await authService.DeleteUser(id);
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var result = await authService.DeleteUser(id, currentUserId);
 
             if (!result.Success)
             {
@@ -111,11 +114,13 @@ namespace HospitalManagement.Auth.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = RoleNames.Admin)]
         public async Task<IActionResult> UpdateUserAsync(
             [FromBody] UpdateUserRequestDto request,
             [FromServices] IValidator<UpdateUserRequestDto> validator)
         {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
             var validation = await validator.ValidateAsync(request);
 
             if (!validation.IsValid)
@@ -123,7 +128,7 @@ namespace HospitalManagement.Auth.Controllers
                 return ValidationFailed(validation);
             }
 
-            var result = await authService.UpdateUserAsync(request);
+            var result = await authService.UpdateUserAsync(request, currentUserId);
 
             if (!result.Success)
             {

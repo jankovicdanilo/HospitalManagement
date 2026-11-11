@@ -1,4 +1,5 @@
 using AutoMapper;
+using HospitalManagement.QueryService.Clients;
 using HospitalManagement.QueryService.Clients.Interfaces;
 using HospitalManagement.QueryService.Models.DTOs.Patient;
 using HospitalManagement.QueryService.Repositories.Interfaces;
@@ -65,15 +66,25 @@ namespace HospitalManagement.QueryService.Services.Implementations
                     $"Patient with id {patientId} not found", "INVALID_PATIENT_ID", ErrorType.NotFound);
             }
 
-            var patientMedicalHistory = await appointmentServiceClient.GetPatientHistoryAsync(patientId);
+            var fetch = await appointmentServiceClient.GetPatientHistoryAsync(patientId);
 
-            if(patientMedicalHistory == null)
+            switch (fetch.Status)
             {
-                logger.LogWarning("Could not retrieve history for patient {PatientId}", patientId);
-                return Result<PatientMedicalHistoryDto>.Fail(
-                    "Could not retrieve patient history", "HISTORY_UNAVAILABLE", ErrorType.UpstreamFailure);
+                case HistoryFetchStatus.Forbidden:
+                    return Result<PatientMedicalHistoryDto>.Fail(fetch.Message ?? "You can only see your own patients",
+                        fetch.ErrorCode ?? "NOT_YOUR_PATIENT", ErrorType.Forbidden);
+
+                case HistoryFetchStatus.NotFound:
+                    return Result<PatientMedicalHistoryDto>.Fail(
+                        $"Patient with id {patientId} not found", "INVALID_PATIENT_ID", ErrorType.NotFound);
+
+                case HistoryFetchStatus.Failed:
+                    logger.LogWarning("Could not retrieve history for patient {PatientId}", patientId);
+                    return Result<PatientMedicalHistoryDto>.Fail(
+                        "Could not retrieve patient history", "HISTORY_UNAVAILABLE", ErrorType.UpstreamFailure);
             }
 
+            var patientMedicalHistory = fetch.History;
             patientMedicalHistory.PatientName = $"{patient.Name} {patient.LastName}";
 
             return Result<PatientMedicalHistoryDto>.Ok(patientMedicalHistory);

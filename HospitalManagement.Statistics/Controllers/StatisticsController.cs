@@ -1,12 +1,16 @@
 ﻿using HospitalManagement.Shared.Controllers;
+using HospitalManagement.Shared.Security;
 using HospitalManagement.Statistics.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Polly;
 
 namespace HospitalManagement.Statistics.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = PolicyNames.ReportsAccess)]
     public class StatisticsController : BaseController
     {
         private readonly IStatisticsService statisticsService;

@@ -17,7 +17,7 @@ namespace HospitalManagement.Auth.Services.Implementations
 {
     public class ServiceTokenService : IServiceTokenService
     {
-        private const string TokenRole = "Mcp";
+        private const string TokenRole = RoleNames.Mcp;
 
         private readonly AuthDbContext dbContext;
         private readonly JwtSettings jwtSettings;

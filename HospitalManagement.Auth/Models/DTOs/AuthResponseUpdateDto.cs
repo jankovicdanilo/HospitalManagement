@@ -5,6 +5,7 @@ namespace HospitalManagement.Auth.Models.DTOs
     public class AuthResponseUpdateDto
     {
         public int Id { get; set; }
+        public int? DoctorId { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
         public UserRole Role { get; set; }

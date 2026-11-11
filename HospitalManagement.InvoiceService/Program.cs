@@ -42,6 +42,12 @@ try
     })
         .AddHttpMessageHandler<AuthTokenHandler>();
 
+    builder.Services.AddStackExchangeRedisCache(options =>
+    options.Configuration = builder.Configuration["Redis:ConnectionString"]);
+
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddTransient<AuthTokenHandler>();
+
     builder.Services.AddAutoMapper(typeof(Program));
 
     QuestPDF.Settings.License = LicenseType.Community;
@@ -76,7 +82,8 @@ try
                     Message = "You must be logged in to access this resource"
                 });
             },
-            OnTokenValidated = TokenRevocation.CheckAsync
+            OnTokenValidated = TokenRevocation.CheckAsync,
+            OnForbidden = ForbiddenHandler.HandleAsync
         };
 
         options.TokenValidationParameters = new TokenValidationParameters
@@ -92,11 +99,7 @@ try
         };
     });
 
-    builder.Services.AddAuthorization(options =>
-    {
-        options.FallbackPolicy = new AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser().Build();
-    });
+    builder.Services.AddHospitalAuthorization();
 
     builder.Services.AddControllers()
         .AddJsonOptions(options =>

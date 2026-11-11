@@ -4,7 +4,7 @@ namespace HospitalManagement.QueryService.Clients.Interfaces
 {
     public interface IAppointmentServiceClient
     {
-        Task<PatientMedicalHistoryDto?> GetPatientHistoryAsync(int patientId);
+        Task<HistoryFetchResult> GetPatientHistoryAsync(int patientId);
         Task<List<int>?> GetPopularDoctorIdsAsync(int count);
         Task<List<int>?> GetPopularPatientIdsAsync(int count);
     }
