@@ -1,0 +1,15 @@
+{{- if eq .Values.ingress.className "traefik" }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: hms-strip-prefix
+  namespace: {{ .Values.namespace }}
+spec:
+  stripPrefix:
+    prefixes:
+      {{- range $name, $svc := .Values.services }}
+      {{- if $svc.ingressPath }}
+      - /{{ $svc.ingressPath }}
+      {{- end }}
+      {{- end }}
+{{- end }}
