@@ -2,6 +2,7 @@ namespace: hms-dev
 
 ingress:
   host: localhost
+  className: nginx
   tls:
     enabled: false
     issuer: letsencrypt-staging
