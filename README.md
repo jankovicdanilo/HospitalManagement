@@ -1,5 +1,7 @@
 # Hospital Management System
 
+[![Backend CI](https://github.com/jankovicdanilo/HospitalManagement/actions/workflows/ci.yml/badge.svg)](https://github.com/jankovicdanilo/HospitalManagement/actions/workflows/ci.yml)
+
 A backend REST API for managing hospital operations, built with .NET 8 and structured
 as a set of microservices handling authentication, core domain data, and appointment
 scheduling independently.
