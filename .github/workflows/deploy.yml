@@ -6,19 +6,22 @@ on:
       sha:
         description: "Full 40-character commit SHA on main to deploy (its images must already exist)"
         required: true
-
-concurrency:
-  group: deploy-vm
-  cancel-in-progress: false
+  workflow_call:
+    inputs:
+      sha:
+        description: "Full 40-character commit SHA on main to deploy"
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
+  check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment: production
+    timeout-minutes: 10
+    outputs:
+      proceed: ${{ steps.fresh.outputs.proceed }}
 
     steps:
       - name: Check out the code
@@ -41,7 +44,21 @@ jobs:
           fi
           echo "Commit $SHA is on main"
 
+      - name: Skip if a newer commit is already on main (automatic runs only)
+        id: fresh
+        env:
+          SHA: ${{ inputs.sha }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" != "workflow_dispatch" ] && [ "$SHA" != "$(git rev-parse origin/main)" ]; then
+            echo "A newer commit is on main, skipping the deploy of $SHA"
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check that the six images exist
+        if: steps.fresh.outputs.proceed == 'true'
         env:
           SHA: ${{ inputs.sha }}
         run: |
@@ -51,6 +68,17 @@ jobs:
             echo "${n}:${TAG} ok"
           done
 
+  deploy:
+    needs: check
+    if: needs.check.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    concurrency:
+      group: deploy-vm
+      cancel-in-progress: false
+
+    steps:
       - name: Set up SSH
         env:
           KEY: ${{ secrets.DEPLOY_SSH_KEY }}
