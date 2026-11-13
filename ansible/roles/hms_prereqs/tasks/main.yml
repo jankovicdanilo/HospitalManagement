@@ -1,0 +1,60 @@
+---
+- name: Create the HMS namespace
+  ansible.builtin.shell: |
+    set -o pipefail
+    kubectl create namespace {{ hms_namespace }} --dry-run=client -o yaml | kubectl apply -f -
+  args:
+    executable: /bin/bash
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: hms_namespace_result
+  changed_when: "'created' in hms_namespace_result.stdout or 'configured' in hms_namespace_result.stdout"
+  when: not ansible_check_mode
+
+- name: Check whether the hms-secrets secret exists
+  ansible.builtin.command: kubectl get secret hms-secrets -n {{ hms_namespace }}
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: hms_secret_check
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+# Create-only on purpose: SQL Server keeps the sa password it was first started with,
+# so overwriting the secret with a different value would break every service.
+- name: Create the hms-secrets secret (only when it does not exist yet)
+  ansible.builtin.shell: |
+    kubectl create secret generic hms-secrets -n {{ hms_namespace }} \
+      --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+      --from-literal=JWT_KEY="$JWT_KEY" \
+      --from-literal=JWT_ISSUER="$JWT_ISSUER" \
+      --from-literal=JWT_AUDIENCE="$JWT_AUDIENCE" \
+      --from-literal=ADMIN_PASSWORD="$ADMIN_PASSWORD"
+  args:
+    executable: /bin/bash
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    DB_PASSWORD: "{{ db_password }}"
+    JWT_KEY: "{{ jwt_key }}"
+    JWT_ISSUER: "{{ jwt_issuer }}"
+    JWT_AUDIENCE: "{{ jwt_audience }}"
+    ADMIN_PASSWORD: "{{ admin_password }}"
+  no_log: true
+  when: hms_secret_check.rc != 0 and not ansible_check_mode
+  changed_when: true
+
+- name: Install the deploy script that CI calls (reference copy lives in the repo)
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../deploy/vm/hms-deploy.sh"
+    dest: /usr/local/bin/hms-deploy
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Authorize the restricted CI deploy key (it can run only the deploy script)
+  ansible.posix.authorized_key:
+    user: "{{ ansible_user }}"
+    key: "{{ ci_deploy_public_key }}"
+    key_options: 'command="/usr/local/bin/hms-deploy",restrict'
+    state: present
+  when: ci_deploy_public_key | length > 0

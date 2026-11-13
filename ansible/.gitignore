@@ -1,0 +1,4 @@
+# Real addresses and secrets stay out of the public repository
+inventory/hosts.ini
+group_vars/hms/vault.yml
+*.retry

@@ -1,0 +1,18 @@
+# Copy to vault.yml, fill in the values, then encrypt it:
+#   ansible-vault encrypt group_vars/hms/vault.yml
+# vault.yml is git-ignored. Keep the real values in your password manager.
+
+vault_letsencrypt_email: "you@example.com"
+
+# Only used when the hms-secrets secret does not exist yet.
+# An existing secret is never overwritten: SQL Server keeps the sa password it was first started with.
+vault_db_password: "..."
+vault_jwt_key: "..."
+vault_admin_password: "..."
+
+# Public keys that may log in as ansible_user (at least one: the key of the machine running Ansible)
+vault_admin_ssh_public_keys:
+  - "ssh-ed25519 AAAA... ansible-control-machine"
+
+# Public half of the restricted key that GitHub Actions uses to deploy (empty = skip)
+vault_ci_deploy_public_key: "ssh-ed25519 AAAA... github-actions-deploy"
