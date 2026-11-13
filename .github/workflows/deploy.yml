@@ -112,3 +112,41 @@ jobs:
       - name: Remove the SSH key from the runner
         if: always()
         run: rm -f ~/.ssh/deploy_key
+
+  tag:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Read the version that is live
+        id: deployed
+        env:
+          SHA: ${{ inputs.sha }}
+        run: |
+          expected="${SHA:0:7}"
+          for i in 1 2 3 4 5 6; do
+            json="$(curl -fsS "https://hospital-management.duckdns.org/auth/version" || true)"
+            build="$(echo "$json" | jq -r '.build // empty' 2>/dev/null || true)"
+            version="$(echo "$json" | jq -r '.version // empty' 2>/dev/null || true)"
+            echo "attempt ${i}: version=${version} build=${build}"
+            if [ "${build}" = "${expected}" ] && [ -n "${version}" ]; then
+              echo "version=${version}" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "The live build does not match ${expected}, so the commit is not tagged"
+          exit 1
+
+      - name: Tag the deployed commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ inputs.sha }}
+          VERSION: ${{ steps.deployed.outputs.version }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/git/refs" \
+            -f ref="refs/tags/v${VERSION}" -f sha="${SHA}"
+          echo "Tagged ${SHA} as v${VERSION}"
