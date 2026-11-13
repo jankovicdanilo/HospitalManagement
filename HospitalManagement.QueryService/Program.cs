@@ -18,6 +18,7 @@ using NLog.Web;
 using Polly;
 using StackExchange.Redis;
 using System.Text;
+using HospitalManagement.Shared.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -173,6 +174,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapVersionEndpoint("query");
 app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

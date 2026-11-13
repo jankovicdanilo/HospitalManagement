@@ -7,6 +7,7 @@ using HospitalManagement.Auth.Services.Interfaces;
 using HospitalManagement.Shared.Extensions;
 using HospitalManagement.Shared.Security;
 using HospitalManagement.Shared.Settings;
+using HospitalManagement.Shared.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -158,6 +159,7 @@ app.UseAuthorization();
 
 
 app.MapControllers();
+app.MapVersionEndpoint("auth");
 app.MapHealthChecks("/health").WithMetadata(new AllowAnonymousAttribute());
 
 app.Run();

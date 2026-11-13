@@ -15,6 +15,7 @@ using NLog;
 using NLog.Web;
 using QuestPDF.Infrastructure;
 using System.Text;
+using HospitalManagement.Shared.Versioning;
 
 var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
 
@@ -156,6 +157,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapVersionEndpoint("statistics");
 
     app.Run();
 }

@@ -26,6 +26,7 @@ using Polly;
 using QuestPDF.Infrastructure;
 using StackExchange.Redis;
 using System.Text;
+using HospitalManagement.Shared.Versioning;
 
 var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
 
@@ -210,6 +211,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapVersionEndpoint("appointments");
     app.MapHealthChecks("/health").AllowAnonymous();
 
     app.Run();
