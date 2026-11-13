@@ -7,17 +7,21 @@ using HospitalManagement.Shared.Data;
 using HospitalManagement.Shared.Extensions;
 using HospitalManagement.Shared.Security;
 using HospitalManagement.Shared.Settings;
+using HospitalManagement.Shared.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using NLog;
 using NLog.Web;
 using Polly;
 using StackExchange.Redis;
 using System.Text;
-using HospitalManagement.Shared.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
+
+GlobalDiagnosticsContext.Set("appversion", AppVersion.Version);
+GlobalDiagnosticsContext.Set("appbuild", AppVersion.Build);
 
 builder.Services.AddDbContext<HospitalManagementDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("HospitalManagementCQRS"),
@@ -118,6 +122,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HospitalManagement CommandService", Version = AppVersion.Version });
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Name = "Authorization",

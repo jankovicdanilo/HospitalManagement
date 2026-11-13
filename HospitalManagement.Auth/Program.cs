@@ -12,10 +12,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using NLog;
 using NLog.Web;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+GlobalDiagnosticsContext.Set("appversion", AppVersion.Version);
+GlobalDiagnosticsContext.Set("appbuild", AppVersion.Build);
 
 // Add services to the container.
 builder.Services.AddDbContext<AuthDbContext>(options =>
@@ -101,6 +105,7 @@ builder.Services.AddEndpointsApiExplorer();
 // Configure Swagger with JWT support so protected endpoints can be tested directly in Swagger UI
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HospitalManagement AuthService", Version = AppVersion.Version });
     // Define Bearer token security scheme
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {

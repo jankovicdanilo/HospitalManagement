@@ -34,6 +34,9 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    GlobalDiagnosticsContext.Set("appversion", AppVersion.Version);
+    GlobalDiagnosticsContext.Set("appbuild", AppVersion.Build);
+
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();
 
@@ -161,6 +164,7 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
+        options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HospitalManagement AppointmentService", Version = AppVersion.Version });
         options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
             Name = "Authorization",
