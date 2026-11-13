@@ -4,6 +4,10 @@ kind: Deployment
 metadata:
   name: {{ $name }}
   namespace: {{ $.Values.namespace }}
+  labels:
+    app.kubernetes.io/version: "1.0.{{ $.Release.Revision }}"
+  annotations:
+    hms/build: {{ regexReplaceAll "^.*:" $svc.image "" | quote }}
 spec:
   replicas: 1
   selector:
@@ -13,6 +17,7 @@ spec:
     metadata:
       labels:
         app: {{ $name }}
+        app.kubernetes.io/version: "1.0.{{ $.Release.Revision }}"
     spec:
       containers:
       - name: {{ $name }}
@@ -34,6 +39,10 @@ spec:
         - name: Cors__AllowedOrigins__{{ $i }}
           value: {{ $origin | quote }}
         {{- end }}
+        - name: APP_VERSION
+          value: "1.0.{{ $.Release.Revision }}"
+        - name: APP_BUILD
+          value: {{ regexReplaceAll "^.*:" $svc.image "" | quote }}
         ports:
         - containerPort: {{ $svc.port }}
         resources:
