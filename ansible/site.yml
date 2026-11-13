@@ -1,0 +1,11 @@
+---
+# Prepares a server for HMS: base hardening, K3s, cluster add-ons, and what the CI deploy needs.
+# The application itself is released by the CI/CD pipeline (Deploy to VM), not by this playbook.
+- name: Configure the HMS server
+  hosts: hms
+  become: true
+  roles:
+    - { role: base, tags: [base] }
+    - { role: k3s, tags: [k3s] }
+    - { role: cluster_addons, tags: [addons] }
+    - { role: hms_prereqs, tags: [hms] }
