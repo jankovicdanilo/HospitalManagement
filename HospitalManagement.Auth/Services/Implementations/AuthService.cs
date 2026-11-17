@@ -16,6 +16,8 @@ namespace HospitalManagement.Auth.Services.Implementations
 {
     public class AuthService : IAuthService
     {
+        private static readonly string DummyHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString());
+
         private readonly IAuthRepository authRepository;
         private readonly JwtSettings jwtSettings;
         private readonly IMapper mapper;
@@ -84,6 +86,8 @@ namespace HospitalManagement.Auth.Services.Implementations
 
             if (user == null)
             {
+                BCrypt.Net.BCrypt.Verify(request.Password, DummyHash); // Prevent timing attacks
+
                 logger.LogWarning("Login failed, username {Username} not found", request.Username);
                 return Result<AuthResponseDto>.Fail("Invalid credentials", "INVALID_CREDENTIALS", ErrorType.Unauthorized);
             }
