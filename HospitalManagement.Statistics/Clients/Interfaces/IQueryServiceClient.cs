@@ -7,5 +7,7 @@ namespace HospitalManagement.Statistics.Clients.Interfaces
     {
         Task<DoctorResponseDto?> GetDoctorAsync(int doctorId); // null only when 404
         Task<PatientResponseDto?> GetPatientAsync(int patientId);
+        Task<IReadOnlyList<DoctorResponseDto>> GetDoctorsAsync(IEnumerable<int> doctorIds);
+        Task<IReadOnlyList<PatientResponseDto>> GetPatientsAsync(IEnumerable<int> patientIds);
     }
 }

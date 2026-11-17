@@ -10,6 +10,8 @@ namespace HospitalManagement.Statistics.Clients.Implementations
 {
     public class QueryServiceClient : IQueryServiceClient
     {
+        private const int BatchSize = 200; // Limit the number of IDs per request to avoid URL length issues
+
         private readonly HttpClient httpClient;
         private readonly ILogger<QueryServiceClient> logger;
 
@@ -50,5 +52,29 @@ namespace HospitalManagement.Statistics.Clients.Implementations
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<PatientResponseDto>(JsonOptions);
         }
+
+        public Task<IReadOnlyList<DoctorResponseDto>> GetDoctorsAsync(IEnumerable<int> doctorIds) => 
+            PostBatchAsync<DoctorResponseDto>("api/doctor/batch", doctorIds);
+
+        public Task<IReadOnlyList<PatientResponseDto>> GetPatientsAsync(IEnumerable<int> patientIds) =>
+            PostBatchAsync<PatientResponseDto>("api/patient/batch", patientIds);
+
+        private async Task<IReadOnlyList<T>> PostBatchAsync<T>(string path, IEnumerable<int> ids)
+        {
+            var requested = ids.Distinct().ToList();
+            var result = new List<T>(requested.Count);
+
+            foreach(var chunk in requested.Chunk(BatchSize))
+            {
+                var response = await httpClient.PostAsJsonAsync(path, new { ids = chunk });
+                response.EnsureSuccessStatusCode();
+                result.AddRange(await response.Content.ReadFromJsonAsync<List<T>>(JsonOptions) ?? []);
+            }
+
+            logger.LogInformation("Fetched {Count} of {Requested} records from {Path}", result.Count, requested.Count, path);
+            return result;
+        }
+
+
     }
 }
