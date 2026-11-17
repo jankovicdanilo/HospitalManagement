@@ -25,7 +25,8 @@ namespace HospitalManagement.Shared.Extensions
                 {
                     policy.WithOrigins(origins)
                           .AllowAnyHeader()
-                          .AllowAnyMethod();
+                          .AllowAnyMethod()
+                          .SetPreflightMaxAge(TimeSpan.FromMinutes(30));
                 });
             });
         }
