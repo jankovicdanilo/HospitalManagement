@@ -26,12 +26,16 @@ using Polly;
 using QuestPDF.Infrastructure;
 using StackExchange.Redis;
 using System.Text;
+using HospitalManagement.Shared.Versioning;
 
 var logger = LogManager.Setup().LoadConfigurationFromFile("nlog.config").GetCurrentClassLogger();
 
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+
+    GlobalDiagnosticsContext.Set("appversion", AppVersion.Version);
+    GlobalDiagnosticsContext.Set("appbuild", AppVersion.Build);
 
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();
@@ -160,6 +164,7 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
+        options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "HospitalManagement AppointmentService", Version = AppVersion.Version });
         options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
             Name = "Authorization",
@@ -210,6 +215,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapVersionEndpoint("appointments");
     app.MapHealthChecks("/health").AllowAnonymous();
 
     app.Run();
