@@ -139,6 +139,8 @@ jobs:
   deploy:
     needs: push-images
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.AUTO_DEPLOY == 'true'
+    permissions:
+      contents: write
     uses: ./.github/workflows/deploy.yml
     with:
       sha: ${{ github.sha }}
