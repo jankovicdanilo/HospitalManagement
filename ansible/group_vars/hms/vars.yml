@@ -1,0 +1,23 @@
+# Settings that are safe to commit. Personal values and secrets live in vault.yml.
+
+k3s_version: "v1.37.2+k3s1"
+cert_manager_version: "v1.21.3"
+hms_namespace: hms-dev
+
+# Turn SSH password and root logins off. Needs at least one key in admin_ssh_public_keys.
+ssh_harden: true
+
+ufw_allowed_tcp_ports: [22, 80, 443]
+# K3s pod and service networks must be able to talk to each other
+ufw_cluster_cidrs: ["10.42.0.0/16", "10.43.0.0/16"]
+
+jwt_issuer: HospitalManagement
+jwt_audience: HospitalManagement
+
+# Mapped from the encrypted vault file
+letsencrypt_email: "{{ vault_letsencrypt_email }}"
+db_password: "{{ vault_db_password }}"
+jwt_key: "{{ vault_jwt_key }}"
+admin_password: "{{ vault_admin_password }}"
+admin_ssh_public_keys: "{{ vault_admin_ssh_public_keys }}"
+ci_deploy_public_key: "{{ vault_ci_deploy_public_key }}"

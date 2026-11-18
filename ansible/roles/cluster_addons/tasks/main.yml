@@ -1,0 +1,36 @@
+---
+- name: Check whether cert-manager is installed
+  ansible.builtin.command: helm status cert-manager -n cert-manager
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: cert_manager_status
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Add the Jetstack chart repository
+  ansible.builtin.command: helm repo add jetstack https://charts.jetstack.io --force-update
+  when: cert_manager_status.rc != 0
+  changed_when: true
+
+- name: Install cert-manager
+  ansible.builtin.command: >-
+    helm install cert-manager jetstack/cert-manager
+    --namespace cert-manager --create-namespace
+    --version {{ cert_manager_version }}
+    --set crds.enabled=true
+    --wait --timeout 5m
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  when: cert_manager_status.rc != 0
+  changed_when: true
+
+- name: Create the two Let's Encrypt issuers (staging and production)
+  ansible.builtin.command: kubectl apply -f -
+  args:
+    stdin: "{{ lookup('ansible.builtin.template', 'cluster-issuers.yaml.j2') }}"
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: cluster_issuers
+  changed_when: "'created' in cluster_issuers.stdout or 'configured' in cluster_issuers.stdout"
+  when: not ansible_check_mode

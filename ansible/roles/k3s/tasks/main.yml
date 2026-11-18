@@ -1,0 +1,69 @@
+---
+- name: Install K3s (its packaged Traefik stays enabled)
+  ansible.builtin.shell: curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" sh -
+  args:
+    creates: /usr/local/bin/k3s
+
+- name: Wait for the K3s kubeconfig
+  ansible.builtin.wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    timeout: 180
+  when: not ansible_check_mode
+
+- name: Create the .kube directory of the admin user
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0700"
+
+- name: Copy the kubeconfig for the admin user
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Point KUBECONFIG at it in the admin user's shell
+  ansible.builtin.lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: 'export KUBECONFIG=$HOME/.kube/config'
+
+- name: Traefik, redirect HTTP to HTTPS on port 443
+  ansible.builtin.copy:
+    dest: /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      apiVersion: helm.cattle.io/v1
+      kind: HelmChartConfig
+      metadata:
+        name: traefik
+        namespace: kube-system
+      spec:
+        valuesContent: |-
+          additionalArguments:
+            - "--entryPoints.web.http.redirections.entryPoint.to=:443"
+            - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
+            - "--entryPoints.web.http.redirections.entryPoint.permanent=true"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Install Helm
+  ansible.builtin.shell: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  args:
+    creates: /usr/local/bin/helm
+
+- name: Wait until the node is Ready
+  ansible.builtin.command: kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml get nodes --no-headers
+  register: k3s_nodes
+  until: k3s_nodes.stdout is search(' Ready')
+  retries: 30
+  delay: 10
+  changed_when: false
+  check_mode: false
+  when: not ansible_check_mode
